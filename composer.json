@@ -13,7 +13,6 @@
     },
     "autoload": {
         "classmap": [
-            "src/controllers"
         ],
         "psr-0": {
             "Csgt\\Crud\\": "src/"
