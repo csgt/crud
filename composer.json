@@ -1,0 +1,23 @@
+{
+    "name": "csgt/crud2",
+    "description": "",
+    "authors": [
+        {
+            "name": "CS",
+            "email": "info@cs.com.gt"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "4.2.*"
+    },
+    "autoload": {
+        "classmap": [
+            "src/controllers"
+        ],
+        "psr-0": {
+            "Csgt\\Crud\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
