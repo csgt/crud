@@ -11,12 +11,13 @@ class Crud {
 	private $tablaId;
 	private $titulo;
 	private $data;
-	private $camposShow = array();
-	private $camposEdit = array();
-	private $wheres     = array();
-	private $wheresRaw  = array();
-	private $leftJoins  = array();
-	private $permisos   = array('add'=>false,'edit'=>false,'delete'=>false);
+	private $camposShow   = array();
+	private $camposEdit   = array();
+	private $wheres       = array();
+	private $wheresRaw    = array();
+	private $leftJoins    = array();
+	private $botonesExtra = array();
+	private $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
 
 	public function getData($showEdit) {
 		$response = array();
@@ -113,6 +114,28 @@ class Crud {
 		$this->titulo = $aNombre;
 	}
 
+	public function setBotonExtra($aParams) {
+		$allowed = array('url','titulo','target','icon','class');
+		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed)) {
+				dd('setBotonExtra no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+			}
+		}
+		if(!array_key_exists('url', $aParams)) dd('setBotonExtra debe tener un valor para "url"');
+
+		$icon   = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
+		$class  = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
+		$titulo = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
+
+		$arr = array(
+			'url'      => $aParams['url'],
+			'titulo'	 => $titulo,
+			'icon'     => $icon,
+			'class'    => $class,
+		);
+		$this->botonesExtra[] = $arr;
+	}
+
 	public function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class','default','rules','decimales','query','combokey');
 		$tipos   = array('string','numeric','date','datetime','bool','combobox');
@@ -192,6 +215,8 @@ class Crud {
 		$this->permisos = $aPermisos;
 	}
 
+
+
 	private function getUrl($aPath) {
 		$arr = explode('/', $aPath);
 		array_pop($arr);
@@ -207,7 +232,8 @@ class Crud {
 			->with('perPage', $this->perPage)
 			->with('titulo', $this->titulo)
 			->with('columnas', $this->camposShow)
-			->with('permisos', $this->permisos);
+			->with('permisos', $this->permisos)
+			->with('botonesExtra', $this->botonesExtra);
 	}
 
 	public function create($aId) {

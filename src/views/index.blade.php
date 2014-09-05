@@ -23,8 +23,11 @@
 			    	var col = data.length-1;
 			    	var id = data[col];	 
 			    	var html = '';
+			    	@foreach ($botonesExtra as $botonExtra)
+							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$botonExtra["url"]}}/' + id + '"><span class="{{$botonExtra["icon"]}}"></span></a>';
+						@endforeach
 			    	@if($permisos['edit'])   	
-							html = '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit"><span class="glyphicon glyphicon-pencil"></span></a>&nbsp;';
+							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit"><span class="glyphicon glyphicon-pencil"></span></a>';
 						@endif;
 						@if($permisos['delete'])
 							html += '<form action="{{ URL::to(Request::url())}}/' + id + '" class="btn-delete" method="POST">\
@@ -151,7 +154,9 @@
           + (aDec ? "." + Math.abs(n - i).toFixed(aDec).slice(2) : "");
     };
 	</script>
-
+	<style>
+		.btn { margin-left: 2px; margin-right: 2px;}
+	</style>
 	@if(Session::get('message'))
 		<div class="alert alert-{{ Session::get('type') }} alert-dismissable .mrgn-top">
 			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
