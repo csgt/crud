@@ -11,7 +11,7 @@
 		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta']),'class'=>'form-horizontal', 'method'=>'put')) }}
 	@endif
 		@foreach($columnas as $columna)
-			<?php $valor = ($data ? $data->$columna['campoReal'] : '') ?>
+			<?php $valor = ($data ? $data->$columna['campoReal'] : ''); ?>
 			<div class="form-group">
 				@if($columna['tipo'] != 'bool')
 		    	<label for="{{ $columna['campoReal'] }}" class="col-sm-2 control-label">{{ $columna['nombre'] }}</label>
@@ -55,7 +55,7 @@
 						</div>
 					@elseif($columna['tipo'] == 'combobox')
 						<?php $combokey = ($data ? $data->$columna['combokey'] : '') ?>
-						{{ Form::select($columna['campoReal'], $combos[$columna['campoReal']], $combokey, array('class' => 'selectpicker form-control')) }}
+						{{ Form::select($columna['combokey'], $combos[$columna['campoReal']], $combokey, array('class' => 'selectpicker form-control')) }}
 		    	@else 
 		    		{{ Form::text($columna['campoReal'], $valor, array('class' => 'form-control')) }}
 		    	@endif

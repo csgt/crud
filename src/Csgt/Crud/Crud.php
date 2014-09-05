@@ -1,7 +1,7 @@
 <?php 
 namespace Csgt\Crud;
 
-use Hash, View, DB, Input, Response, Request, Session, Redirect;
+use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 
 
 class Crud {
@@ -84,7 +84,8 @@ class Crud {
 		foreach($data as $d){
 			$tmparr = array();
 			foreach($d as $columna => $valor){
-				$tmparr[] = $valor;
+				if ($columna==$this->tablaId) $tmparr[] = Crypt::encrypt($valor);
+				else $tmparr[] = $valor;
 			}
 
 			$dataarr[] = $tmparr;
@@ -239,10 +240,9 @@ class Crud {
 	public function create($aId) {
 		$data = null;
 		$hijo = 'Nuevo';
-
-		if($aId <> 0){
+		if(!$aId==0){
 			$data = DB::table($this->tabla)
-				->where($this->tablaId, $aId)
+				->where($this->tablaId, Crypt::decrypt($aId))
 				->first();
 			$hijo = 'Editar';
 		}
@@ -279,9 +279,12 @@ class Crud {
 	public function store($id=null) {
 		$data  = array();
 		foreach($this->camposEdit as $campo){
-			$data[$campo['campoReal']] = Input::get($campo['campoReal']);
+			if ($campo['tipo']=='bool') 
+				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
+			else
+				$data[$campo['campoReal']] = Input::get($campo['campoReal']);
 		}
-
+		
 		if($id == null){
 			$query = DB::table($this->tabla)
 				->insert($data);
@@ -293,7 +296,7 @@ class Crud {
 
 		else {
 			$query = DB::table($this->tabla)
-				->where($this->tablaId, $id)
+				->where($this->tablaId, Crypt::decrypt($id))
 				->update($data);
 
 			Session::flash('message', 'Registro actualizado exitosamente');
