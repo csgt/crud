@@ -278,14 +278,19 @@ class Crud {
 
 	public function store($id=null) {
 		$data  = array();
+		//dd($this->camposEdit);
 		foreach($this->camposEdit as $campo){
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
+			else if ($campo['tipo']=='combobox')
+				$data[$campo['combokey']] = Input::get($campo['combokey']);
 			else
 				$data[$campo['campoReal']] = Input::get($campo['campoReal']);
 		}
-		
+		$data['updated_at'] = date_create();
 		if($id == null){
+			$data['created_at'] = date_create();
+
 			$query = DB::table($this->tabla)
 				->insert($data);
 
