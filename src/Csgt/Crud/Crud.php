@@ -287,7 +287,6 @@ class Crud {
 			else if ($campo['tipo']=='combobox')
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
 			else if ($campo['tipo']=='password') {
-				dd(Input::all());
 				$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
 			}
 			else
