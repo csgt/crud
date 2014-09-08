@@ -138,8 +138,9 @@ class Crud {
 	}
 
 	public function setCampo($aParams) {
-		$allowed = array('campo','nombre','editable','show','tipo','class','default','rules','decimales','query','combokey');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox');
+		$allowed = array('campo','nombre','editable','show','tipo','class',
+			'default','reglas', 'reglasmensaje', 'decimales','query','combokey');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -149,16 +150,17 @@ class Crud {
 
 		if(!array_key_exists('campo', $aParams)) dd('setCampo debe tener un valor para "campo"');
 
-		$nombre    = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']); 
-		$edit      = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
-		$show      = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
-		$tipo      = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
-		$class     = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
-		$default   = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
-		$rules     = (!array_key_exists('rules', $aParams) ? '' : $aParams['rules']);
-		$decimales = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
-		$query     = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
-		$combokey  = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
+		$nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']); 
+		$edit          = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
+		$show          = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
+		$tipo          = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
+		$class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
+		$default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
+		$reglas        = (!array_key_exists('reglas', $aParams) ? array() : $aParams['reglas']);
+		$decimales     = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
+		$query         = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
+		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
+		$reglasmensaje = (!array_key_exists('reglasmensaje', $aParams) ? '' : $aParams['reglasmensaje']);
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
 
@@ -177,19 +179,20 @@ class Crud {
 		}
 
 		$arr = array(
-			'nombre'   => $nombre,
-			'campo'    => $aParams['campo'],
-			'alias'    => $alias,
-			'campoReal'=> $campoReal,
-			'tipo'     => $tipo,
-			'show'     => $show,
-			'editable' => $edit,
-			'default'  => $default,
-			'rules'    => $rules,
-			'class'    => $class,
-			'decimales'=> $decimales,
-			'query'    => $query,
-			'combokey' => $combokey
+			'nombre'   			=> $nombre,
+			'campo'    			=> $aParams['campo'],
+			'alias'    			=> $alias,
+			'campoReal'			=> $campoReal,
+			'tipo'     			=> $tipo,
+			'show'     			=> $show,
+			'editable' 			=> $edit,
+			'default'  			=> $default,
+			'reglas'   			=> $reglas,
+			'reglasmensaje' => $reglasmensaje,
+			'class'    			=> $class,
+			'decimales'			=> $decimales,
+			'query'    			=> $query,
+			'combokey' 			=> $combokey
 		);
 		if ($show) $this->camposShow[] = $arr;
 		if ($edit) $this->camposEdit[] = $arr;
@@ -215,8 +218,6 @@ class Crud {
 	public function setPermisos($aPermisos) {
 		$this->permisos = $aPermisos;
 	}
-
-
 
 	private function getUrl($aPath) {
 		$arr = explode('/', $aPath);
@@ -278,12 +279,17 @@ class Crud {
 
 	public function store($id=null) {
 		$data  = array();
+
 		//dd($this->camposEdit);
 		foreach($this->camposEdit as $campo){
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
 			else if ($campo['tipo']=='combobox')
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
+			else if ($campo['tipo']=='password') {
+				dd(Input::all());
+				$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+			}
 			else
 				$data[$campo['campoReal']] = Input::get($campo['campoReal']);
 		}
