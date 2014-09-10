@@ -175,7 +175,7 @@ class Crud {
 
 		else {
 			$campoReal  = $aParams['campo'];
-			$alias 			= 'a' . date('U') . count($this->campos); //Nos inventamos un alias para los subqueries
+			$alias 			= 'a' . date('U') . count($this->camposShow); //Nos inventamos un alias para los subqueries
 		}
 
 		$arr = array(

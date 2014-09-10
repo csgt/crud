@@ -42,44 +42,43 @@
 			  }, 
 			  <?php $i=0; ?>
 			  @foreach ($columnas as $columna)
-				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime"))
-					  {
-					  	"targets" : {{$i}}, "data" : null,
-					  	"class"   : "{{$columna["class"]}}",
-					  	"render" : function(data) {
-					  		var fecha = data[{{$i}}];
-					  		var arrhf = fecha.split(" "); 
-					  		var arrf  = arrhf[0].split("-");
-					  		var hora  = '';
-					  		if (arrhf.length==2) {hora = ' ' + arrhf[1];}
-					  		return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
-					  	}
-					  },
-					@elseif ($columna["tipo"]=="numeric")
-					  {
-					  	"targets" : {{$i}}, "data" : null,
-					  	"class"   : "{{$columna["class"]}}",
-					  	"render" : function(data) {
-					  		var val = data[{{$i}}];
-					  		if (val==null) return null;
+			  	{
+			  		"targets" : {{$i}},
+			  		"class" : "{{$columna["class"]}}",
+			  		"searchable" : "{{$columna["searchable"]}}",
 
-					  		val = Number(val);
-					  		return val.formatMoney({{$columna["decimales"]}});
-					  	}
-					  },
-			  	@elseif($columna["tipo"]=="bool")
-					  {
-					  	"targets" : {{$i}}, "data" : null,
-					  	"class"   : "{{$columna["class"]}}",
-					  	"render" : function(data) {
-					  		var val = data[{{$i}}];
-								if (val==null) return null;
+				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime")) 
+				  	"data" : null,
+				  	"render" : function(data) {
+				  		var fecha = data[{{$i}}];
+				  		var arrhf = fecha.split(" "); 
+				  		var arrf  = arrhf[0].split("-");
+				  		var hora  = '';
+				  		if (arrhf.length==2) {hora = ' ' + arrhf[1];}
+				  		return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
+				  	}
 
-								var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">Si</span>');
-					  		return text;
-					  	}
-					  },
-			  	@endif
+					@elseif ($columna["tipo"]=="numeric") 
+						"data" : null,
+				  	"render" : function(data) {
+				  		var val = data[{{$i}}];
+				  		if (val==null) return null;
+
+				  		val = Number(val);
+				  		return val.formatMoney({{$columna["decimales"]}});
+				  	}
+
+			  	@elseif($columna["tipo"]=="bool") 
+			  	 	"data" : null,
+				  	"render" : function(data) {
+				  		var val = data[{{$i}}];
+							if (val==null) return null;
+
+							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">Si</span>');
+				  		return text;
+					  }
+		  		@endif
+		  		},
 			  	<?php $i++; ?>
 			  @endforeach
 			  ],
@@ -100,7 +99,7 @@
 					}
 				}
 			});
-			@if((!$permisos['edit'])&&(!$permisos['edit']))   	   
+			@if((!$permisos['edit'])&&(!$permisos['delete']))   	   
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 
