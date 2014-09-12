@@ -139,8 +139,8 @@ class Crud {
 
 	public function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
-			'default','reglas', 'reglasmensaje', 'decimales','query','combokey');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox','password');
+			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -161,11 +161,14 @@ class Crud {
 		$query         = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
 		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
 		$reglasmensaje = (!array_key_exists('reglasmensaje', $aParams) ? '' : $aParams['reglasmensaje']);
+		$searchable    = true;
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
 
 		if($tipo == 'combobox' && ($query == '' || $combokey == '')) dd('Para el tipo combobox el query y combokey son requeridos');
-	
+
+		if($tipo == 'emum' && $enumarray == '') dd('Para el tipo enum el enumarray es requerido');
+		else $enumarray = array();
 		
 		if (!strpos($aParams['campo'], ')')) {
 			$arr = explode('.', $aParams['campo']);
@@ -176,6 +179,7 @@ class Crud {
 		else {
 			$campoReal  = $aParams['campo'];
 			$alias 			= 'a' . date('U') . count($this->camposShow); //Nos inventamos un alias para los subqueries
+			$searchable = false;
 		}
 
 		$arr = array(
@@ -192,7 +196,9 @@ class Crud {
 			'class'    			=> $class,
 			'decimales'			=> $decimales,
 			'query'    			=> $query,
-			'combokey' 			=> $combokey
+			'combokey' 			=> $combokey,
+			'searchable'    => $searchable,
+			'enumarray'     => $enumarray
 		);
 		if ($show) $this->camposShow[] = $arr;
 		if ($edit) $this->camposEdit[] = $arr;
