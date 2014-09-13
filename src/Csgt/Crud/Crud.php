@@ -324,7 +324,7 @@ class Crud {
 	public function destroy($aId) {
 		try{
 			$query = DB::table($this->tabla)
-				->where($this->tablaId, $aId)
+				->where($this->tablaId, Crypt::decrypt($aId))
 				->delete();
 
 			Session::flash('message', 'Registro borrado exitosamente');

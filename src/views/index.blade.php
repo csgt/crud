@@ -24,7 +24,13 @@
 			    	var id = data[col];	 
 			    	var html = '';
 			    	@foreach ($botonesExtra as $botonExtra)
-							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$botonExtra["url"]}}/' + id + '"><span class="{{$botonExtra["icon"]}}"></span></a>';
+			    		<?php 
+			    			$url = $botonExtra["url"];
+			    			$urlarr = explode('{id}', $url);
+			    			$parte1 = $urlarr[0];
+			    			$parte2 = (count($urlarr)==1?'':$urlarr[1]);
+			    		?>
+							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2}}"><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
 			    	@if($permisos['edit'])   	
 							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit"><span class="glyphicon glyphicon-pencil"></span></a>';
@@ -114,6 +120,10 @@
 				var txInfo = $(this).closest('.dataTables_wrapper').find('div[id$=_info]');
 				txInfo.addClass('small text-muted');
 
+				var divTitulo = $(this).closest('.dataTables_wrapper').find('.col-titulo');
+				divTitulo.html('<h2 class="text-primary">{{$titulo}}</h2>');
+
+
 				var divBoton = $(this).closest('.dataTables_wrapper').find('.col-boton-agregar');
 				@if($permisos['add'])
 			 		divBoton.html('<a class="btn btn-success" href="{{ URL::to(Request::url() . '/create') }}">\
@@ -155,6 +165,8 @@
 	</script>
 	<style>
 		.btn { margin-left: 2px; margin-right: 2px;}
+		.top { margin-top: 10px;}
+		.top h2 {margin-top:0; margin-bottom: 0;}
 	</style>
 	@if(Session::get('message'))
 		<div class="alert alert-{{ Session::get('type') }} alert-dismissable .mrgn-top">
