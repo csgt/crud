@@ -139,8 +139,8 @@ class Crud {
 
 	public function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
-			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum');
+			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray','filepath');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -161,11 +161,13 @@ class Crud {
 		$query         = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
 		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
 		$reglasmensaje = (!array_key_exists('reglasmensaje', $aParams) ? '' : $aParams['reglasmensaje']);
+		$filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
 		$searchable    = true;
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
 
 		if($tipo == 'combobox' && ($query == '' || $combokey == '')) dd('Para el tipo combobox el query y combokey son requeridos');
+		if($tipo == 'file' && $filepath == '') dd('Para el tipo file hay que especifiarle el filepath');
 
 		if($tipo == 'emum' && $enumarray == '') dd('Para el tipo enum el enumarray es requerido');
 		else $enumarray = array();
@@ -198,7 +200,8 @@ class Crud {
 			'query'    			=> $query,
 			'combokey' 			=> $combokey,
 			'searchable'    => $searchable,
-			'enumarray'     => $enumarray
+			'enumarray'     => $enumarray,
+			'filepath'			=> $filepath
 		);
 		if ($show) $this->camposShow[] = $arr;
 		if ($edit) $this->camposEdit[] = $arr;
@@ -271,10 +274,10 @@ class Crud {
 
 					$temp[$id] = $nombre;
 				}
-
 				$combos[$campo['campoReal']] = $temp;
 			}
 		}
+
 
 		return View::make('crud::edit')
 			->with('breadcrum', array('padre'=>array('titulo'=>$this->titulo,'ruta'=>$route), 'hijo'=>$hijo))
@@ -294,6 +297,17 @@ class Crud {
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
 			else if ($campo['tipo']=='password') {
 				$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+			}
+			else if ($campo['tipo']=='file') {
+				if (Input::hasFile($campo['campoReal']))
+				{
+					$file = Input::file($campo['campoReal']);
+					
+					$filename = date('Ymdhi').$file->getClientOriginalName();
+					$file->move($campo['filepath'], $filename);
+					
+					$data[$campo['campoReal']] = $filename;
+				}
 			}
 			else
 				$data[$campo['campoReal']] = Input::get($campo['campoReal']);

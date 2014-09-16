@@ -6,9 +6,9 @@
 	  <li class="active">{{ $breadcrum['hijo'] }}</li>
 	</ol>
 	@if(!$data)
-		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta']),'class'=>'form-horizontal','id'=>'frmCrud')) }}
+		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta']),'class'=>'form-horizontal','id'=>'frmCrud', 'files'=>'true')) }}
 	@else
-		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta']),'class'=>'form-horizontal', 'method'=>'put','id'=>'frmCrud')) }}
+		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta']),'class'=>'form-horizontal', 'method'=>'put','id'=>'frmCrud', 'files'=>'true')) }}
 	@endif
 		@foreach($columnas as $columna)
 			<?php 
@@ -107,7 +107,11 @@
 						<?php $combokey = ($data ? $data->$columna['combokey'] : '') ?>
 						{{ Form::select($columna['combokey'], $combos[$columna['campoReal']], $combokey, $arr) }}
 					</div>
-
+				@elseif($columna['tipo'] == 'file')
+					{{$label}}
+					<div class="col-sm-10">
+						{{ Form::file($columna['campoReal']) }}
+					</div>
 	    	@else 
 	    		{{$label}}
 					<div class="col-sm-10">

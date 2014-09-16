@@ -121,7 +121,7 @@
 				txInfo.addClass('small text-muted');
 
 				var divTitulo = $(this).closest('.dataTables_wrapper').find('.col-titulo');
-				divTitulo.html('<h2 class="text-primary">{{$titulo}}</h2>');
+				divTitulo.html('<h3 class="text-primary">{{$titulo}}</h3>');
 
 
 				var divBoton = $(this).closest('.dataTables_wrapper').find('.col-boton-agregar');
