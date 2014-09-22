@@ -105,7 +105,7 @@
 					}
 				}
 			});
-			@if((!$permisos['edit'])&&(!$permisos['delete']))   	   
+			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))   	   
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 

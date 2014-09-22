@@ -13,6 +13,7 @@ class Crud {
 	private $data;
 	private $camposShow   = array();
 	private $camposEdit   = array();
+	private $camposHidden = array();
 	private $wheres       = array();
 	private $wheresRaw    = array();
 	private $leftJoins    = array();
@@ -135,6 +136,22 @@ class Crud {
 			'class'    => $class,
 		);
 		$this->botonesExtra[] = $arr;
+	}
+
+	public function setHidden($aParams) {
+		$allowed = array('campo','valor');
+
+		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed)) {
+				dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+			}
+		}
+
+		$arr = array(
+			'campo' => $aParams['campo'],
+			'valor'	=> $aParams['valor']
+		);
+		$this->camposHidden[] = $arr;
 	}
 
 	public function setCampo($aParams) {
@@ -313,6 +330,11 @@ class Crud {
 				$data[$campo['campoReal']] = Input::get($campo['campoReal']);
 		}
 		$data['updated_at'] = date_create();
+
+		foreach ($camposHidden as $key=>$val) {
+			$data[$key] = $val;
+		}
+
 		if($id == null){
 			$data['created_at'] = date_create();
 
