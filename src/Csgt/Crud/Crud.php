@@ -18,6 +18,7 @@ class Crud {
 	private $wheresRaw    = array();
 	private $leftJoins    = array();
 	private $botonesExtra = array();
+	private $orders       = array();
 	private $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
 
 	public function getData($showEdit) {
@@ -54,21 +55,25 @@ class Crud {
 		$registros = $query->count();
 		
 		$orders = Input::get('order');
-		foreach($orders as $order){
-			$orderArray = explode(' AS ', $selects[$order['column']]);
-			$query->orderBy($orderArray[0], $order['dir']);
+		if ($orders) {
+			foreach($orders as $order){
+				$orderArray = explode(' AS ', $selects[$order['column']]);
+				$query->orderBy(DB::raw($orderArray[0]), $order['dir']);
+			}
 		}
 
 		$columns = Input::get('columns');
 		$search  = Input::get('search');
 		$i       = 0;
 		$query->where(function($q) use ($columns, $selects, $i, $search){
-			foreach ($columns as $column) {
-				if($column['searchable']){
-					$select = explode(' AS ', $selects[$i]);
-					$q->orWhere($select[0], 'like', '%'.$search['value'].'%');
+			if ($columns) {
+				foreach ($columns as $column) {
+					if($column['searchable']){
+						$select = explode(' AS ', $selects[$i]);
+						$q->orWhere($select[0], 'like', '%'.$search['value'].'%');
+					}
+					$i++;
 				}
-				$i++;
 			}
 		});
 
@@ -129,6 +134,8 @@ class Crud {
 		$class  = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
 		$titulo = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
 
+		if (substr($aParams['url'], -1,1)!='/') $aParams['url'] .= '/';
+
 		$arr = array(
 			'url'      => $aParams['url'],
 			'titulo'	 => $titulo,
@@ -141,17 +148,30 @@ class Crud {
 	public function setHidden($aParams) {
 		$allowed = array('campo','valor');
 
-		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
-			if (!in_array($key, $allowed)) {
+		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed)) 
 				dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
-			}
-		}
+			
 
 		$arr = array(
 			'campo' => $aParams['campo'],
 			'valor'	=> $aParams['valor']
 		);
 		$this->camposHidden[] = $arr;
+	}
+
+	public function setOrderBy($aParams) {
+		$allowed     = array('columna','direccion');
+		$direcciones = array('asc','desc');
+
+		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed))
+				dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+		
+		$columna    = (!array_key_exists('columna', $aParams) ? 0: $aParams['columna']);
+		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
+
+		$this->orders[$columna] = $direccion;
 	}
 
 	public function setCampo($aParams) {
@@ -261,6 +281,7 @@ class Crud {
 			->with('titulo', $this->titulo)
 			->with('columnas', $this->camposShow)
 			->with('permisos', $this->permisos)
+			->with('orders', $this->orders)
 			->with('botonesExtra', $this->botonesExtra);
 	}
 
@@ -331,7 +352,7 @@ class Crud {
 		}
 		$data['updated_at'] = date_create();
 
-		foreach ($camposHidden as $key=>$val) {
+		foreach ($this->camposHidden as $key=>$val) {
 			$data[$key] = $val;
 		}
 

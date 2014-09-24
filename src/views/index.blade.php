@@ -10,6 +10,13 @@
 			var oTable = $('.tablaCatalogo').dataTable({
 				"processing" : true,
 				"serverSide" : true,
+				@if($orders)
+					"order": [
+						@foreach ($orders as $col=>$orden)
+						[ {{$col}}, "{{$orden}}" ],
+						@endforeach
+					],
+				@endif
 				"ajax" : "/{{Request::path()}}/0",
 				"bLengthChange": false,
 				"sDom": '<"top"<"col-md-5 col-titulo"><"col-md-4"f><"col-md-3 col-boton-agregar text-right">><"col-md-12"rt><"bottom"<"col-md-6"i><"col-md-6"p>><"clear">',
