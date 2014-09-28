@@ -58,7 +58,7 @@
 					<div class="col-sm-10">
 						<div class="checkbox">
 					    <label>
-					      {{ Form::checkbox($columna['campoReal'], '1', (Input::old($columna['campoReal']) == 1)? true:false) }} {{ $columna['nombre'] }}
+					      {{ Form::checkbox($columna['campoReal'], '1', ($valor == 1? true:false)) }} {{ $columna['nombre'] }}
 					    </label>
 				    </div>
 				  </div>
