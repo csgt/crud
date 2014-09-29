@@ -105,7 +105,7 @@
 					{{$label}}
 					<div class="col-sm-10">
 						<?php $combokey = ($data ? $data->$columna['combokey'] : '') ?>
-						{{ Form::select($columna['combokey'], $combos[$columna['campoReal']], $combokey, $arr) }}
+						{{ Form::select($columna['combokey'], $combos[$columna['alias']], $combokey, $arr) }}
 					</div>
 				@elseif($columna['tipo'] == 'enum')
 					<?php

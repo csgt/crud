@@ -312,7 +312,7 @@ class Crud {
 
 					$temp[$id] = $nombre;
 				}
-				$combos[$campo['campoReal']] = $temp;
+				$combos[$campo['alias']] = $temp;
 			}
 		}
 
