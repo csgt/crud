@@ -199,6 +199,7 @@ class Crud {
 		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
 		$reglasmensaje = (!array_key_exists('reglasmensaje', $aParams) ? '' : $aParams['reglasmensaje']);
 		$filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
+		$enumarray     = (!array_key_exists('enumarray', $aParams) ? array() : $aParams['enumarray']);
 		$searchable    = true;
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
@@ -206,8 +207,7 @@ class Crud {
 		if($tipo == 'combobox' && ($query == '' || $combokey == '')) dd('Para el tipo combobox el query y combokey son requeridos');
 		if($tipo == 'file' && $filepath == '') dd('Para el tipo file hay que especifiarle el filepath');
 
-		if($tipo == 'emum' && $enumarray == '') dd('Para el tipo enum el enumarray es requerido');
-		else $enumarray = array();
+		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
 		
 		if (!strpos($aParams['campo'], ')')) {
 			$arr = explode('.', $aParams['campo']);

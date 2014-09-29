@@ -65,8 +65,8 @@
 
 				@elseif($columna['tipo'] == 'date')
 					<?php 
-						$arr = explode('-', $valor); 
-						if (count($arr) == 3) $laFecha = $arr[2] . '/' . $arr[1] . '/' . $arr[0];
+						$datearray = explode('-', $valor); 
+						if (count($datearray) == 3) $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
 						else $laFecha = '';
 						$arr['data-date-language'] = 'es';
 						$arr['data-date-pickTime'] = 'false';
@@ -81,10 +81,10 @@
 
 				@elseif($columna['tipo'] == 'datetime')
 					<?php 
-						$arr = explode('-', $valor); 
-						if (count($arr)==3) {
-							$arr2    = explode(' ', $arr[2]);
-							$laFecha = $arr2[0] . '/' . $arr[1] . '/' . $arr[0] . ' ' . $arr2[1];
+						$datearray = explode('-', $valor); 
+						if (count($datearray)==3) {
+							$datearray2 = explode(' ', $datearray[2]);
+							$laFecha    = $datearray2[0] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $datearray2[1];
 						}
 						else $laFecha = '';
 						$arr['data-date-language'] = 'es';
@@ -106,6 +106,15 @@
 					<div class="col-sm-10">
 						<?php $combokey = ($data ? $data->$columna['combokey'] : '') ?>
 						{{ Form::select($columna['combokey'], $combos[$columna['campoReal']], $combokey, $arr) }}
+					</div>
+				@elseif($columna['tipo'] == 'enum')
+					<?php
+						$arr['class'] = 'selectpicker form-control';
+						$arr['data-width'] = 'auto';
+					?>
+					{{$label}}
+					<div class="col-sm-10">
+						{{ Form::select($columna['campoReal'], $columna['enumarray'], $valor,$arr) }}
 					</div>
 				@elseif($columna['tipo'] == 'file')
 					{{$label}}
