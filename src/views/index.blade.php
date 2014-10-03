@@ -64,6 +64,7 @@
 				  	"data" : null,
 				  	"render" : function(data) {
 				  		var fecha = data[{{$i}}];
+				  		if (fecha==null) return null;
 				  		var arrhf = fecha.split(" "); 
 				  		var arrf  = arrhf[0].split("-");
 				  		var hora  = '';
