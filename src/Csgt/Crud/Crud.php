@@ -353,7 +353,8 @@ class Crud {
 		$data['updated_at'] = date_create();
 
 		foreach ($this->camposHidden as $key=>$val) {
-			$data[$key] = $val;
+			//$data[$key] = $val;
+			$data[$campo['campo']] = $campo['valor'];
 		}
 
 		if($id == null){
