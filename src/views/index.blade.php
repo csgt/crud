@@ -193,4 +193,7 @@
     </thead>
  
 	</table>
+	@if(isset($extraView))
+		@include($extraView)
+	@endif
 @stop
