@@ -5,50 +5,50 @@ use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 
 
 class Crud {
-	private $showExport = true;
-	private $perPage    = 20;
-	private $tabla;
-	private $tablaId;
-	private $titulo;
-	private $data;
-	private $camposShow   = array();
-	private $camposEdit   = array();
-	private $camposHidden = array();
-	private $wheres       = array();
-	private $wheresRaw    = array();
-	private $leftJoins    = array();
-	private $botonesExtra = array();
-	private $orders       = array();
-	private $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
+	private static $showExport = true;
+	private static $perPage    = 20;
+	private static $tabla;
+	private static $tablaId;
+	private static $titulo;
+	private static $data;
+	private static $camposShow   = array();
+	private static $camposEdit   = array();
+	private static $camposHidden = array();
+	private static $wheres       = array();
+	private static $wheresRaw    = array();
+	private static $leftJoins    = array();
+	private static $botonesExtra = array();
+	private static $orders       = array();
+	private static $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
 
-	public function getData($showEdit) {
+	public static function getData($showEdit) {
 		$response = array();
 		$dataarr  = array();
 
 		$selects = array();
-		$query = DB::table($this->tabla);
+		$query = DB::table(self::$tabla);
 		
 		if($showEdit=='1')
-			$campos = $this->camposEdit;
+			$campos = self::$camposEdit;
 		else
-			$campos = $this->camposShow;
+			$campos = self::$camposShow;
 
 		foreach ($campos as $campo) {
 			$selects[] = $campo['campo'].' AS '.$campo['alias'];
 		}
-		$selects[] = $this->tablaId;
+		$selects[] = self::$tablaId;
 		
 		$query->selectRaw(implode(',',$selects));
 
-		foreach($this->leftJoins as $leftJoin){
+		foreach(self::$leftJoins as $leftJoin){
 			$query->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
 		}
 
-		foreach($this->wheres as $where){
+		foreach(self::$wheres as $where){
 			$query->where($where['columna'], $where['operador'], $where['valor']);
 		}
 
-		foreach($this->wheresRaw as $whereRaw){
+		foreach(self::$wheresRaw as $whereRaw){
 			$query->whereRaw($whereRaw);
 		}
 
@@ -90,7 +90,7 @@ class Crud {
 		foreach($data as $d){
 			$tmparr = array();
 			foreach($d as $columna => $valor){
-				if ($columna==$this->tablaId) $tmparr[] = Crypt::encrypt($valor);
+				if ($columna==self::$tablaId) $tmparr[] = Crypt::encrypt($valor);
 				else $tmparr[] = $valor;
 			}
 
@@ -101,27 +101,27 @@ class Crud {
 		return  Response::json($response);
 	}
 
-	public function setExport($aBool){
-		$this->showExport = $aBool;
+	public static function setExport($aBool){
+		self::$showExport = $aBool;
 	}
 
-	public function setPerPage($aCuantos){
-		$this->perPage = $aCuantos;
+	public static function setPerPage($aCuantos){
+		self::$perPage = $aCuantos;
 	}
 
-	public function setTabla($aTabla){
-		$this->tabla = $aTabla;
+	public static function setTabla($aTabla){
+		self::$tabla = $aTabla;
 	}
 
-	public function setTablaId($aNombre){
-		$this->tablaId = $aNombre;
+	public static function setTablaId($aNombre){
+		self::$tablaId = $aNombre;
 	}
 
-	public function setTitulo($aNombre){
-		$this->titulo = $aNombre;
+	public static function setTitulo($aNombre){
+		self::$titulo = $aNombre;
 	}
 
-	public function setBotonExtra($aParams) {
+	public static function setBotonExtra($aParams) {
 		$allowed = array('url','titulo','target','icon','class');
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -142,10 +142,10 @@ class Crud {
 			'icon'     => $icon,
 			'class'    => $class,
 		);
-		$this->botonesExtra[] = $arr;
+		self::$botonesExtra[] = $arr;
 	}
 
-	public function setHidden($aParams) {
+	public static function setHidden($aParams) {
 		$allowed = array('campo','valor');
 
 		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
@@ -157,10 +157,10 @@ class Crud {
 			'campo' => $aParams['campo'],
 			'valor'	=> $aParams['valor']
 		);
-		$this->camposHidden[] = $arr;
+		self::$camposHidden[] = $arr;
 	}
 
-	public function setOrderBy($aParams) {
+	public static function setOrderBy($aParams) {
 		$allowed     = array('columna','direccion');
 		$direcciones = array('asc','desc');
 
@@ -171,10 +171,10 @@ class Crud {
 		$columna    = (!array_key_exists('columna', $aParams) ? 0: $aParams['columna']);
 		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
 
-		$this->orders[$columna] = $direccion;
+		self::$orders[$columna] = $direccion;
 	}
 
-	public function setCampo($aParams) {
+	public static function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray','filepath');
 		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file');
@@ -217,7 +217,7 @@ class Crud {
 
 		else {
 			$campoReal  = $aParams['campo'];
-			$alias 			= 'a' . date('U') . count($this->camposShow); //Nos inventamos un alias para los subqueries
+			$alias 			= 'a' . date('U') . count(self::$camposShow); //Nos inventamos un alias para los subqueries
 			$searchable = false;
 		}
 
@@ -240,65 +240,65 @@ class Crud {
 			'enumarray'     => $enumarray,
 			'filepath'			=> $filepath
 		);
-		if ($show) $this->camposShow[] = $arr;
-		if ($edit) $this->camposEdit[] = $arr;
+		if ($show) self::$camposShow[] = $arr;
+		if ($edit) self::$camposEdit[] = $arr;
 	}
 
-	public function setWhere($aColumna, $aOperador, $aValor=null) {
+	public static function setWhere($aColumna, $aOperador, $aValor=null) {
 		if($aValor == null){
 			$aValor    = $aOperador;
 			$aOperador = '=';
 		}
 
-		$this->wheres[] = array('columna'=>$aColumna, 'operador'=>$aOperador, 'valor'=>$aValor);
+		self::$wheres[] = array('columna'=>$aColumna, 'operador'=>$aOperador, 'valor'=>$aValor);
 	}
 
-	public function setWhereRaw($aStatement) {
-		$this->wheresRaw[] = $aStatement;
+	public static function setWhereRaw($aStatement) {
+		self::$wheresRaw[] = $aStatement;
 	}
 
-	public function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2) {
-		$this->leftJoins[] = array('tabla'=>$aTabla, 'col1'=>$aCol1, 'operador'=>$aOperador, 'col2'=>$aCol2);
+	public static function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2) {
+		self::$leftJoins[] = array('tabla'=>$aTabla, 'col1'=>$aCol1, 'operador'=>$aOperador, 'col2'=>$aCol2);
 	}
 
-	public function setPermisos($aPermisos) {
-		$this->permisos = $aPermisos;
+	public static function setPermisos($aPermisos) {
+		self::$permisos = $aPermisos;
 	}
 
-	private function getUrl($aPath) {
+	private static function getUrl($aPath) {
 		$arr = explode('/', $aPath);
 		array_pop($arr);
 		$route = implode('/', $arr);
 		return $route;
 	}
 
-	public function index() {
-		if ($this->tabla=='')   dd('setTabla es obligatorio.');
-		if ($this->tablaId=='') dd('setTablaId es obligatorio.');
+	public static function index() {
+		if (self::$tabla=='')   dd('setTabla es obligatorio.');
+		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
 		return View::make('crud::index')
-			->with('showExport', $this->showExport)
-			->with('perPage', $this->perPage)
-			->with('titulo', $this->titulo)
-			->with('columnas', $this->camposShow)
-			->with('permisos', $this->permisos)
-			->with('orders', $this->orders)
-			->with('botonesExtra', $this->botonesExtra);
+			->with('showExport', self::$showExport)
+			->with('perPage', self::$perPage)
+			->with('titulo', self::$titulo)
+			->with('columnas', self::$camposShow)
+			->with('permisos', self::$permisos)
+			->with('orders', self::$orders)
+			->with('botonesExtra', self::$botonesExtra);
 	}
 
-	public function create($aId) {
+	public static function create($aId) {
 		$data = null;
 		$hijo = 'Nuevo';
 		if(!$aId==0){
-			$data = DB::table($this->tabla)
-				->where($this->tablaId, Crypt::decrypt($aId))
+			$data = DB::table(self::$tabla)
+				->where(self::$tablaId, Crypt::decrypt($aId))
 				->first();
 			$hijo = 'Editar';
 		}
 
-		$route = $this->getUrl(Request::path());
+		$route = self::getUrl(Request::path());
 
 		$combos = null;
-		foreach($this->camposEdit as $campo){
+		foreach(self::$camposEdit as $campo){
 			if($campo['tipo'] == 'combobox'){
 				$resultados = DB::select(DB::raw($campo['query']));
 				$temp       = array();
@@ -318,17 +318,17 @@ class Crud {
 
 
 		return View::make('crud::edit')
-			->with('breadcrum', array('padre'=>array('titulo'=>$this->titulo,'ruta'=>$route), 'hijo'=>$hijo))
-			->with('columnas', $this->camposEdit)
+			->with('breadcrum', array('padre'=>array('titulo'=>self::$titulo,'ruta'=>$route), 'hijo'=>$hijo))
+			->with('columnas', self::$camposEdit)
 			->with('data', $data)
 			->with('combos', $combos);
 	}
 
-	public function store($id=null) {
+	public static function store($id=null) {
 		$data  = array();
 
-		//dd($this->camposEdit);
-		foreach($this->camposEdit as $campo){
+		//dd(self::$camposEdit);
+		foreach(self::$camposEdit as $campo){
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
 			else if ($campo['tipo']=='combobox')
@@ -352,14 +352,14 @@ class Crud {
 		}
 		$data['updated_at'] = date_create();
 
-		foreach ($this->camposHidden as $campo) {
+		foreach (self::$camposHidden as $campo) {
 			$data[$campo['campo']] = $campo['valor'];
 		}
 
 		if($id == null){
 			$data['created_at'] = date_create();
 
-			$query = DB::table($this->tabla)
+			$query = DB::table(self::$tabla)
 				->insert($data);
 
 			Session::flash('message', 'Registro creado exitosamente');
@@ -368,20 +368,20 @@ class Crud {
 		}
 
 		else {
-			$query = DB::table($this->tabla)
-				->where($this->tablaId, Crypt::decrypt($id))
+			$query = DB::table(self::$tabla)
+				->where(self::$tablaId, Crypt::decrypt($id))
 				->update($data);
 
 			Session::flash('message', 'Registro actualizado exitosamente');
 			Session::flash('type', 'success');
-			return Redirect::to($this->getUrl(Request::path()));	
+			return Redirect::to(self::getUrl(Request::path()));	
 		}
 	}
 
-	public function destroy($aId) {
+	public static function destroy($aId) {
 		try{
-			$query = DB::table($this->tabla)
-				->where($this->tablaId, Crypt::decrypt($aId))
+			$query = DB::table(self::$tabla)
+				->where(self::$tablaId, Crypt::decrypt($aId))
 				->delete();
 
 			Session::flash('message', 'Registro borrado exitosamente');
@@ -392,6 +392,6 @@ class Crud {
 			Session::flash('type', 'danger');
 		}
 
-		return Redirect::to($this->getUrl(Request::path()));
+		return Redirect::to(self::getUrl(Request::path()));
 	}
 }
