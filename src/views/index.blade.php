@@ -118,12 +118,15 @@
 			@endif;
 
       $('.tablaCatalogo').each(function(){
+      	var txSearch = $(this).closest('.dataTables_wrapper').find('div[id$=_filter] input');
+      	@if($showSearch)
+	        txSearch.attr('placeholder', 'Buscar').addClass('form-control input-md').removeClass('input-sm').css('width', '100%');
 
-        var txSearch = $(this).closest('.dataTables_wrapper').find('div[id$=_filter] input');
-        txSearch.attr('placeholder', 'Buscar').addClass('form-control input-md').removeClass('input-sm').css('width', '100%');
-
-        var txSearchLabel = $(this).closest('.dataTables_wrapper').find('div[id$=_filter] label');
-			 	txSearchLabel.css('width', '100%').css('margin-bottom','0');
+	        var txSearchLabel = $(this).closest('.dataTables_wrapper').find('div[id$=_filter] label');
+				 	txSearchLabel.css('width', '100%').css('margin-bottom','0');
+				@else
+					txSearch.addClass('hidden');
+			 	@endif
 				
 				var txInfo = $(this).closest('.dataTables_wrapper').find('div[id$=_info]');
 				txInfo.addClass('small text-muted');

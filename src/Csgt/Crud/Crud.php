@@ -6,6 +6,7 @@ use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 
 class Crud {
 	private static $showExport = true;
+	private static $showSearch = true;
 	private static $perPage    = 20;
 	private static $tabla;
 	private static $tablaId;
@@ -103,6 +104,10 @@ class Crud {
 
 	public static function setExport($aBool){
 		self::$showExport = $aBool;
+	}
+
+	public static function setSearch($aBool){
+		self::$showSearch = $aBool;
 	}
 
 	public static function setPerPage($aCuantos){
@@ -276,13 +281,14 @@ class Crud {
 		if (self::$tabla=='')   dd('setTabla es obligatorio.');
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
 		return View::make('crud::index')
-			->with('showExport', self::$showExport)
-			->with('perPage', self::$perPage)
-			->with('titulo', self::$titulo)
-			->with('columnas', self::$camposShow)
-			->with('permisos', self::$permisos)
-			->with('orders', self::$orders)
-			->with('botonesExtra', self::$botonesExtra);
+			->with('showExport', 	self::$showExport)
+			->with('showSearch', 	self::$showSearch)
+			->with('perPage', 		self::$perPage)
+			->with('titulo', 			self::$titulo)
+			->with('columnas', 		self::$camposShow)
+			->with('permisos', 		self::$permisos)
+			->with('orders', 			self::$orders)
+			->with('botonesExtra',self::$botonesExtra);
 	}
 
 	public static function create($aId) {
