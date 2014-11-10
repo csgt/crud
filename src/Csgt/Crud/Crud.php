@@ -139,8 +139,6 @@ class Crud {
 		$class  = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
 		$titulo = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
 
-		if (substr($aParams['url'], -1,1)!='/') $aParams['url'] .= '/';
-
 		$arr = array(
 			'url'      => $aParams['url'],
 			'titulo'	 => $titulo,
@@ -280,6 +278,9 @@ class Crud {
 	public static function index() {
 		if (self::$tabla=='')   dd('setTabla es obligatorio.');
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
+
+		$getVars = $_SERVER['QUERY_STRING']==''?'':'?' . $_SERVER['QUERY_STRING'];
+		
 		return View::make('crud::index')
 			->with('showExport', 	self::$showExport)
 			->with('showSearch', 	self::$showSearch)
@@ -288,7 +289,8 @@ class Crud {
 			->with('columnas', 		self::$camposShow)
 			->with('permisos', 		self::$permisos)
 			->with('orders', 			self::$orders)
-			->with('botonesExtra',self::$botonesExtra);
+			->with('botonesExtra',self::$botonesExtra)
+			->with('getVars', $getVars);
 	}
 
 	public static function create($aId) {
