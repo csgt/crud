@@ -394,7 +394,7 @@ class Crud {
 
 	public static function destroy($aId) {
 		try{
-			if (self::softDelete)
+			if (self::$softDelete)
 				$query = DB::table(self::$tabla)
 					->where(self::$tablaId, Crypt::decrypt($aId))
 					->update(array('deleted_at', date_create()));	
