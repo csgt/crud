@@ -7,6 +7,7 @@ use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 class Crud {
 	private static $showExport = true;
 	private static $showSearch = true;
+	private static $softDelete = false;
 	private static $perPage    = 20;
 	private static $tabla;
 	private static $tablaId;
@@ -52,6 +53,7 @@ class Crud {
 		foreach(self::$wheresRaw as $whereRaw){
 			$query->whereRaw($whereRaw);
 		}
+		if (self::softDelete) $query->whereNull('deleted_at');
 
 		$registros = $query->count();
 		
@@ -108,6 +110,10 @@ class Crud {
 
 	public static function setSearch($aBool){
 		self::$showSearch = $aBool;
+	}
+
+	public static function setSoftDelete($aBool){
+		self::$softDelete = $aBool;
 	}
 
 	public static function setPerPage($aCuantos){
@@ -388,9 +394,14 @@ class Crud {
 
 	public static function destroy($aId) {
 		try{
-			$query = DB::table(self::$tabla)
-				->where(self::$tablaId, Crypt::decrypt($aId))
-				->delete();
+			if (self::softDelete)
+				$query = DB::table(self::$tabla)
+					->where(self::$tablaId, Crypt::decrypt($aId))
+					->update(array('deleted_at', date_create()));	
+			else
+				$query = DB::table(self::$tabla)
+					->where(self::$tablaId, Crypt::decrypt($aId))
+					->delete();
 
 			Session::flash('message', 'Registro borrado exitosamente');
 			Session::flash('type', 'warning');
