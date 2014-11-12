@@ -285,7 +285,7 @@ class Crud {
 		if (self::$tabla=='')   dd('setTabla es obligatorio.');
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
 
-		$getVars = $_SERVER['QUERY_STRING']==''?'': '?' . str_replace('?', '&', $_SERVER['QUERY_STRING']);
+		$getVars = $_SERVER['QUERY_STRING']==''?'': (strpos(Request::url(), '?')===false?'?':'&') . $_SERVER['QUERY_STRING'];
 		
 		return View::make('crud::index')
 			->with('showExport', 	self::$showExport)
