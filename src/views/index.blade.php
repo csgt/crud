@@ -36,7 +36,7 @@
 			    			$urlarr = explode('{id}', $url);
 			    			$parte1 = $urlarr[0];
 			    			$parte2 = (count($urlarr)==1?'':$urlarr[1]);
-			    			if (strpos($url, '?')===true) 
+			    			if (strpos($url, '?')!==false) 
 			    				$getVars = '?' . str_replace('?', '&', substr($getVars,1));
 			    		?>
 							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $getVars}}"><span class="{{$botonExtra["icon"]}}"></span></a>';
