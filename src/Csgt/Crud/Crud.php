@@ -53,7 +53,7 @@ class Crud {
 		foreach(self::$wheresRaw as $whereRaw){
 			$query->whereRaw($whereRaw);
 		}
-		if (self::$softDelete) $query->whereNull('deleted_at');
+		if (self::$softDelete) $query->whereNull(self::$tabla . '.deleted_at');
 
 		$registros = $query->count();
 		
