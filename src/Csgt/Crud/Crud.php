@@ -3,7 +3,6 @@ namespace Csgt\Crud;
 
 use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 
-
 class Crud {
 	private static $showExport = true;
 	private static $showSearch = true;
@@ -284,8 +283,7 @@ class Crud {
 	public static function index() {
 		if (self::$tabla=='')   dd('setTabla es obligatorio.');
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
-
-		$getVars = Request::server('QUERY_STRING') ==''?'': '?' . Request::server('QUERY_STRING');
+		$getVars = Request::server('QUERY_STRING');
 		
 		return View::make('crud::index')
 			->with('showExport', 	self::$showExport)
