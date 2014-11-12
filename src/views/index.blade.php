@@ -1,6 +1,10 @@
 @extends('template/template')
 
 @section('content')
+	<?php
+		$nuevasVars = '';
+		if ($getVars!='') $nuevasVars = '?' . $getVars;
+	?>
   @if($showExport)
     {{HTML::script('/js/dataTables.tableTools.min.js')}}
     {{HTML::style('/css/dataTables.tableTools.min.css')}}
@@ -17,7 +21,7 @@
 						@endforeach
 					],
 				@endif
-				"ajax" : "/{{Request::path()}}/0{{$getVars}}",
+				"ajax" : "/{{Request::path()}}/0{{$nuevasVars}}",
 				"bLengthChange": false,
 				"sDom": '<"top"<"col-md-5 col-titulo"><"col-md-4"f><"col-md-3 col-boton-agregar text-right">><"col-md-12"rt><"bottom"<"col-md-6"i><"col-md-6"p>><"clear">',
 				"iDisplayLength": {{$perPage}},
@@ -42,10 +46,10 @@
 							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $getVars}}"><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
 			    	@if($permisos['edit'])   	
-							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit{{$getVars}}"><span class="glyphicon glyphicon-pencil"></span></a>';
+							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit/{{$nuevasVars}}"><span class="glyphicon glyphicon-pencil"></span></a>';
 						@endif;
 						@if($permisos['delete'])
-							html += '<form action="{{ URL::to(Request::url())}}/' + id + '" class="btn-delete" method="POST">\
+							html += '<form action="{{ URL::to(Request::url())}}/' + id + '{{$nuevasVars}}" class="btn-delete" method="POST">\
 								<input type="hidden" name="_method" value="DELETE">\
 								<button type="submit" class="btn btn-xs btn-danger" title="Borrar" onclick="return confirm(\'¿Está seguro que desea eliminar este registro?\')">\
 								<i class="glyphicon glyphicon-trash"></i>\
@@ -139,7 +143,7 @@
 
 				var divBoton = $(this).closest('.dataTables_wrapper').find('.col-boton-agregar');
 				@if($permisos['add'])
-			 		divBoton.html('<a class="btn btn-success" href="{{ URL::to(Request::url() . '/create/' . $getVars) }}">\
+			 		divBoton.html('<a class="btn btn-success" href="{{ URL::to(Request::url() . '/create/' . $nuevasVars) }}">\
 						<span class="glyphicon glyphicon-plus"></span>&nbsp;Agregar</a>');
 			 	@else
 					divBoton.html('<a></a>');
