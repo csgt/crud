@@ -349,17 +349,21 @@ class Crud {
 		$data  = array();
 
 		//dd(self::$camposEdit);
-		foreach(self::$camposEdit as $campo){
+		foreach(self::$camposEdit as $campo) {
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
 			else if ($campo['tipo']=='combobox')
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
 			else if ($campo['tipo']=='password') {
-				$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+				if($id == null)
+					$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+				else {
+					if(Input::get($campo['campoReal']) <> '')
+						$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+				}
 			}
 			else if ($campo['tipo']=='file') {
-				if (Input::hasFile($campo['campoReal']))
-				{
+				if (Input::hasFile($campo['campoReal'])) {
 					$file = Input::file($campo['campoReal']);
 					
 					$filename = date('Ymdhi').$file->getClientOriginalName();

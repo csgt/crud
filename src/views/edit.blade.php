@@ -46,7 +46,12 @@
 						?>
 						{{ Form::password($columna['campoReal'] . "confirm", $arr) }}
 					</div>
-
+					@if($data)
+						<div class="col-sm-2">&nbsp;</div>
+						<div class="col-sm-10">
+							* Dejar en blanco para no cambiar {{ $columna['nombre'] }}
+						</div>
+					@endif
 				@elseif($columna['tipo'] == 'text')
 					{{$label}}
 					<div class="col-sm-10">
