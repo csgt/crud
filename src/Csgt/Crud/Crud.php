@@ -19,6 +19,7 @@ class Crud {
 	private $leftJoins    = array();
 	private $botonesExtra = array();
 	private $orders       = array();
+	private $groups       = array();
 	private $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
 
 	public function getData($showEdit) {
@@ -50,6 +51,10 @@ class Crud {
 
 		foreach($this->wheresRaw as $whereRaw){
 			$query->whereRaw($whereRaw);
+		}
+
+		foreach($this->groups as $group){
+			$query->groupBy($group);
 		}
 
 		$registros = $query->count();
@@ -158,6 +163,10 @@ class Crud {
 			'valor'	=> $aParams['valor']
 		);
 		$this->camposHidden[] = $arr;
+	}
+
+	public function setGroupBy($aCampo) {
+		$this->groups[] = $aCampo;
 	}
 
 	public function setOrderBy($aParams) {
