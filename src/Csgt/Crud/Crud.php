@@ -20,6 +20,7 @@ class Crud {
 	private static $leftJoins    = array();
 	private static $botonesExtra = array();
 	private static $orders       = array();
+	private static $groups       = array();
 	private static $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
 
 	public static function getData($showEdit) {
@@ -53,6 +54,10 @@ class Crud {
 			$query->whereRaw($whereRaw);
 		}
 		if (self::$softDelete) $query->whereNull(self::$tabla . '.deleted_at');
+
+		foreach(self::$groups as $group) {
+			$query->groupBy($group);
+		}
 
 		$registros = $query->count();
 		
@@ -180,6 +185,10 @@ class Crud {
 		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
 
 		self::$orders[$columna] = $direccion;
+	}
+
+	public function setGroupBy($aCampo) {
+		self::$groups[] = $aCampo;
 	}
 
 	public static function setCampo($aParams) {
