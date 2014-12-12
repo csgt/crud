@@ -187,7 +187,7 @@ class Crud {
 		self::$orders[$columna] = $direccion;
 	}
 
-	public function setGroupBy($aCampo) {
+	public static function setGroupBy($aCampo) {
 		self::$groups[] = $aCampo;
 	}
 
