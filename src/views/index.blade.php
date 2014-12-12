@@ -17,7 +17,7 @@
 				@if($orders)
 					"order": [
 						@foreach ($orders as $col=>$orden)
-						[ {{$col}}, "{{$orden}}" ],
+						[ "{{$col}}", "{{$orden}}" ],
 						@endforeach
 					],
 				@endif
