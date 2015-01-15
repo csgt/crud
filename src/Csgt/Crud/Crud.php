@@ -309,7 +309,7 @@ class Crud {
 			->with('permisos', 		self::$permisos)
 			->with('orders', 			self::$orders)
 			->with('botonesExtra',self::$botonesExtra)
-			->with('nuevasVars', getGetVars());
+			->with('nuevasVars', self::getGetVars());
 	}
 
 	public static function create($aId) {
@@ -349,7 +349,7 @@ class Crud {
 			->with('columnas', self::$camposEdit)
 			->with('data', $data)
 			->with('combos', $combos)
-			->with('nuevasVars', getGetVars());
+			->with('nuevasVars', self::getGetVars());
 	}
 
 	public static function store($id=null) {
