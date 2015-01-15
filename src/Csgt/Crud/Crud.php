@@ -289,11 +289,17 @@ class Crud {
 		return $route;
 	}
 
+	private static function getGetVars(){
+		$getVars = Request::server('QUERY_STRING');
+		$nuevasVars = '';
+		if ($getVars!='') $nuevasVars = '?' . $getVars;
+		return $nuevasVars;
+	}
+
 	public static function index() {
 		if (self::$tabla=='')   dd('setTabla es obligatorio.');
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
-		$getVars = Request::server('QUERY_STRING');
-		
+				
 		return View::make('crud::index')
 			->with('showExport', 	self::$showExport)
 			->with('showSearch', 	self::$showSearch)
@@ -303,7 +309,7 @@ class Crud {
 			->with('permisos', 		self::$permisos)
 			->with('orders', 			self::$orders)
 			->with('botonesExtra',self::$botonesExtra)
-			->with('getVars', $getVars);
+			->with('nuevasVars', getGetVars());
 	}
 
 	public static function create($aId) {
@@ -342,7 +348,8 @@ class Crud {
 			->with('breadcrum', array('padre'=>array('titulo'=>self::$titulo,'ruta'=>$route), 'hijo'=>$hijo))
 			->with('columnas', self::$camposEdit)
 			->with('data', $data)
-			->with('combos', $combos);
+			->with('combos', $combos)
+			->with('nuevasVars', getGetVars());
 	}
 
 	public static function store($id=null) {

@@ -1,10 +1,7 @@
 @extends('template/template')
 
 @section('content')
-	<?php
-		$nuevasVars = '';
-		if ($getVars!='') $nuevasVars = '?' . $getVars;
-	?>
+	
   @if($showExport)
     {{HTML::script('/js/dataTables.tableTools.min.js')}}
     {{HTML::style('/css/dataTables.tableTools.min.css')}}
