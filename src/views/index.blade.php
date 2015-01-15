@@ -37,10 +37,10 @@
 			    			$urlarr = explode('{id}', $url);
 			    			$parte1 = $urlarr[0];
 			    			$parte2 = (count($urlarr)==1?'':$urlarr[1]);
-			    			if ($getVars!='')
-			    				$getVars = (strpos($url, '?')===false?'?':'&') . $getVars;
+			    			if ($nuevasVars!='')
+			    				$nuevasVars = (strpos($url, '?')===false?'?':'&') . $nuevasVars;
 			    		?>
-							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $getVars}}"><span class="{{$botonExtra["icon"]}}"></span></a>';
+							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $nuevasVars}}"><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
 			    	@if($permisos['edit'])   	
 							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit/{{$nuevasVars}}"><span class="glyphicon glyphicon-pencil"></span></a>';
