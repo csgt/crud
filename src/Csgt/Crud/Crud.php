@@ -406,7 +406,7 @@ class Crud {
 
 			Session::flash('message', 'Registro actualizado exitosamente');
 			Session::flash('type', 'success');
-			return Redirect::to(self::getUrl(Request::path()));	
+			return Redirect::to(self::getUrl(Request::path()) . self::getGetVars());	
 		}
 	}
 
