@@ -35,6 +35,7 @@
 			    		<?php 
 			    			$url = $botonExtra["url"];
 			    			$urlarr = explode('{id}', $url);
+			    			$urlVars = '';
 			    			$parte1 = $urlarr[0];
 			    			$parte2 = (count($urlarr)==1?'':$urlarr[1]);
 			    			if ($nuevasVars!='') {
