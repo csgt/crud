@@ -396,7 +396,7 @@ class Crud {
 
 			Session::flash('message', 'Registro creado exitosamente');
 			Session::flash('type', 'success');
-			return Redirect::to(Request::path());
+			return Redirect::to(Request::path() . self::getGetVars());
 		}
 
 		else {
