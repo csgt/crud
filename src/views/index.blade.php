@@ -38,7 +38,7 @@
 			    			$parte1 = $urlarr[0];
 			    			$parte2 = (count($urlarr)==1?'':$urlarr[1]);
 			    			if ($nuevasVars!='')
-			    				$nuevasVars = (strpos($url, '?')===false?'?':'&') . $nuevasVars;
+			    				$nuevasVars = (strpos($url, '?')===false?'?':'&') . substr($nuevasVars,1);
 			    		?>
 							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $nuevasVars}}"><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
