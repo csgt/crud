@@ -362,12 +362,12 @@ class Crud {
 			else if ($campo['tipo']=='combobox')
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
 			else if ($campo['tipo']=='date') {
-				$laFecha = explode(Input::get($campo['campoReal'],'/'));
+				$laFecha = explode('/',Input::get($campo['campoReal']));
 				$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0];
 			}
 			else if ($campo['tipo']=='datetime') {
-				$fechaHora = explode(Input::get($campo['campoReal'], ' '));
-				$laFecha = explode($fechaHora[0],'/');
+				$fechaHora = explode(' ', Input::get($campo['campoReal']));
+				$laFecha = explode('/',$fechaHora[0]);
 				$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0] . ' ' . $fechaHora[1];
 			}
 			else if ($campo['tipo']=='password') {
