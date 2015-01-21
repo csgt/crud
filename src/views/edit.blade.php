@@ -6,9 +6,9 @@
 	  <li class="active">{{ $breadcrum['hijo'] }}</li>
 	</ol>
 	@if(!$data)
-		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta']),'class'=>'form-horizontal','id'=>'frmCrud', 'files'=>'true')) }}
+		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta'] . $nuevasVars),'class'=>'form-horizontal','id'=>'frmCrud', 'files'=>'true')) }}
 	@else
-		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta']),'class'=>'form-horizontal', 'method'=>'put','id'=>'frmCrud', 'files'=>'true')) }}
+		{{ Form::open(array('url'=>URL::to($breadcrum['padre']['ruta'] . $nuevasVars),'class'=>'form-horizontal', 'method'=>'put','id'=>'frmCrud', 'files'=>'true')) }}
 	@endif
 		@foreach($columnas as $columna)
 			<?php 
@@ -46,7 +46,12 @@
 						?>
 						{{ Form::password($columna['campoReal'] . "confirm", $arr) }}
 					</div>
-
+					@if($data)
+						<div class="col-sm-2">&nbsp;</div>
+						<div class="col-sm-10">
+							* Dejar en blanco para no cambiar {{ $columna['nombre'] }}
+						</div>
+					@endif
 				@elseif($columna['tipo'] == 'text')
 					{{$label}}
 					<div class="col-sm-10">

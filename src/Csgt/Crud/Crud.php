@@ -3,10 +3,10 @@ namespace Csgt\Crud;
 
 use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 
-
 class Crud {
 	private static $showExport = true;
 	private static $showSearch = true;
+	private static $softDelete = false;
 	private static $perPage    = 20;
 	private static $tabla;
 	private static $tablaId;
@@ -20,6 +20,7 @@ class Crud {
 	private static $leftJoins    = array();
 	private static $botonesExtra = array();
 	private static $orders       = array();
+	private static $groups       = array();
 	private static $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
 
 	public static function getData($showEdit) {
@@ -51,6 +52,11 @@ class Crud {
 
 		foreach(self::$wheresRaw as $whereRaw){
 			$query->whereRaw($whereRaw);
+		}
+		if (self::$softDelete) $query->whereNull(self::$tabla . '.deleted_at');
+
+		foreach(self::$groups as $group) {
+			$query->groupBy($group);
 		}
 
 		$registros = $query->count();
@@ -110,6 +116,10 @@ class Crud {
 		self::$showSearch = $aBool;
 	}
 
+	public static function setSoftDelete($aBool){
+		self::$softDelete = $aBool;
+	}
+
 	public static function setPerPage($aCuantos){
 		self::$perPage = $aCuantos;
 	}
@@ -138,8 +148,6 @@ class Crud {
 		$icon   = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
 		$class  = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
 		$titulo = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
-
-		if (substr($aParams['url'], -1,1)!='/') $aParams['url'] .= '/';
 
 		$arr = array(
 			'url'      => $aParams['url'],
@@ -177,6 +185,10 @@ class Crud {
 		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
 
 		self::$orders[$columna] = $direccion;
+	}
+
+	public static function setGroupBy($aCampo) {
+		self::$groups[] = $aCampo;
 	}
 
 	public static function setCampo($aParams) {
@@ -278,9 +290,17 @@ class Crud {
 		return $route;
 	}
 
+	private static function getGetVars(){
+		$getVars = Request::server('QUERY_STRING');
+		$nuevasVars = '';
+		if ($getVars!='') $nuevasVars = '?' . $getVars;
+		return $nuevasVars;
+	}
+
 	public static function index() {
 		if (self::$tabla=='')   dd('setTabla es obligatorio.');
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
+				
 		return View::make('crud::index')
 			->with('showExport', 	self::$showExport)
 			->with('showSearch', 	self::$showSearch)
@@ -289,7 +309,8 @@ class Crud {
 			->with('columnas', 		self::$camposShow)
 			->with('permisos', 		self::$permisos)
 			->with('orders', 			self::$orders)
-			->with('botonesExtra',self::$botonesExtra);
+			->with('botonesExtra',self::$botonesExtra)
+			->with('nuevasVars', self::getGetVars());
 	}
 
 	public static function create($aId) {
@@ -328,24 +349,38 @@ class Crud {
 			->with('breadcrum', array('padre'=>array('titulo'=>self::$titulo,'ruta'=>$route), 'hijo'=>$hijo))
 			->with('columnas', self::$camposEdit)
 			->with('data', $data)
-			->with('combos', $combos);
+			->with('combos', $combos)
+			->with('nuevasVars', self::getGetVars());
 	}
 
 	public static function store($id=null) {
 		$data  = array();
 
 		//dd(self::$camposEdit);
-		foreach(self::$camposEdit as $campo){
+		foreach(self::$camposEdit as $campo) {
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
 			else if ($campo['tipo']=='combobox')
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
+			else if ($campo['tipo']=='date') {
+				$laFecha = explode('/',Input::get($campo['campoReal']));
+				$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0];
+			}
+			else if ($campo['tipo']=='datetime') {
+				$fechaHora = explode(' ', Input::get($campo['campoReal']));
+				$laFecha = explode('/',$fechaHora[0]);
+				$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0] . ' ' . $fechaHora[1];
+			}
 			else if ($campo['tipo']=='password') {
-				$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+				if($id == null)
+					$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+				else {
+					if(Input::get($campo['campoReal']) <> '')
+						$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+				}
 			}
 			else if ($campo['tipo']=='file') {
-				if (Input::hasFile($campo['campoReal']))
-				{
+				if (Input::hasFile($campo['campoReal'])) {
 					$file = Input::file($campo['campoReal']);
 					
 					$filename = date('Ymdhi').$file->getClientOriginalName();
@@ -371,7 +406,7 @@ class Crud {
 
 			Session::flash('message', 'Registro creado exitosamente');
 			Session::flash('type', 'success');
-			return Redirect::to(Request::path());
+			return Redirect::to(Request::path() . self::getGetVars());
 		}
 
 		else {
@@ -381,15 +416,21 @@ class Crud {
 
 			Session::flash('message', 'Registro actualizado exitosamente');
 			Session::flash('type', 'success');
-			return Redirect::to(self::getUrl(Request::path()));	
+			return Redirect::to(self::getUrl(Request::path()) . self::getGetVars());	
 		}
 	}
 
 	public static function destroy($aId) {
 		try{
-			$query = DB::table(self::$tabla)
-				->where(self::$tablaId, Crypt::decrypt($aId))
-				->delete();
+			if (self::$softDelete){
+				$query = DB::table(self::$tabla)
+					->where(self::$tablaId, Crypt::decrypt($aId))
+					->update(array('deleted_at'=>date_create()));
+			}
+			else
+				$query = DB::table(self::$tabla)
+					->where(self::$tablaId, Crypt::decrypt($aId))
+					->delete();
 
 			Session::flash('message', 'Registro borrado exitosamente');
 			Session::flash('type', 'warning');
@@ -399,6 +440,6 @@ class Crud {
 			Session::flash('type', 'danger');
 		}
 
-		return Redirect::to(self::getUrl(Request::path()));
+		return Redirect::to(self::getUrl(Request::path()) . '?' . Request::server('QUERY_STRING'));
 	}
 }
