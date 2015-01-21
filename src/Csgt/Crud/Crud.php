@@ -326,8 +326,8 @@ class Crud {
 				->first();
 			$hijo = 'Editar';
 		}
-
-		$route = self::getUrl(Request::path());
+		$path = str_replace($aId, '', Request::path());
+		$route = self::getUrl($path);
 
 		$combos = null;
 		foreach(self::$camposEdit as $campo){
