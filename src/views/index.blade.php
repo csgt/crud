@@ -54,8 +54,7 @@
 			    }
 			  }, 
 			  <?php $i=0; ?>
-			  @foreach ($columnas as $columna)
-			  	{
+			  @foreach ($columnas as $columna) {
 			  		"targets" : {{$i}},
 			  		"class" : "{{$columna["class"]}}",
 			  		"searchable" : "{{$columna["searchable"]}}",
@@ -70,6 +69,14 @@
 				  		var hora  = '';
 				  		if (arrhf.length==2) {hora = ' ' + arrhf[1];}
 				  		return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
+				  	}
+
+					@elseif ($columna["tipo"]=="image") 
+						"data" : null,
+				  	"render" : function(data) {
+				  		var val = data[{{$i}}];
+				  		if (val==null) return null;
+				  		return '<img src="hola.jpg">';
 				  	}
 
 					@elseif ($columna["tipo"]=="numeric") 

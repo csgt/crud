@@ -182,7 +182,7 @@ class Crud {
 	public static function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray','filepath');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -211,6 +211,7 @@ class Crud {
 
 		if($tipo == 'combobox' && ($query == '' || $combokey == '')) dd('Para el tipo combobox el query y combokey son requeridos');
 		if($tipo == 'file' && $filepath == '') dd('Para el tipo file hay que especifiarle el filepath');
+		if($tipo == 'image' && $filepath == '') dd('Para el tipo image hay que especifiarle el filepath');
 
 		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
 		
