@@ -81,7 +81,7 @@
 				  	"render" : function(data) {
 				  		var val = data[{{$i}}];
 				  		if (val==null) return null;
-				  		return '<img src="{{$columna["filepath"]}}' + val + '">';
+				  		return '<img width="{{$columna["filewidth"]}}" src="{{$columna["filepath"]}}' + val + '">';
 				  	}
 
 					@elseif ($columna["tipo"]=="numeric") 
