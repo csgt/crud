@@ -379,7 +379,12 @@ class Crud {
 				$fechaHora = explode(' ', Input::get($campo['campoReal']));
 				if (count($fechaHora)==2) {
 					$laFecha = explode('/',$fechaHora[0]);
-					$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0] . ' ' . $fechaHora[1];
+					if (count($laFecha)<>3) {
+						$data[$campo['campoReal']] = 'null';
+					}
+					else {
+						$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0] . ' ' . $fechaHora[1];
+					}
 				}
 				else {
 					$data[$campo['campoReal']] = 'null';
