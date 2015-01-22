@@ -231,7 +231,7 @@ class Crud {
 		
 		if (!strpos($aParams['campo'], ')')) {
 			$arr = explode('.', $aParams['campo']);
-			if (count($arr)>=2) $campoReal = $arr[1]; else $campoReal = $aParams['campo'];
+			if (count($arr)>=2) $campoReal = $arr[count($arr) - 1]; else $campoReal = $aParams['campo'];
 			$alias = str_replace('.','__', $aParams['campo']);
 		} 
 
