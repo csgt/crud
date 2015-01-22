@@ -72,7 +72,7 @@
 					<?php 
 						$datearray = explode('-', $valor); 
 						if (count($datearray) == 3) $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
-						else $laFecha = '';
+						else $laFecha = null;
 						$arr['data-date-language']  = 'es';
 						$arr['data-date-pickTime']  = 'false';
 						$arr['data-bv-date-format'] = 'DD/MM/YYYY';
@@ -93,7 +93,7 @@
 							$datearray  = explode('-', $datearray2[0]);
 							$laFecha    = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $datearray2[1];
 						}
-						else $laFecha = '';
+						else $laFecha = null;
 						$arr['data-date-language'] = 'es';
 						$arr['data-bv-date-format'] = 'DD/MM/YYYY HH:mm';
 						$arr['data-bv-date']        = 'true';
