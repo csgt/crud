@@ -326,7 +326,7 @@ class Crud {
 				->first();
 			$hijo = 'Editar';
 		}
-		$path = self::getUrl(Request::path());
+		$path  = self::getUrl(Request::path());
 		$route = str_replace($aId, '', $path);
 
 		$combos = null;
@@ -350,7 +350,7 @@ class Crud {
 
 
 		return View::make('crud::edit')
-			->with('breadcrum', array('padre'=>array('titulo'=>self::$titulo,'ruta'=>$route), 'hijo'=>$hijo))
+			->with('breadcrum', array('padre'=>array('titulo'=>self::$titulo,'ruta'=>$path), 'hijo'=>$hijo))
 			->with('columnas', self::$camposEdit)
 			->with('data', $data)
 			->with('combos', $combos)
