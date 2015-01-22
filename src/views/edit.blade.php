@@ -89,10 +89,10 @@
 
 				@elseif($columna['tipo'] == 'datetime')
 					<?php 
-						$datearray = explode('-', $valor); 
-						if (count($datearray)==3) {
-							$datearray2 = explode(' ', $datearray[2]);
-							$laFecha    = $datearray2[0] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $datearray2[1];
+						$datearray2 = explode(' ', $valor); 
+						if (count($datearray2)==2) {
+							$datearray = explode('-', $datearray[0]);
+							$laFecha    = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $datearray2[1];
 						}
 						else $laFecha = '';
 						$arr['data-date-language'] = 'es';
