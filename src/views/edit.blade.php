@@ -75,14 +75,13 @@
 						else $laFecha = '';
 						$arr['data-date-language']  = 'es';
 						$arr['data-date-pickTime']  = 'false';
-						$arr['data-bv-date-format'] = 'DD/MM/YYYY';
+						$arr['data-bv-date-format'] = 'DD/MM/YYYY HH:mm';
 						$arr['data-bv-date']        = 'true';
-						$arr['data-format']         = 'dd/MM/yyyy';
 					?>
 					{{$label}}
 					<div class="col-sm-10">
 						<div id="div{{$columna['campoReal']}}" class="input-group date catalogoFecha">
-							{{ Form::text($columna['campoReal'], '' , $arr) }}
+							{{ Form::text($columna['campoReal'], $laFecha , $arr) }}
 						  <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 						</div>
 					</div>
