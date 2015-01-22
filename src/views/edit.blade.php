@@ -91,7 +91,7 @@
 					<?php 
 						$datearray2 = explode(' ', $valor); 
 						if (count($datearray2)==2) {
-							$datearray = explode('-', $datearray[0]);
+							$datearray  = explode('-', $datearray2[0]);
 							$laFecha    = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $datearray2[1];
 						}
 						else $laFecha = '';
@@ -103,7 +103,7 @@
 					{{$label}}
 					<div class="col-sm-10">
 						<div id="div{{$columna['campoReal']}}" class="input-group date catalogoFecha">
-							{{ Form::text($columna['campoReal'], $valor, $arr) }}
+							{{ Form::text($columna['campoReal'], $laFecha, $arr) }}
 						  <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 						</div>
 					</div>
