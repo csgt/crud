@@ -90,8 +90,9 @@
 					<?php 
 						$datearray2 = explode(' ', $valor); 
 						if (count($datearray2)==2) {
+							$hora = explode(':', $datearray2[1]);
 							$datearray  = explode('-', $datearray2[0]);
-							$laFecha    = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $datearray2[1];
+							$laFecha    = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $hora[0] . ':' . $hora[1];
 						}
 						else $laFecha = null;
 						$arr['data-date-language'] = 'es';
