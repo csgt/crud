@@ -368,7 +368,7 @@ class Crud {
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
 			else if ($campo['tipo']=='date') {
 				$laFecha = explode('/',Input::get($campo['campoReal']));
-				if (count($fechaHora)==3) {
+				if (count($laFecha)==3) {
 					$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0];
 				}
 				else {
