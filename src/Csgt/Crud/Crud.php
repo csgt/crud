@@ -194,7 +194,7 @@ class Crud {
 	public static function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray','filepath','filewidth','fileheight');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -368,7 +368,7 @@ class Crud {
 				$data[$campo['combokey']] = Input::get($campo['combokey']);
 			else if ($campo['tipo']=='date') {
 				$laFecha = explode('/',Input::get($campo['campoReal']));
-				if (count($fechaHora)==3) {
+				if (count($laFecha)==3) {
 					$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0];
 				}
 				else {

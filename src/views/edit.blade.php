@@ -52,7 +52,7 @@
 							* Dejar en blanco para no cambiar {{ $columna['nombre'] }}
 						</div>
 					@endif
-				@elseif($columna['tipo'] == 'text')
+				@elseif($columna['tipo'] == 'textarea')
 					{{$label}}
 					<div class="col-sm-10">
 						{{ Form::textarea($columna['campoReal'], $valor, $arr) }}
