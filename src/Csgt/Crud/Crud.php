@@ -22,6 +22,7 @@ class Crud {
 	private static $orders       = array();
 	private static $groups       = array();
 	private static $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
+	private static $template     = 'template/template';
 
 	public static function getData($showEdit) {
 		$response = array();
@@ -287,6 +288,10 @@ class Crud {
 		self::$permisos = $aPermisos;
 	}
 
+	public static function setTemplate($aTemplate){
+		self::$template = $aTemplate;
+	}
+
 	private static function getUrl($aPath) {
 		$arr = explode('/', $aPath);
 		array_pop($arr);
@@ -306,6 +311,7 @@ class Crud {
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
 				
 		return View::make('crud::index')
+			->with('template',    self::$template)
 			->with('showExport', 	self::$showExport)
 			->with('showSearch', 	self::$showSearch)
 			->with('perPage', 		self::$perPage)
