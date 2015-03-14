@@ -354,12 +354,12 @@ class Crud {
 			}
 		}
 
-
 		return View::make('crud::edit')
-			->with('breadcrum', array('padre'=>array('titulo'=>self::$titulo,'ruta'=>$path), 'hijo'=>$hijo))
-			->with('columnas', self::$camposEdit)
-			->with('data', $data)
-			->with('combos', $combos)
+			->with('template',   self::$template)
+			->with('breadcrum',  array('padre' =>array('titulo'=>self::$titulo,'ruta'=>$path), 'hijo'=>$hijo))
+			->with('columnas',   self::$camposEdit)
+			->with('data',       $data)
+			->with('combos',     $combos)
 			->with('nuevasVars', self::getGetVars());
 	}
 

@@ -141,8 +141,10 @@
   		</div>
 		@endforeach
 		<div class="form-group">
-			<div class="col-sm-2">&nbsp;</div>
-			<div class="col-sm-10">{{ Form::submit('Guardar', array('class' => 'btn btn-primary')) }}</div>	
+			<div class="col-sm-offset-2 col-sm-10">
+				{{ Form::submit('Guardar',  array('class' => 'btn btn-primary')) }}&nbsp;
+				<a href="javascript:back();" class="btn btn-default">Cancelar</a>
+			</div>	
 		</div>
 	{{ Form::close() }}
 	<script type="text/javascript">
