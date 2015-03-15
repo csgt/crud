@@ -84,6 +84,14 @@
 				  		return '<img width="{{$columna["filewidth"]}}" src="{{$columna["filepath"]}}' + val + '">';
 				  	}
 
+				  @elseif ($columna["tipo"]=="file") 
+						"data" : null,
+				  	"render" : function(data) {
+				  		var val = data[{{$i}}];
+				  		if (val==null) return null;
+				  		return '<a href="{{$columna["filepath"]}}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
+				  	}
+
 					@elseif ($columna["tipo"]=="numeric") 
 						"data" : null,
 				  	"render" : function(data) {

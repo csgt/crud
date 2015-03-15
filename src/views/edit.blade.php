@@ -1,4 +1,4 @@
-@extends('template/template')
+@extends($template)
 
 @section('content')
 	<ol class="breadcrumb">
@@ -143,7 +143,7 @@
 		<div class="form-group">
 			<div class="col-sm-offset-2 col-sm-10">
 				{{ Form::submit('Guardar',  array('class' => 'btn btn-primary')) }}&nbsp;
-				<a href="javascript:back();" class="btn btn-default">Cancelar</a>
+				<a href="javascript:window.history.back();" class="btn btn-default">Cancelar</a>
 			</div>	
 		</div>
 	{{ Form::close() }}
