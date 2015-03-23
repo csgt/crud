@@ -73,8 +73,10 @@
 						$datearray = explode('-', $valor); 
 						if (count($datearray) == 3) $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
 						else $laFecha = null;
-						$arr['data-date-language']  = 'es';
-						$arr['data-date-pickTime']  = 'false';
+						$arr['data-date-locale']    = 'es';
+						$arr['data-date-language']  = 'es'; //Backwards compatible con datepicker 2
+						$arr['data-date-pickTime']  = 'false'; //Backwards compatible con datepicker 2
+						$arr['data-date-format']    = 'DD/MM/YYYY';
 						$arr['data-bv-date-format'] = 'DD/MM/YYYY';
 						$arr['data-bv-date']        = 'true';
 					?>
@@ -95,7 +97,9 @@
 							$laFecha    = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $hora[0] . ':' . $hora[1];
 						}
 						else $laFecha = null;
-						$arr['data-date-language'] = 'es';
+						$arr['data-date-locale']    = 'es';
+						$arr['data-date-language']  = 'es'; //Backwards compatible con datepicker 2
+						$arr['data-date-format']    = 'DD/MM/YYYY HH:mm';
 						$arr['data-bv-date-format'] = 'DD/MM/YYYY HH:mm';
 						$arr['data-bv-date']        = 'true';
 					?>
@@ -109,7 +113,7 @@
 
 				@elseif($columna['tipo'] == 'combobox')
 					<?php
-						$arr['class'] = 'selectpicker form-control';
+						$arr['class']      = 'selectpicker form-control';
 						$arr['data-width'] = 'auto';
 					?>
 					{{$label}}
