@@ -409,7 +409,7 @@ class Crud {
 					$file = Input::file($campo['campoReal']);
 					
 					$filename = date('Ymdhi').$file->getClientOriginalName();
-					$file->move($campo['filepath'], $filename);
+					$file->move(public_path() . $campo['filepath'], $filename);
 					
 					$data[$campo['campoReal']] = $filename;
 				}
