@@ -3,8 +3,8 @@
 @section('content')
 	
   @if($showExport)
-    {{HTML::script('/js/dataTables.tableTools.min.js')}}
-    {{HTML::style('/css/dataTables.tableTools.min.css')}}
+    {{HTML::script(Config::get('config.pathToAssets') . 'js/dataTables.tableTools.min.js')}}
+    {{HTML::style(Config::get('config.pathToAssets') . 'css/dataTables.tableTools.min.css')}}
   @endif
 	<script>
 		$(document).ready(function(){
@@ -167,7 +167,7 @@
 
       @if($showExport)
 	      var tableTools = new $.fn.dataTable.TableTools(oTable, {
-	          "sSwfPath": "/swf/copy_csv_xls_pdf.swf",
+	          "sSwfPath": "{{Config::get('config.pathToAssets')}}swf/copy_csv_xls_pdf.swf",
 	          "aButtons": [{
 	            "sExtends": "xls",
 	            "sButtonText": "Excel",
