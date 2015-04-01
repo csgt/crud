@@ -292,9 +292,10 @@ class Crud {
 		self::$template = $aTemplate;
 	}
 
-	private static function getUrl($aPath) {
+	private static function getUrl($aPath, $aEdit=false) {
 		$arr = explode('/', $aPath);
 		array_pop($arr);
+		if($aEdit) array_pop($arr);
 		$route = implode('/', $arr);
 		return $route;
 	}
@@ -324,15 +325,20 @@ class Crud {
 	}
 
 	public static function create($aId) {
-		$data = null;
-		$hijo = 'Nuevo';
+		$data  = null;
+		$hijo  = 'Nuevo';
+
 		if(!$aId==0){
 			$data = DB::table(self::$tabla)
 				->where(self::$tablaId, Crypt::decrypt($aId))
 				->first();
 			$hijo = 'Editar';
+			$path = self::getUrl(Request::path(), true);
 		}
-		$path  = self::getUrl(Request::path());
+		else {
+			$path  = self::getUrl(Request::path(), false);
+		}
+		
 		$route = str_replace($aId, '', $path);
 
 		$combos = null;
@@ -447,7 +453,7 @@ class Crud {
 
 			Session::flash('message', 'Registro actualizado exitosamente');
 			Session::flash('type', 'success');
-			return Redirect::to(self::getUrl(Request::path()) . self::getGetVars());	
+			return Redirect::to(self::getUrl(Request::path()) . self::getGetVars(), false);	
 		}
 	}
 
@@ -471,6 +477,6 @@ class Crud {
 			Session::flash('type', 'danger');
 		}
 
-		return Redirect::to(self::getUrl(Request::path()) . '?' . Request::server('QUERY_STRING'));
+		return Redirect::to(self::getUrl(Request::path()) . '?' . Request::server('QUERY_STRING'), false);
 	}
 }
