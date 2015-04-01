@@ -23,19 +23,19 @@
 
 			?>
 			<div class="form-group">
-
+				<!---------------------------- PASSWORD ---------------------------------->
 	    	@if($columna['tipo'] == 'password')
 	    		{{$label}}
 	    		<div class="col-sm-5">
 	    			<?php
-	    				$arr['placeholder'] ='Password';
-							$arr['data-bv-identical'] = 'true';
-							$arr['data-bv-identical-field'] = $columna['campoReal'] . 'confirm';
+							$arr['placeholder']               = 'Password';
+							$arr['data-bv-identical']         = 'true';
+							$arr['data-bv-identical-field']   = $columna['campoReal'] . 'confirm';
 							$arr['data-bv-identical-message'] = 'Las passwords no coinciden';
 
 							if (!$data) {
-	    					$arr['data-bv-notempty'] = 'true';
-	    					$arr['data-bv-notempty-message'] = 'La password es requerida';
+								$arr['data-bv-notempty']         = 'true';
+								$arr['data-bv-notempty-message'] = 'La password es requerida';
       				}
 	    			?>
 						{{ Form::password($columna['campoReal'], $arr) }}
@@ -49,12 +49,13 @@
 							<p class="help-block">* Dejar en blanco para no cambiar {{ $columna['nombre'] }}</p>
 						@endif
 					</div>
+				<!---------------------------- TEXTAREA ---------------------------------->
 				@elseif($columna['tipo'] == 'textarea')
 					{{$label}}
 					<div class="col-sm-10">
 						{{ Form::textarea($columna['campoReal'], $valor, $arr) }}
 					</div>
-				
+				<!---------------------------- BOOLEAN ---------------------------------->
 				@elseif($columna['tipo'] == 'bool')
 					<div class="col-sm-2">&nbsp;</div>	
 					<div class="col-sm-10">
@@ -64,7 +65,7 @@
 					    </label>
 				    </div>
 				  </div>
-
+				<!---------------------------- DATE ---------------------------------->
 				@elseif($columna['tipo'] == 'date')
 					<?php 
 						$datearray = explode('-', $valor); 
@@ -84,7 +85,7 @@
 						  <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 						</div>
 					</div>
-
+				<!---------------------------- DATETIME ---------------------------------->
 				@elseif($columna['tipo'] == 'datetime')
 					<?php 
 						$datearray2 = explode(' ', $valor); 
@@ -107,7 +108,7 @@
 						  <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 						</div>
 					</div>
-
+				<!---------------------------- COMBOBOX ---------------------------------->
 				@elseif($columna['tipo'] == 'combobox')
 					<?php
 						$arr['class']      = 'selectpicker form-control';
@@ -118,6 +119,7 @@
 						<?php $combokey = ($data ? $data->$columna['combokey'] : '') ?>
 						{{ Form::select($columna['combokey'], $combos[$columna['alias']], $combokey, $arr) }}
 					</div>
+				<!---------------------------- ENUM ---------------------------------->
 				@elseif($columna['tipo'] == 'enum')
 					<?php
 						$arr['class'] = 'selectpicker form-control';
@@ -127,6 +129,7 @@
 					<div class="col-sm-10">
 						{{ Form::select($columna['campoReal'], $columna['enumarray'], $valor,$arr) }}
 					</div>
+				<!---------------------------- FILE/IMAGE ---------------------------------->
 				@elseif(($columna['tipo'] == 'file')||($columna['tipo'] == 'image'))
 					{{$label}}
 					<div class="col-sm-10">
@@ -135,6 +138,13 @@
 							<p class="help-block">{{ $valor }}</p>
 						@endif
 					</div>
+				<!---------------------------- NUMERIC ---------------------------------->
+				@elseif($columna['tipo'] == 'numeric')
+					{{$label}}
+					<div class="col-sm-3">
+	    			{{ Form::text($columna['campoReal'], $valor, $arr) }}
+	    		</div>
+				<!---------------------------- DEFAULT ---------------------------------->
 	    	@else 
 	    		{{$label}}
 					<div class="col-sm-10">
