@@ -414,7 +414,7 @@ class Crud {
 				if (Input::hasFile($campo['campoReal'])) {
 					$file = Input::file($campo['campoReal']);
 					
-					$filename = date('Ymdhi').$file->getClientOriginalName();
+					$filename = mt_rand(1, 1000) . date('Ymdhis');
 					$path     = public_path() . $campo['filepath'];
 
 					if (!file_exists($path)) {
