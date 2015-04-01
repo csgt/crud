@@ -45,13 +45,10 @@
 							$arr['data-bv-identical-field'] = $columna['campoReal'];
 						?>
 						{{ Form::password($columna['campoReal'] . "confirm", $arr) }}
+						@if($data)
+							<p class="help-block">* Dejar en blanco para no cambiar {{ $columna['nombre'] }}</p>
+						@endif
 					</div>
-					@if($data)
-						<div class="col-sm-2">&nbsp;</div>
-						<div class="col-sm-10">
-							* Dejar en blanco para no cambiar {{ $columna['nombre'] }}
-						</div>
-					@endif
 				@elseif($columna['tipo'] == 'textarea')
 					{{$label}}
 					<div class="col-sm-10">
@@ -134,6 +131,9 @@
 					{{$label}}
 					<div class="col-sm-10">
 						{{ Form::file($columna['campoReal']) }}
+						@if($data)
+							<p class="help-block">{{ $valor }}</p>
+						@endif
 					</div>
 	    	@else 
 	    		{{$label}}
