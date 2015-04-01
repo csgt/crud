@@ -361,7 +361,7 @@ class Crud {
 		}
 
 		return View::make('crud::edit')
-			->with('pathstore', self::getUrl(Request::path(), true))
+			->with('pathstore', self::getUrl(Request::path(), false))
 			->with('template',   self::$template)
 			->with('breadcrum',  array('padre' =>array('titulo'=>self::$titulo,'ruta'=>$path), 'hijo'=>$hijo))
 			->with('columnas',   self::$camposEdit)
