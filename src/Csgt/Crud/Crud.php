@@ -404,12 +404,18 @@ class Crud {
 						$data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
 				}
 			}
-			else if ($campo['tipo']=='file') {
+			else if (($campo['tipo']=='file')||($campo['tipo']=='image')) {
 				if (Input::hasFile($campo['campoReal'])) {
 					$file = Input::file($campo['campoReal']);
 					
 					$filename = date('Ymdhi').$file->getClientOriginalName();
-					$file->move(public_path() . $campo['filepath'], $filename);
+					$path     = public_path() . $campo['filepath'];
+
+					if (!file_exists($path)) {
+    				mkdir($path, 0777, true);
+					}
+
+					$file->move($path, $filename);
 					
 					$data[$campo['campoReal']] = $filename;
 				}
