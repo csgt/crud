@@ -139,6 +139,7 @@ class Crud {
 
 	public static function setBotonExtra($aParams) {
 		$allowed = array('url','titulo','target','icon','class');
+
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
 				dd('setBotonExtra no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
@@ -149,12 +150,14 @@ class Crud {
 		$icon   = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
 		$class  = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
 		$titulo = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
+		$target = (!array_key_exists('target', $aParams) ? '': $aParams['target']); 
 
 		$arr = array(
 			'url'      => $aParams['url'],
 			'titulo'	 => $titulo,
 			'icon'     => $icon,
 			'class'    => $class,
+			'target'	 => $target,
 		);
 		self::$botonesExtra[] = $arr;
 	}

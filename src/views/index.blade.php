@@ -41,8 +41,10 @@
 			    			if ($nuevasVars!='') {
 			    				$urlVars = (strpos($url, '?')===false?'?':'&') . substr($nuevasVars,1);
 			    			}
+			    			$target = $botonExtra["target"];
+			    			if ($target<>'') $target='target="' . $target . '"';
 			    		?>
-							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}"><span class="{{$botonExtra["icon"]}}"></span></a>';
+							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" ' . $target . '><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
 			    	@if($permisos['edit'])   	
 							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit/{{$nuevasVars}}"><span class="glyphicon glyphicon-pencil"></span></a>';
