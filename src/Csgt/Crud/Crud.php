@@ -481,6 +481,6 @@ class Crud {
 			Session::flash('type', 'danger');
 		}
 
-		return Redirect::to(self::getUrl(Request::path()) . '?' . Request::server('QUERY_STRING'), false);
+				return Redirect::to(self::getUrl(Request::path(), false) . '?' . Request::server('QUERY_STRING'));
 	}
 }
