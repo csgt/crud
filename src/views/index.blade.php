@@ -197,7 +197,7 @@
     };
 	</script>
 	<style>
-		.btn { margin-left: 2px; margin-right: 2px;}
+		.btn { margin-left: 2px; margin-right: 2px; margin-bottom: 1px; margin-top: 1px;}
 		.top { margin-top: 10px;}
 		.top h2 {margin-top:0; margin-bottom: 0;}
 	</style>
@@ -207,7 +207,7 @@
 			{{ Session::get('message') }}
 		</div>
 	@endif
-	<table class="table table-striped table-bordered table-condensed tablaCatalogo display">
+	<table class="table table-striped table-bordered table-condensed table-hover tablaCatalogo display">
 		<thead>
       <tr>
       	@foreach ($columnas as $columna) 
