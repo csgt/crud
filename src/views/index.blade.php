@@ -3,8 +3,8 @@
 @section('content')
 	
   @if($showExport)
-    {{HTML::script(Config::get('crud::pathToAssets') . 'js/dataTables.tableTools.min.js')}}
-    {{HTML::style(Config::get('crud::pathToAssets') . 'css/dataTables.tableTools.min.css')}}
+    {{HTML::script(Config::get('crud::pathToAssets','/') . 'js/dataTables.tableTools.min.js')}}
+    {{HTML::style(Config::get('crud::pathToAssets','/') . 'css/dataTables.tableTools.min.css')}}
   @endif
 	<script>
 		$(document).ready(function(){
