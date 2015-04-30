@@ -1,18 +1,18 @@
 [
     {
         "name": "illuminate/support",
-        "version": "v4.2.16",
-        "version_normalized": "4.2.16.0",
+        "version": "v4.2.17",
+        "version_normalized": "4.2.17.0",
         "target-dir": "Illuminate/Support",
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/support.git",
-            "reference": "015f51f4d8cb3d9a29e7fe7932843acf15232941"
+            "reference": "db61f3f6d507ce417ca993e1f93585db7efd8b12"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/support/zipball/015f51f4d8cb3d9a29e7fe7932843acf15232941",
-            "reference": "015f51f4d8cb3d9a29e7fe7932843acf15232941",
+            "url": "https://api.github.com/repos/illuminate/support/zipball/db61f3f6d507ce417ca993e1f93585db7efd8b12",
+            "reference": "db61f3f6d507ce417ca993e1f93585db7efd8b12",
             "shasum": ""
         },
         "require": {
@@ -20,9 +20,9 @@
         },
         "require-dev": {
             "jeremeamia/superclosure": "~1.0.1",
-            "patchwork/utf8": "1.1.*"
+            "patchwork/utf8": "~1.1"
         },
-        "time": "2014-12-19 18:02:33",
+        "time": "2015-01-27 20:51:43",
         "type": "library",
         "extra": {
             "branch-alias": {
