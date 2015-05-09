@@ -441,22 +441,33 @@ class Crud {
 
 		if($id == null){
 			$data['created_at'] = date_create();
-
-			$query = DB::table(self::$tabla)
-				->insert($data);
-
-			Session::flash('message', 'Registro creado exitosamente');
-			Session::flash('type', 'success');
+			try {
+				$query = DB::table(self::$tabla)
+					->insert($data);
+				Session::flash('message', 'Registro creado exitosamente');
+				Session::flash('type', 'success');
+			}
+			catch (\Exception $e) {
+				Session::flash('message', 'Error actualizando registro: ' . $e->getMessage());
+				Session::flash('type', 'danger');
+			}
+			
 			return Redirect::to(Request::path() . self::getGetVars());
 		}
 
 		else {
-			$query = DB::table(self::$tabla)
-				->where(self::$tablaId, Crypt::decrypt($id))
-				->update($data);
+			try {
+				$query = DB::table(self::$tabla)
+					->where(self::$tablaId, Crypt::decrypt($id))
+					->update($data);
 
-			Session::flash('message', 'Registro actualizado exitosamente');
-			Session::flash('type', 'success');
+				Session::flash('message', 'Registro actualizado exitosamente');
+				Session::flash('type', 'success');
+			}
+			catch (\Exception $e) {
+				Session::flash('message', 'Error actualizando registro: ' . $e->getMessage());
+				Session::flash('type', 'danger');
+			}
 			return Redirect::to(self::getUrl(Request::path(), false) . self::getGetVars());	
 		}
 	}
