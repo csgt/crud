@@ -121,6 +121,10 @@ class Crud {
 		self::$softDelete = $aBool;
 	}
 
+	public static function getSoftDelete(){
+		return self::$softDelete;
+	}
+
 	public static function setPerPage($aCuantos){
 		self::$perPage = $aCuantos;
 	}
