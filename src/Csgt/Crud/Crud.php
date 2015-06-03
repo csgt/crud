@@ -467,7 +467,9 @@ class Crud {
 			if(in_array($campo['campoReal'], self::$camposSlug)) {
 				$temp  = strtolower(Input::get($campo['campoReal']));
 				$temp  = str_replace(' ', self::$slugSeparator, $temp);
-				$temp  = str_replace('\\', '', $temp);
+				$temp  = str_replace('\\', 'y', $temp);
+				$temp  = str_replace('+', 'y', $temp);
+				$temp  = str_replace('-', '', $temp);
 				$temp  = str_replace('\'', '', $temp);
 				$temp  = str_replace($no_permitidas, $permitidas ,$temp);
 				$slug .= $temp; 
