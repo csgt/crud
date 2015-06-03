@@ -12,17 +12,20 @@ class Crud {
 	private static $tablaId;
 	private static $titulo;
 	private static $data;
-	private static $camposShow   = array();
-	private static $camposEdit   = array();
-	private static $camposHidden = array();
-	private static $wheres       = array();
-	private static $wheresRaw    = array();
-	private static $leftJoins    = array();
-	private static $botonesExtra = array();
-	private static $orders       = array();
-	private static $groups       = array();
-	private static $permisos     = array('add'=>false,'edit'=>false,'delete'=>false);
-	private static $template     = 'template/template';
+	private static $colSlug       = 'slug';
+	private static $slugSeparator = '-';
+	private static $camposSlug    = array();
+	private static $camposShow    = array();
+	private static $camposEdit    = array();
+	private static $camposHidden  = array();
+	private static $wheres        = array();
+	private static $wheresRaw     = array();
+	private static $leftJoins     = array();
+	private static $botonesExtra  = array();
+	private static $orders        = array();
+	private static $groups        = array();
+	private static $permisos      = array('add'=>false,'edit'=>false,'delete'=>false);
+	private static $template      = 'template/template';
 
 	public static function getData($showEdit) {
 		$response = array();
@@ -119,6 +122,28 @@ class Crud {
 
 	public static function setSoftDelete($aBool){
 		self::$softDelete = $aBool;
+	}
+
+	public static function setSlug($aParams){
+		$allowed = array('columnas','campo','separator');
+		
+		foreach ($aParams as $key=>$val) {  //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed))
+				dd('setSlug no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+
+			else {
+				if($key == 'columnas') {
+					foreach($val as $columnas)
+						self::$camposSlug[] = $columnas;
+				}
+
+				elseif($key == 'campo')
+					self::$colSlug = $val;
+
+				elseif($key == 'separator')
+					self::$slugSeparator = $val;
+			}
+		}
 	}
 
 	public static function getSoftDelete(){
@@ -379,8 +404,8 @@ class Crud {
 
 	public static function store($id=null) {
 		$data  = array();
+		$slug  = '';
 
-		//dd(self::$camposEdit);
 		foreach(self::$camposEdit as $campo) {
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
@@ -436,7 +461,17 @@ class Crud {
 			}
 			else
 				$data[$campo['campoReal']] = Input::get($campo['campoReal']);
+
+			if(in_array($campo['campoReal'], self::$camposSlug)) {
+				$temp  = strtolower(Input::get($campo['campoReal']));
+				$temp  = str_replace(' ', self::$slugSeparator, $temp);
+				$slug .= $temp; 
+			}
 		}
+
+		if($slug <> '')
+			$data[self::$colSlug] = $slug;
+
 		$data['updated_at'] = date_create();
 
 		foreach (self::$camposHidden as $campo) {
