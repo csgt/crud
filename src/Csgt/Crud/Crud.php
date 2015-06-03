@@ -474,7 +474,7 @@ class Crud {
 			}
 		}
 
-		if($slug <> '') {
+		if($slug <> '' && $id == null) {
 			$result = DB::table(self::$tabla)->where(self::$colSlug, $slug)->first();
 			if(!$result)
 				$data[self::$colSlug] = $slug;
