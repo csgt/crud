@@ -403,8 +403,10 @@ class Crud {
 	}
 
 	public static function store($id=null) {
-		$data  = array();
-		$slug  = '';
+		$data          = array();
+		$slug          = '';
+		$no_permitidas = array ("á","é","í","ó","ú","Á","É","Í","Ó","Ú","ñ","À","Ã","Ì","Ò","Ù","Ã™","Ã ","Ã¨","Ã¬","Ã²","Ã¹","ç","Ç","Ã¢","ê","Ã®","Ã´","Ã»","Ã‚","ÃŠ","ÃŽ","Ã”","Ã›","ü","Ã¶","Ã–","Ã¯","Ã¤","«","Ò","Ã","Ã„","Ã‹");
+		$permitidas    = array ("a","e","i","o","u","A","E","I","O","U","n","N","A","E","I","O","U","a","e","i","o","u","c","C","a","e","i","o","u","A","E","I","O","U","u","o","O","i","a","e","U","I","A","E");
 
 		foreach(self::$camposEdit as $campo) {
 			if ($campo['tipo']=='bool') 
@@ -465,12 +467,30 @@ class Crud {
 			if(in_array($campo['campoReal'], self::$camposSlug)) {
 				$temp  = strtolower(Input::get($campo['campoReal']));
 				$temp  = str_replace(' ', self::$slugSeparator, $temp);
+				$temp  = str_replace('\\', '', $temp);
+				$temp  = str_replace('\'', '', $temp);
+				$temp  = str_replace($no_permitidas, $permitidas ,$temp);
 				$slug .= $temp; 
 			}
 		}
 
-		if($slug <> '')
-			$data[self::$colSlug] = $slug;
+		if($slug <> '') {
+			$result = DB::table(self::$tabla)->where(self::$colSlug, $slug)->first();
+			if(!$result)
+				$data[self::$colSlug] = $slug;
+
+			else {
+
+				$i = 1;
+				while ($result) {
+					$i++;
+					$result = DB::table(self::$tabla)->where(self::$colSlug, $slug.self::$slugSeparator.$i)->first();
+				}
+				
+				$data[self::$colSlug] = $slug.self::$slugSeparator.$i;
+			}
+
+		}
 
 		$data['updated_at'] = date_create();
 
