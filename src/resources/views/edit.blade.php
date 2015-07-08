@@ -2,13 +2,13 @@
 
 @section('content')
 	<ol class="breadcrumb">
-	  <li><a href="{{ URL::to($breadcrum['padre']['ruta']) }}">{{ $breadcrum['padre']['titulo'] }}</a></li>
-	  <li class="active">{{ $breadcrum['hijo'] }}</li>
+	  <li><a href="{!! URL::to($breadcrum['padre']['ruta']) !!}">{!! $breadcrum['padre']['titulo'] !!}</a></li>
+	  <li class="active">{!! $breadcrum['hijo'] !!}</li>
 	</ol>
 	@if(!$data)
-		{{ Form::open(array('url'=>URL::to($pathstore . $nuevasVars),'class'=>'form-horizontal','id'=>'frmCrud', 'files'=>'true')) }}
+		{!! Form::open(array('url'=>URL::to($pathstore . $nuevasVars),'class'=>'form-horizontal','id'=>'frmCrud', 'files'=>'true')) !!}
 	@else
-		{{ Form::open(array('url'=>URL::to($pathstore . $nuevasVars),'class'=>'form-horizontal', 'method'=>'put','id'=>'frmCrud', 'files'=>'true')) }}
+		{!! Form::open(array('url'=>URL::to($pathstore . $nuevasVars),'class'=>'form-horizontal', 'method'=>'put','id'=>'frmCrud', 'files'=>'true')) !!}
 	@endif
 		@foreach($columnas as $columna)
 			<?php 
@@ -25,7 +25,7 @@
 			<div class="form-group">
 				<!---------------------------- PASSWORD ---------------------------------->
 	    	@if($columna['tipo'] == 'password')
-	    		{{$label}}
+	    		{!!$label!!}
 	    		<div class="col-sm-5">
 	    			<?php
 							$arr['placeholder']               = 'Password';
@@ -38,22 +38,22 @@
 								$arr['data-bv-notempty-message'] = 'La password es requerida';
       				}
 	    			?>
-						{{ Form::password($columna['campoReal'], $arr) }}
+						{!! Form::password($columna['campoReal'], $arr) !!}
 					</div>
 					<div class="col-sm-5">
 						<?php
 							$arr['data-bv-identical-field'] = $columna['campoReal'];
 						?>
-						{{ Form::password($columna['campoReal'] . "confirm", $arr) }}
+						{!! Form::password($columna['campoReal'] . "confirm", $arr) !!}
 						@if($data)
-							<p class="help-block">* Dejar en blanco para no cambiar {{ $columna['nombre'] }}</p>
+							<p class="help-block">* Dejar en blanco para no cambiar {!! $columna['nombre'] !!}</p>
 						@endif
 					</div>
 				<!---------------------------- TEXTAREA ---------------------------------->
 				@elseif($columna['tipo'] == 'textarea')
-					{{$label}}
+					{!!$label!!}
 					<div class="col-sm-10">
-						{{ Form::textarea($columna['campoReal'], $valor, $arr) }}
+						{!! Form::textarea($columna['campoReal'], $valor, $arr) !!}
 					</div>
 				<!---------------------------- BOOLEAN ---------------------------------->
 				@elseif($columna['tipo'] == 'bool')
@@ -61,7 +61,7 @@
 					<div class="col-sm-10">
 						<div class="checkbox">
 					    <label>
-					      {{ Form::checkbox($columna['campoReal'], '1', ($valor == 1? true:false)) }} {{ $columna['nombre'] }}
+					      {!! Form::checkbox($columna['campoReal'], '1', ($valor == 1? true:false)) !!} {!! $columna['nombre'] !!}
 					    </label>
 				    </div>
 				  </div>
@@ -78,10 +78,10 @@
 						$arr['data-bv-date-format'] = 'DD/MM/YYYY';
 						$arr['data-bv-date']        = 'true';
 					?>
-					{{$label}}
+					{!!$label!!}
 					<div class="col-sm-10">
-						<div id="div{{$columna['campoReal']}}" class="input-group date catalogoFecha">
-							{{ Form::text($columna['campoReal'], $laFecha , $arr) }}
+						<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
+							{!! Form::text($columna['campoReal'], $laFecha , $arr) !!}
 						  <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 						</div>
 					</div>
@@ -101,10 +101,10 @@
 						$arr['data-bv-date-format'] = 'DD/MM/YYYY HH:mm';
 						$arr['data-bv-date']        = 'true';
 					?>
-					{{$label}}
+					{!!$label!!}
 					<div class="col-sm-10">
-						<div id="div{{$columna['campoReal']}}" class="input-group date catalogoFecha">
-							{{ Form::text($columna['campoReal'], $laFecha, $arr) }}
+						<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
+							{!! Form::text($columna['campoReal'], $laFecha, $arr) !!}
 						  <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 						</div>
 					</div>
@@ -114,10 +114,10 @@
 						$arr['class']      = 'selectpicker form-control';
 						$arr['data-width'] = 'auto';
 					?>
-					{{$label}}
+					{!!$label!!}
 					<div class="col-sm-10">
 						<?php $combokey = ($data ? $data->$columna['combokey'] : '') ?>
-						{{ Form::select($columna['combokey'], $combos[$columna['alias']], $combokey, $arr) }}
+						{!! Form::select($columna['combokey'], $combos[$columna['alias']], $combokey, $arr) !!}
 					</div>
 				<!---------------------------- ENUM ---------------------------------->
 				@elseif($columna['tipo'] == 'enum')
@@ -125,30 +125,30 @@
 						$arr['class'] = 'selectpicker form-control';
 						$arr['data-width'] = 'auto';
 					?>
-					{{$label}}
+					{!!$label!!}
 					<div class="col-sm-10">
-						{{ Form::select($columna['campoReal'], $columna['enumarray'], $valor,$arr) }}
+						{!! Form::select($columna['campoReal'], $columna['enumarray'], $valor,$arr) !!}
 					</div>
 				<!---------------------------- FILE/IMAGE ---------------------------------->
 				@elseif(($columna['tipo'] == 'file')||($columna['tipo'] == 'image'))
-					{{$label}}
+					{!!$label!!}
 					<div class="col-sm-10">
-						{{ Form::file($columna['campoReal']) }}
+						{!! Form::file($columna['campoReal']) !!}
 						@if($data)
-							<p class="help-block">{{ $valor }}</p>
+							<p class="help-block">{!! $valor !!}</p>
 						@endif
 					</div>
 				<!---------------------------- NUMERIC ---------------------------------->
 				@elseif($columna['tipo'] == 'numeric')
-					{{$label}}
+					{!!$label!!}
 					<div class="col-sm-3">
-	    			{{ Form::text($columna['campoReal'], $valor, $arr) }}
+	    			{!! Form::text($columna['campoReal'], $valor, $arr) !!}
 	    		</div>
 				<!---------------------------- DEFAULT ---------------------------------->
 	    	@else 
-	    		{{$label}}
+	    		{!!$label!!}
 					<div class="col-sm-10">
-	    			{{ Form::text($columna['campoReal'], $valor, $arr) }}
+	    			{!! Form::text($columna['campoReal'], $valor, $arr) !!}
 	    		</div>
 	    	@endif
 		   
@@ -156,11 +156,11 @@
 		@endforeach
 		<div class="form-group">
 			<div class="col-sm-offset-2 col-sm-10">
-				{{ Form::submit('Guardar',  array('class' => 'btn btn-primary')) }}&nbsp;
+				{!! Form::submit('Guardar',  array('class' => 'btn btn-primary')) !!}&nbsp;
 				<a href="javascript:window.history.back();" class="btn btn-default">Cancelar</a>
 			</div>	
 		</div>
-	{{ Form::close() }}
+	{!! Form::close() !!}
 	<script type="text/javascript">
 		$(function() {
 			$('.catalogoFecha').datetimepicker();
