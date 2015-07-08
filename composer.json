@@ -1,22 +1,23 @@
 {
-    "name": "csgt/crud",
-    "description": "",
-    "authors": [
-        {
-            "name": "CS",
-            "email": "info@cs.com.gt"
-        }
+  "name": "csgt/crud",
+  "description": "",
+  "authors": [
+    {
+      "name": "CS",
+      "email": "software@cs.com.gt"
+    }
+  ],
+  "require": {
+    "illuminate/support": "~5.1",
+    "php" : ">=5.3.0"
+  },
+  "autoload": {
+    "classmap": [
+      "src/Http/Controllers"
     ],
-    "require": {
-        "php": ">=5.4.0",
-        "illuminate/support": "4.2.*"
-    },
-    "autoload": {
-        "classmap": [
-        ],
-        "psr-0": {
-            "Csgt\\Crud\\": "src/"
-        }
-    },
-    "minimum-stability": "stable"
+    "psr-4": {
+      "Csgt\\Crud\\": "src"
+    }
+  },
+  "minimum-stability" : "stable"
 }

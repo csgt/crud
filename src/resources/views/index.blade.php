@@ -3,8 +3,8 @@
 @section('content')
 	
   @if($showExport)
-    {{HTML::script(Config::get('crud::pathToAssets','/') . 'js/dataTables.tableTools.min.js')}}
-    {{HTML::style(Config::get('crud::pathToAssets','/') . 'css/dataTables.tableTools.min.css')}}
+  	<script src="{!!Config::get('crud::pathToAssets','/') . 'js/dataTables.tableTools.min.js'!!}"></script>
+    <style src="{!!Config::get('crud::pathToAssets','/') . 'css/dataTables.tableTools.min.css'!!}"></style>
   @endif
 	<script>
 		$(document).ready(function(){
@@ -14,14 +14,14 @@
 				@if($orders)
 					"order": [
 						@foreach ($orders as $col=>$orden)
-						[ "{{$col}}", "{{$orden}}" ],
+						[ "{!!$col!!}", "{!!$orden!!}" ],
 						@endforeach
 					],
 				@endif
-				"ajax" : "/{{Request::path()}}/0{{$nuevasVars}}",
+				"ajax" : "/{!!Request::path()!!}/0{!!$nuevasVars!!}",
 				"bLengthChange": false,
 				"sDom": '<"top"<"col-md-5 col-titulo"><"col-md-4"f><"col-md-3 col-boton-agregar text-right">><"col-md-12"rt><"bottom"<"col-md-6"i><"col-md-6"p>><"clear">',
-				"iDisplayLength": {{$perPage}},
+				"iDisplayLength": {!!$perPage!!},
 				"columnDefs": [{
 			    "targets": -1,
 			    "class": "text-right",
@@ -44,13 +44,13 @@
 			    			$target = $botonExtra["target"];
 			    			if ($target<>'') $target='target="' . $target . '"';
 			    		?>
-							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}}><span class="{{$botonExtra["icon"]}}"></span></a>';
+							html += '<a class="btn btn-xs btn-{!!$botonExtra["class"]!!}" title="{!!$botonExtra["titulo"]!!}" href="{!!$parte1!!}' + id + '{!!$parte2 . $urlVars!!}" {!!$target!!}><span class="{!!$botonExtra["icon"]!!}"></span></a>';
 						@endforeach
 			    	@if($permisos['edit'])   	
-							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit/{{$nuevasVars}}"><span class="glyphicon glyphicon-pencil"></span></a>';
+							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{!! URL::to(Request::url())!!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="glyphicon glyphicon-pencil"></span></a>';
 						@endif;
 						@if($permisos['delete'])
-							html += '<form action="{{ URL::to(Request::url())}}/' + id + '{{$nuevasVars}}" class="btn-delete" method="POST">\
+							html += '<form action="{!! URL::to(Request::url())!!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
 								<input type="hidden" name="_method" value="DELETE">\
 								<button type="submit" class="btn btn-xs btn-danger" title="Borrar" onclick="return confirm(\'¿Está seguro que desea eliminar este registro?\')">\
 								<i class="glyphicon glyphicon-trash"></i>\
@@ -62,14 +62,14 @@
 			  }, 
 			  <?php $i=0; ?>
 			  @foreach ($columnas as $columna) {
-			  		"targets" : {{$i}},
-			  		"class" : "{{$columna["class"]}}",
-			  		"searchable" : "{{$columna["searchable"]}}",
+			  		"targets" : {!!$i!!},
+			  		"class" : "{!!$columna["class"]!!}",
+			  		"searchable" : "{!!$columna["searchable"]!!}",
 
 				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime")) 
 				  	"data" : null,
 				  	"render" : function(data) {
-				  		var fecha = data[{{$i}}];
+				  		var fecha = data[{!!$i!!}];
 				  		if (fecha==null) return null;
 				  		var arrhf = fecha.split(" "); 
 				  		var arrf  = arrhf[0].split("-");
@@ -81,33 +81,33 @@
 					@elseif ($columna["tipo"]=="image") 
 						"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{{$i}}];
+				  		var val = data[{!!$i!!}];
 				  		if (val==null) return null;
-				  		return '<img width="{{$columna["filewidth"]}}" src="{{$columna["filepath"]}}' + val + '">';
+				  		return '<img width="{!!$columna["filewidth"]!!}" src="{!!$columna["filepath"]!!}' + val + '">';
 				  	}
 
 				  @elseif ($columna["tipo"]=="file") 
 						"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{{$i}}];
+				  		var val = data[{!!$i!!}];
 				  		if (val==null) return null;
-				  		return '<a href="{{$columna["filepath"]}}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
+				  		return '<a href="{!!$columna["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
 				  	}
 
 					@elseif ($columna["tipo"]=="numeric") 
 						"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{{$i}}];
+				  		var val = data[{!!$i!!}];
 				  		if (val==null) return null;
 
 				  		val = Number(val);
-				  		return val.formatMoney({{$columna["decimales"]}});
+				  		return val.formatMoney({!!$columna["decimales"]!!});
 				  	}
 
 			  	@elseif($columna["tipo"]=="bool") 
 			  	 	"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{{$i}}];
+				  		var val = data[{!!$i!!}];
 							if (val==null) return null;
 
 							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">Si</span>');
@@ -154,12 +154,12 @@
 				txInfo.addClass('small text-muted');
 
 				var divTitulo = $(this).closest('.dataTables_wrapper').find('.col-titulo');
-				divTitulo.html('<h3 class="text-primary">{{addslashes($titulo)}}</h3>');
+				divTitulo.html('<h3 class="text-primary">{!!addslashes($titulo)!!}</h3>');
 
 
 				var divBoton = $(this).closest('.dataTables_wrapper').find('.col-boton-agregar');
 				@if($permisos['add'])
-			 		divBoton.html('<a class="btn btn-success" href="{{ URL::to(Request::url() . '/create/' . $nuevasVars) }}">\
+			 		divBoton.html('<a class="btn btn-success" href="{!! URL::to(Request::url() . '/create/' . $nuevasVars) !!}">\
 						<span class="glyphicon glyphicon-plus"></span>&nbsp;Agregar</a>');
 			 	@else
 					divBoton.html('<a></a>');
@@ -169,7 +169,7 @@
 
       @if($showExport)
 	      var tableTools = new $.fn.dataTable.TableTools(oTable, {
-	          "sSwfPath": "{{Config::get('crud::pathToAssets')}}swf/copy_csv_xls_pdf.swf",
+	          "sSwfPath": "{!!Config::get('crud::pathToAssets')!!}swf/copy_csv_xls_pdf.swf",
 	          "aButtons": [{
 	            "sExtends": "xls",
 	            "sButtonText": "Excel",
@@ -202,16 +202,16 @@
 		.top h2 {margin-top:0; margin-bottom: 0;}
 	</style>
 	@if(Session::get('message'))
-		<div class="alert alert-{{ Session::get('type') }} alert-dismissable .mrgn-top">
+		<div class="alert alert-{!! Session::get('type') !!} alert-dismissable .mrgn-top">
 			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-			{{ Session::get('message') }}
+			{!! Session::get('message') !!}
 		</div>
 	@endif
 	<table class="table table-striped table-bordered table-condensed table-hover tablaCatalogo display">
 		<thead>
       <tr>
       	@foreach ($columnas as $columna) 
-        	<th>{{$columna["nombre"]}}</th>
+        	<th>{!!$columna["nombre"]!!}</th>
         @endforeach
         <th>&nbsp;</th>
       </tr>

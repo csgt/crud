@@ -8,9 +8,8 @@ class CrudServiceProvider extends ServiceProvider {
 	protected $defer = false;
 
 	public function boot() {
-		$this->package('csgt/crud');
 		AliasLoader::getInstance()->alias('Crud','Csgt\Crud\Crud');
-		include __DIR__.'/../../routes.php';
+		$this->loadViewsFrom(__DIR__ . '/resources/views/','csgtcrud');
 	}
 
 	public function register() {

@@ -343,7 +343,7 @@ class Crud {
 		if (self::$tabla=='')   dd('setTabla es obligatorio.');
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
 				
-		return View::make('crud::index')
+		return view('csgtcrud::index')
 			->with('template',    self::$template)
 			->with('showExport', 	self::$showExport)
 			->with('showSearch', 	self::$showSearch)
