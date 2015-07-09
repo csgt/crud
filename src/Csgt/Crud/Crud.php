@@ -42,7 +42,7 @@ class Crud {
 		foreach ($campos as $campo) {
 			$selects[] = $campo['campo'].' AS '.$campo['alias'];
 		}
-		$selects[] = self::$tablaId;
+		$selects[] = self::$tabla . '.' . self::$tablaId;
 		
 		$query->selectRaw(implode(',',$selects));
 
