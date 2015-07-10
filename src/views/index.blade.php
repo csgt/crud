@@ -74,7 +74,7 @@
 				  		var arrhf = fecha.split(" "); 
 				  		var arrf  = arrhf[0].split("-");
 				  		var hora  = '';
-				  		if (arrhf.length==2) {hora = ' ' + str_copy(arrhf[1],0,5);}
+				  		if (arrhf.length==2) {hora = ' ' + substring(arrhf[1],0,5);}
 				  		return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
 				  	}
 
