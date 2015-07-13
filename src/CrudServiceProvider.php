@@ -1,4 +1,4 @@
-<?php namespace Csgt\Crud;
+<?php namespace Csgt;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\AliasLoader;
@@ -8,7 +8,7 @@ class CrudServiceProvider extends ServiceProvider {
 	protected $defer = false;
 
 	public function boot() {
-		AliasLoader::getInstance()->alias('Crud','Csgt\Crud\Crud');
+		AliasLoader::getInstance()->alias('Crud','Csgt\Crud');
 		$this->loadViewsFrom(__DIR__ . '/resources/views/','csgtcrud');
 	}
 
@@ -21,5 +21,4 @@ class CrudServiceProvider extends ServiceProvider {
 	public function provides() {
 		return array('crud');
 	}
-
 }
