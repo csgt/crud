@@ -8,8 +8,13 @@ class CrudServiceProvider extends ServiceProvider {
 	protected $defer = false;
 
 	public function boot() {
+		$this->mergeConfigFrom(__DIR__ . '/config/csgtcrud.php', 'csgtcrud');
 		AliasLoader::getInstance()->alias('Crud','Csgt\Crud');
 		$this->loadViewsFrom(__DIR__ . '/resources/views/','csgtcrud');
+
+		$this->publishes([
+      __DIR__.'/config/csgtmenu.php' => config_path('csgtmenu.php'),
+    ], 'config');
 	}
 
 	public function register() {
