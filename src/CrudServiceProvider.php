@@ -1,4 +1,4 @@
-<?php namespace Csgt;
+<?php namespace Csgt\Crud;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\AliasLoader;
