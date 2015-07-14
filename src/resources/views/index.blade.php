@@ -52,7 +52,7 @@
 						@if($permisos['delete'])
 							html += '<form action="{!! URL::to(Request::url())!!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
 								<input type="hidden" name="_method" value="DELETE">\
-								<input type="hidden" name="__token" value="{{csrf_token()}}">\
+								<input type="hidden" name="_token" value="{{csrf_token()}}">\
 								<button type="submit" class="btn btn-xs btn-danger" title="Borrar" onclick="return confirm(\'¿Está seguro que desea eliminar este registro?\')">\
 								<i class="glyphicon glyphicon-trash"></i>\
 								</button>\
