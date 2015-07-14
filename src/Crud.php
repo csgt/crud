@@ -1,5 +1,5 @@
 <?php 
-namespace Csgt;
+namespace Csgt\Crud;
 
 use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 
