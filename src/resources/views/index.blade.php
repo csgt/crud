@@ -3,8 +3,8 @@
 @section('content')
 	
   @if($showExport)
-  	<script src="{!!Config::get('csgtcrud::pathToAssets','/') . 'js/dataTables.tableTools.min.js'!!}"></script>
-    <style src="{!!Config::get('csgtcrud::pathToAssets','/') . 'css/dataTables.tableTools.min.css'!!}"></style>
+  	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/dataTables.tableTools.min.js'!!}"></script>
+    <style src="{!!config('csgtcrud.pathToAssets','/') . 'css/dataTables.tableTools.min.css'!!}"></style>
   @endif
 	<script>
 		$(document).ready(function(){
@@ -170,7 +170,7 @@
 
       @if($showExport)
 	      var tableTools = new $.fn.dataTable.TableTools(oTable, {
-	          "sSwfPath": "{!!Config::get('csgtcrud::pathToAssets')!!}swf/copy_csv_xls_pdf.swf",
+	          "sSwfPath": "{!!config('csgtcrud.pathToAssets')!!}swf/copy_csv_xls_pdf.swf",
 	          "aButtons": [{
 	            "sExtends": "xls",
 	            "sButtonText": "Excel",
