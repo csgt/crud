@@ -114,6 +114,13 @@
 							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">Si</span>');
 				  		return text;
 					  }
+					@elseif ($columna["tipo"]=="url") 
+						"data" : null,
+				  	"render" : function(data) {
+				  		var val = data[{!!$i!!}];
+				  		if (val==null) return null;
+				  		return '<a href="' + val + '" target="{!!$columna["target"]!!}">' + val + '</a>';
+				  	}
 		  		@endif
 		  		},
 			  	<?php $i++; ?>

@@ -226,8 +226,9 @@ class Crud {
 
 	public static function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
-			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray','filepath','filewidth','fileheight');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea');
+			'default','reglas', 'reglasmensaje', 'decimales','query','combokey',
+			'enumarray','filepath','filewidth','fileheight','target');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -251,6 +252,7 @@ class Crud {
 		$filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
 		$filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
 		$fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
+		$target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
 		$enumarray     = (!array_key_exists('enumarray', $aParams) ? array() : $aParams['enumarray']);
 		$searchable    = true;
 
@@ -293,7 +295,8 @@ class Crud {
 			'enumarray'     => $enumarray,
 			'filepath'			=> $filepath,
 			'filewidth'			=> $filewidth,
-			'fileheight'		=> $fileheight
+			'fileheight'		=> $fileheight,
+			'target'        => $target,
 		);
 		if ($show) self::$camposShow[] = $arr;
 		if ($edit) self::$camposEdit[] = $arr;
