@@ -165,7 +165,7 @@
 		$(function() {
 			$('.catalogoFecha').datetimepicker();
 			$('.selectpicker').selectpicker();
-			$('#frmCrud').bootstrapValidator({
+			$('#frmCrud').formValidation({
 				message: 'Revisar campo',
 				feedbackIcons: {
           valid: 'glyphicon glyphicon-ok',
