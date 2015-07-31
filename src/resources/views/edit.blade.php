@@ -17,8 +17,8 @@
 				$arr   = array('class'=>'form-control');
 				//dd($columnas);
 				foreach ($columna['reglas'] as $regla) {
-					$arr['data-bv-' . $regla] = 'true';
-					$arr['data-bv-' . $regla . '-message'] = $columna['reglasmensaje'];
+					$arr['data-fv-' . $regla] = 'true';
+					$arr['data-fv-' . $regla . '-message'] = $columna['reglasmensaje'];
 				}
 
 			?>
@@ -29,20 +29,20 @@
 	    		<div class="col-sm-5">
 	    			<?php
 							$arr['placeholder']               = 'Password';
-							$arr['data-bv-identical']         = 'true';
-							$arr['data-bv-identical-field']   = $columna['campoReal'] . 'confirm';
-							$arr['data-bv-identical-message'] = 'Las passwords no coinciden';
+							$arr['data-fv-identical']         = 'true';
+							$arr['data-fv-identical-field']   = $columna['campoReal'] . 'confirm';
+							$arr['data-fv-identical-message'] = 'Las passwords no coinciden';
 
 							if (!$data) {
-								$arr['data-bv-notempty']         = 'true';
-								$arr['data-bv-notempty-message'] = 'La password es requerida';
+								$arr['data-fv-notempty']         = 'true';
+								$arr['data-fv-notempty-message'] = 'La password es requerida';
       				}
 	    			?>
 						{!! Form::password($columna['campoReal'], $arr) !!}
 					</div>
 					<div class="col-sm-5">
 						<?php
-							$arr['data-bv-identical-field'] = $columna['campoReal'];
+							$arr['data-fv-identical-field'] = $columna['campoReal'];
 						?>
 						{!! Form::password($columna['campoReal'] . "confirm", $arr) !!}
 						@if($data)
@@ -75,8 +75,8 @@
 						$arr['data-date-language']  = 'es'; //Backwards compatible con datepicker 2
 						$arr['data-date-pickTime']  = 'false'; //Backwards compatible con datepicker 2
 						$arr['data-date-format']    = 'DD/MM/YYYY';
-						$arr['data-bv-date-format'] = 'DD/MM/YYYY';
-						$arr['data-bv-date']        = 'true';
+						$arr['data-fv-date-format'] = 'DD/MM/YYYY';
+						$arr['data-fv-date']        = 'true';
 					?>
 					{!!$label!!}
 					<div class="col-sm-10">
@@ -98,8 +98,8 @@
 						$arr['data-date-locale']    = 'es';
 						$arr['data-date-language']  = 'es'; //Backwards compatible con datepicker 2
 						$arr['data-date-format']    = 'DD/MM/YYYY HH:mm';
-						$arr['data-bv-date-format'] = 'DD/MM/YYYY HH:mm';
-						$arr['data-bv-date']        = 'true';
+						$arr['data-fv-date-format'] = 'DD/MM/YYYY HH:mm';
+						$arr['data-fv-date']        = 'true';
 					?>
 					{!!$label!!}
 					<div class="col-sm-10">
