@@ -168,7 +168,7 @@
 				$('.pagination').addClass('pagination-sm');
 				$('.dataTables_info').addClass('small text-muted');
 				@if($permisos['add'])
-					$('.btn-group-agregar').html('<button type="button" class="btn btn-success">Agregar</button>');
+					$('.btn-group-agregar').html('<a type="button" class="btn btn-success" href="{!! URL::to(Request::url() . '/create/' . $nuevasVars) !!}">Agregar</a>');
 				@endif
 				$('.dt-buttons').addClass('btn-group-sm');
 				$('div[id$=_filter] input').css('width','100%').attr('placeholder','Buscar');
