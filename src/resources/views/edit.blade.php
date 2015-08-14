@@ -1,6 +1,20 @@
 @extends($template)
 
 @section('content')
+	<?php $includefechas = false;
+ 	foreach($columnas as $columna) {	
+ 		if(($columna['tipo'] == 'date')||($columna['tipo']=='date'))
+ 			$includefechas = true;
+  }
+  ?>
+  @if($includefechas)
+		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/bootstrap-datetimepicker.min.css">
+		<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/moment-with-locales.min.js"></script>
+		<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/bootstrap-datetimepicker.min.js"></script>
+	@endif
+
+	
+
 	<ol class="breadcrumb">
 	  <li><a href="{!! URL::to($breadcrum['padre']['ruta']) !!}">{!! $breadcrum['padre']['titulo'] !!}</a></li>
 	  <li class="active">{!! $breadcrum['hijo'] !!}</li>
