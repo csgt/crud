@@ -3,8 +3,8 @@
 @section('content')
 	
   @if($showExport)
-  	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/dataTables.tableTools.min.js'!!}"></script>
-    <style src="{!!config('csgtcrud.pathToAssets','/') . 'css/dataTables.tableTools.min.css'!!}"></style>
+  	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
+    <style src="{!!config('csgtcrud.pathToAssets','/') . 'css/datatables.min.css'!!}"></style>
   @endif
 	<script>
 		$(document).ready(function(){
