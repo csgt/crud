@@ -4,11 +4,21 @@
 	
   @if($showExport)
   	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
-    <style src="{!!config('csgtcrud.pathToAssets','/') . 'css/datatables.min.css'!!}"></style>
   @endif
-	<script>
+  <?php
+  	foreach ($botonesExtra as $botonExtra) {
+  		$fontawesome = false;
+  		if( strpos($botonExtra['icon'], 'fa-')) {
+  			$fontawesome = true;
+  		} 
+  	}
+  ?>
+  @if($fontawesome)
+  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/font-awesome.min.css'!!}">
+  @endif
+ 	<script>
 		$(document).ready(function(){
-			var oTable = $('.tablaCatalogo').dataTable({
+			var oTable = $('.tabla-catalogo').dataTable({
 				"processing" : true,
 				"serverSide" : true,
 				@if($orders)
@@ -20,7 +30,7 @@
 				@endif
 				"ajax" : "/{!!Request::path()!!}/0{!!$nuevasVars!!}",
 				"bLengthChange": false,
-				"sDom": '<"top"<"col-md-5 col-titulo"><"col-md-4"f><"col-md-3 col-boton-agregar text-right">><"col-md-12"rt><"bottom"<"col-md-6"i><"col-md-6"p>><"clear">',
+				"sDom": '<"row" @if($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"pull-left"i><"pull-right"p>',
 				"iDisplayLength": {!!$perPage!!},
 				"columnDefs": [{
 			    "targets": -1,
@@ -141,57 +151,38 @@
 						"sFirst":"Primera",
 						"sLast":"Ultima"
 					}
-				}
+				},
+				@if($showExport)
+      		buttons: [
+        		'copy', 'excel', 'pdf'
+    			]
+	    @endif
+
 			});
 			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))   	   
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 
-      $('.tablaCatalogo').each(function(){
-      	var txSearch = $(this).closest('.dataTables_wrapper').find('div[id$=_filter] input');
-      	@if($showSearch)
-	        txSearch.attr('placeholder', 'Buscar').addClass('form-control input-md').removeClass('input-sm').css('width', '100%');
-
-	        var txSearchLabel = $(this).closest('.dataTables_wrapper').find('div[id$=_filter] label');
-				 	txSearchLabel.css('width', '100%').css('margin-bottom','0');
-				@else
-					txSearch.addClass('hidden');
-			 	@endif
-				
-				var txInfo = $(this).closest('.dataTables_wrapper').find('div[id$=_info]');
-				txInfo.addClass('small text-muted');
-
-				var divTitulo = $(this).closest('.dataTables_wrapper').find('.col-titulo');
-				divTitulo.html('<h3 class="text-primary">{!!addslashes($titulo)!!}</h3>');
-
-
-				var divBoton = $(this).closest('.dataTables_wrapper').find('.col-boton-agregar');
+			$('.tabla-catalogo').on('init.dt', function(){
+				console.log('init');
+				$('.pagination').addClass('pagination-sm');
+				$('.dataTables_info').addClass('small text-muted');
 				@if($permisos['add'])
-			 		divBoton.html('<a class="btn btn-success" href="{!! URL::to(Request::url() . '/create/' . $nuevasVars) !!}">\
-						<span class="glyphicon glyphicon-plus"></span>&nbsp;Agregar</a>');
-			 	@else
-					divBoton.html('<a></a>');
+					$('.btn-group-agregar').html('<button type="button" class="btn btn-success">Agregar</button>');
 				@endif
+				$('.dt-buttons').addClass('btn-group-sm');
+				$('div[id$=_filter] input').css('width','100%').attr('placeholder','Buscar');
+				$('.dataTables_filter label').css('width','100%');
+			});
 
-      });
-
-      @if($showExport)
-	      var tableTools = new $.fn.dataTable.TableTools(oTable, {
-	          "sSwfPath": "{!!config('csgtcrud.pathToAssets')!!}swf/copy_csv_xls_pdf.swf",
-	          "aButtons": [{
-	            "sExtends": "xls",
-	            "sButtonText": "Excel",
-	            "sButtonClass": "btn btn-default btn-export",
-	            "oSelectorOpts": {
-	                "page": "all"
-	            }
-	          }]
-	      });
-	      $(tableTools.fnContainer()).insertBefore('.col-boton-agregar a');
-	      $('.btn-export').removeClass('DTTT_button');
-	      $('.DTTT_container').css('margin-bottom','0').css('margin-left','4px');
-	      $('.DTTT_container .btn').prepend('<span class="glyphicon glyphicon-save"></span>&nbsp;');
-      @endif
+			$('.tabla-catalogo').on('processing.dt', function(e, settings, processing){
+				console.log('processing');
+				console.log(processing);
+				if (processing==false)
+					$('#modal-procesando').modal('hide');
+				else
+					$('#modal-procesando').modal('show');
+			});
 
 		});
 
@@ -206,16 +197,20 @@
 	</script>
 	<style>
 		.btn { margin-left: 2px; margin-right: 2px; margin-bottom: 1px; margin-top: 1px;}
-		.top { margin-top: 10px;}
-		.top h2 {margin-top:0; margin-bottom: 0;}
+		.hr-crud {margin-top:0; margin-bottom: 4px;}
+		.pagination { margin: 0;}
+		.tabla-catalogo { margin-bottom: 5px;}
 	</style>
+	{!! $titulo !!}
+	<div class="clearfix"></div>
+	<hr class="hr-crud">
 	@if(Session::get('message'))
 		<div class="alert alert-{!! Session::get('type') !!} alert-dismissable .mrgn-top">
 			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
 			{!! Session::get('message') !!}
 		</div>
 	@endif
-	<table class="table table-striped table-bordered table-condensed table-hover tablaCatalogo display">
+	<table class="table table-striped table-bordered table-condensed table-hover tabla-catalogo display">
 		<thead>
       <tr>
       	@foreach ($columnas as $columna) 
@@ -224,8 +219,17 @@
         <th>&nbsp;</th>
       </tr>
     </thead>
- 
 	</table>
+	<div class="modal" id="modal-procesando">
+	  <div class="modal-dialog modal-sm">
+	    <div class="modal-content">
+	      <div class="modal-body text-center">
+	        <h4>Procesando...</h4>
+	      </div>
+	    </div><!-- /.modal-content -->
+	  </div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
 	@if(isset($extraView))
 		@include($extraView)
 	@endif
