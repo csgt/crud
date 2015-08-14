@@ -6,8 +6,8 @@
   	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
   @endif
   <?php
+  	$fontawesome = false;
   	foreach ($botonesExtra as $botonExtra) {
-  		$fontawesome = false;
   		if( strpos($botonExtra['icon'], 'fa-')) {
   			$fontawesome = true;
   		} 
