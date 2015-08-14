@@ -1,19 +1,33 @@
 @extends($template)
 
 @section('content')
-	<?php $includefechas = false;
- 	foreach($columnas as $columna) {	
- 		if(($columna['tipo'] == 'date')||($columna['tipo']=='date'))
- 			$includefechas = true;
-  }
+	<?php 
+		$includefechas = false;
+		$includeselect = false;
+
+	 	foreach($columnas as $columna) {	
+	 		if(($columna['tipo'] == 'date')||($columna['tipo']=='datetime'))
+	 			$includefechas = true;
+
+	 		if(($columna['tipo'] == 'combobox')||($columna['tipo']=='enum'))
+	 			$includeselect = true;
+	  }
   ?>
+  <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/formValidation.min.css">
+  <script src="{!!config('csgtcrud.pathToAssets','/')!!}js/formValidation.min.js"></script>
+	<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/framework/bootstrap.min.js"></script>
+
   @if($includefechas)
-		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/bootstrap-datetimepicker.min.css">
-		<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/moment-with-locales.min.js"></script>
-		<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/bootstrap-datetimepicker.min.js"></script>
+		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/bootstrap-datetimepicker.min.css">
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/moment-with-locales.min.js"></script>
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/bootstrap-datetimepicker.min.js"></script>
 	@endif
 
-	
+ 	@if($includeselect)
+		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/selectize.css">
+		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/selectize.bootstrap3.css">
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/selectize.min.js"></script>
+	@endif
 
 	<ol class="breadcrumb">
 	  <li><a href="{!! URL::to($breadcrum['padre']['ruta']) !!}">{!! $breadcrum['padre']['titulo'] !!}</a></li>
@@ -177,8 +191,12 @@
 	{!! Form::close() !!}
 	<script type="text/javascript">
 		$(function() {
-			$('.catalogoFecha').datetimepicker();
-			$('.selectpicker').selectpicker();
+			@if($includefechas)
+				$('.catalogoFecha').datetimepicker();
+			@endif
+			@if($includeselect)
+				$('.selectpicker').selectize();
+			@endif
 			$('#frmCrud').formValidation({
 				message: 'Revisar campo',
 				feedbackIcons: {
