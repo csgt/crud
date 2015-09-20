@@ -269,11 +269,15 @@ class Crud {
 			if (count($arr)>=2) $campoReal = $arr[count($arr) - 1]; else $campoReal = $aParams['campo'];
 			$alias = str_replace('.','__', $aParams['campo']);
 		} 
-
 		else {
 			$campoReal  = $aParams['campo'];
 			$alias 			= 'a' . date('U') . count(self::$camposShow); //Nos inventamos un alias para los subqueries
 			$searchable = false;
+		}
+
+		if($aParams['campo']==self::$tablaId) {
+			$alias = 'idsinenc'  . count(self::$camposShow);
+			$edit  = false;
 		}
 
 		$arr = array(
