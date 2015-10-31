@@ -512,11 +512,11 @@ class Crud {
 			try {
 				$query = DB::table(self::$tabla)
 					->insert($data);
-				Session::flash('message', 'Registro creado exitosamente');
+				Session::flash('message', trans('csgtcrud::crud.registrook'));
 				Session::flash('type', 'success');
 			}
 			catch (\Exception $e) {
-				Session::flash('message', 'Error actualizando registro: ' . $e->getMessage());
+				Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
 				Session::flash('type', 'danger');
 			}
 			
@@ -529,11 +529,11 @@ class Crud {
 					->where(self::$tablaId, Crypt::decrypt($id))
 					->update($data);
 
-				Session::flash('message', 'Registro actualizado exitosamente');
+				Session::flash('message',  trans('csgtcrud::crud.registrook'));
 				Session::flash('type', 'success');
 			}
 			catch (\Exception $e) {
-				Session::flash('message', 'Error actualizando registro: ' . $e->getMessage());
+				Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
 				Session::flash('type', 'danger');
 			}
 			return Redirect::to(self::getUrl(Request::path(), false) . self::getGetVars());	
@@ -552,11 +552,11 @@ class Crud {
 					->where(self::$tablaId, Crypt::decrypt($aId))
 					->delete();
 
-			Session::flash('message', 'Registro borrado exitosamente');
+			Session::flash('message', trans('csgtcrud::crud.registroeliminado'));
 			Session::flash('type', 'warning');
 
 		} catch (\Exception $e) {
-			Session::flash('message', 'Error al borrar campo. Revisar datos relacionados.');
+			Session::flash('message', trans('csgtcrud::crud.registroelimiandoe'));
 			Session::flash('type', 'danger');
 		}
 

@@ -59,11 +59,11 @@
 							$arr['placeholder']               = 'Password';
 							$arr['data-fv-identical']         = 'true';
 							$arr['data-fv-identical-field']   = $columna['campoReal'] . 'confirm';
-							$arr['data-fv-identical-message'] = 'Las passwords no coinciden';
+							$arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
 
 							if (!$data) {
 								$arr['data-fv-notempty']         = 'true';
-								$arr['data-fv-notempty-message'] = 'La password es requerida';
+								$arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
       				}
 	    			?>
 						{!! Form::password($columna['campoReal'], $arr) !!}
@@ -184,8 +184,8 @@
 		@endforeach
 		<div class="form-group">
 			<div class="col-sm-offset-2 col-sm-10">
-				{!! Form::submit('Guardar',  array('class' => 'btn btn-primary')) !!}&nbsp;
-				<a href="javascript:window.history.back();" class="btn btn-default">Cancelar</a>
+				{!! Form::submit(trans('csgtcrud::crud.guardar'),  array('class' => 'btn btn-primary')) !!}&nbsp;
+				<a href="javascript:window.history.back();" class="btn btn-default">{{trans('csgtcrud::crud.cancelar')}}</a>
 			</div>	
 		</div>
 	{!! Form::close() !!}
@@ -198,7 +198,7 @@
 				$('.selectpicker').selectize();
 			@endif
 			$('#frmCrud').formValidation({
-				message: 'Revisar campo',
+				message: '{{trans('csgtcrud::crud.revisarcampo')}}',
 				feedbackIcons: {
           valid: 'glyphicon glyphicon-ok',
           invalid: 'glyphicon glyphicon-remove',
