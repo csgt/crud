@@ -167,7 +167,8 @@ class Crud {
 	}
 
 	public static function setBotonExtra($aParams) {
-		$allowed = array('url','titulo','target','icon','class');
+		$allowed = array('url','titulo','target','icon','class','confirm','confirmmessage');
+
 
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -176,18 +177,24 @@ class Crud {
 		}
 		if(!array_key_exists('url', $aParams)) dd('setBotonExtra debe tener un valor para "url"');
 
-		$icon   = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
-		$class  = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
-		$titulo = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
-		$target = (!array_key_exists('target', $aParams) ? '': $aParams['target']); 
+		$icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
+		$class          = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
+		$titulo         = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
+		$target         = (!array_key_exists('target', $aParams) ? '': $aParams['target']); 
+		$confirm        = (!array_key_exists('confirm', $aParams) ? false: $aParams['confirm']);
+		$confirmmessage = (!array_key_exists('confirmmessage', $aParams) ? '¿Estas seguro?': $aParams['confirmmessage']);
 
-		$arr = array(
-			'url'      => $aParams['url'],
-			'titulo'	 => $titulo,
-			'icon'     => $icon,
-			'class'    => $class,
-			'target'	 => $target,
-		);
+
+		$arr = [
+			'url'            => $aParams['url'],
+			'titulo'         => $titulo,
+			'icon'           => $icon,
+			'class'          => $class,
+			'target'         => $target,
+			'confirm'        => $confirm,
+			'confirmmessage' => $confirmmessage,
+		];
+		
 		self::$botonesExtra[] = $arr;
 	}
 
