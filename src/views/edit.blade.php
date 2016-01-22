@@ -12,7 +12,7 @@
 	@endif
 		@foreach($columnas as $columna)
 			<?php 
-				$valor = ($data ? $data->$columna['campoReal'] : $columna['default']); 
+				$valor = ($data ? $data->{$columna['campoReal']} : $columna['default']); 
 				$label = '<label for="' . $columna['campoReal'] . '" class="col-sm-2 control-label">' . $columna['nombre'] . '</label>'; 
 				$arr   = array('class'=>'form-control');
 				//dd($columnas);
