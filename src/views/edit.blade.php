@@ -116,7 +116,7 @@
 					?>
 					{{$label}}
 					<div class="col-sm-10">
-						<?php $combokey = ($data ? $data->$columna['combokey'] : '') ?>
+						<?php $combokey = ($data ? $data->{$columna['combokey']} : '') ?>
 						{{ Form::select($columna['combokey'], $combos[$columna['alias']], $combokey, $arr) }}
 					</div>
 				<!---------------------------- ENUM ---------------------------------->
