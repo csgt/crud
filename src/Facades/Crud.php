@@ -1,4 +1,4 @@
-<?php namespace namespace Csgt\Crud\Facades;
+<?php namespace Csgt\Crud\Facades;
  
 use Illuminate\Support\Facades\Facade;
  
