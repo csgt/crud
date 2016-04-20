@@ -2,8 +2,9 @@
 
 @section('content')
 	<?php 
-		$includefechas = false;
-		$includeselect = false;
+		$includefechas     = false;
+		$includeselect     = false;
+		$includesummernote = false;
 
 	 	foreach($columnas as $columna) {	
 	 		if(($columna['tipo'] == 'date')||($columna['tipo']=='datetime'))
@@ -11,6 +12,9 @@
 
 	 		if(($columna['tipo'] == 'combobox')||($columna['tipo']=='enum'))
 	 			$includeselect = true;
+
+	 		if($columna['tipo'] == 'summernote')
+	 			$includesummernote = true;
 	  }
   ?>
   <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/formValidation.min.css">
@@ -29,6 +33,11 @@
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/selectize.min.js"></script>
 	@endif
 
+	@if($includesummernote)
+		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/summernote.min.css">
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote.min.js"></script>
+	@endif
+
 	<ol class="breadcrumb">
 	  <li><a href="{!! URL::to($breadcrum['padre']['ruta']) !!}">{!! $breadcrum['padre']['titulo'] !!}</a></li>
 	  <li class="active">{!! $breadcrum['hijo'] !!}</li>
@@ -42,7 +51,7 @@
 			<?php 
 				$valor = ($data ? $data->{$columna['campoReal']} : $columna['default']); 
 				$label = '<label for="' . $columna['campoReal'] . '" class="col-sm-2 control-label">' . $columna['nombre'] . '</label>'; 
-				$arr   = array('class'=>'form-control');
+				$arr   = ['class'=>'form-control'];
 				//dd($columnas);
 				foreach ($columna['reglas'] as $regla) {
 					$arr['data-fv-' . $regla] = 'true';
@@ -81,6 +90,13 @@
 				@elseif($columna['tipo'] == 'textarea')
 					{!!$label!!}
 					<div class="col-sm-10">
+						{!! Form::textarea($columna['campoReal'], $valor, $arr) !!}
+					</div>
+				<!---------------------------- SUMMERNOTE ---------------------------------->
+				@elseif($columna['tipo'] == 'summernote')
+					{!!$label!!}
+					<div class="col-sm-10">
+						<?php $arr   = ['class'=>'summernote']; ?>
 						{!! Form::textarea($columna['campoReal'], $valor, $arr) !!}
 					</div>
 				<!---------------------------- BOOLEAN ---------------------------------->
@@ -196,6 +212,11 @@
 			@endif
 			@if($includeselect)
 				$('.selectpicker').selectize();
+			@endif
+			@if($includesummernote)
+				$('.summernote').summernote({
+					'height' : 300,
+				});
 			@endif
 			$('#frmCrud').formValidation({
 				message: '{{trans('csgtcrud::crud.revisarcampo')}}',

@@ -235,7 +235,7 @@ class Crud {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','query','combokey',
 			'enumarray','filepath','filewidth','fileheight','target');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -251,7 +251,7 @@ class Crud {
 		$tipo          = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
 		$class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
 		$default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
-		$reglas        = (!array_key_exists('reglas', $aParams) ? array() : $aParams['reglas']);
+		$reglas        = (!array_key_exists('reglas', $aParams) ? [] : $aParams['reglas']);
 		$decimales     = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
 		$query         = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
 		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
@@ -260,7 +260,7 @@ class Crud {
 		$filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
 		$fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
 		$target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
-		$enumarray     = (!array_key_exists('enumarray', $aParams) ? array() : $aParams['enumarray']);
+		$enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
 		$searchable    = true;
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
