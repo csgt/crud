@@ -36,6 +36,7 @@
 	@if($includesummernote)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/summernote.min.css">
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote.min.js"></script>
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote-es-ES.js"></script>
 	@endif
 
 	<ol class="breadcrumb">
@@ -215,7 +216,7 @@
 			@endif
 			@if($includesummernote)
 				$('.summernote').summernote({
-					'height' : 300,
+					'lang'   : 'es-ES',
 				});
 			@endif
 			$('#frmCrud').formValidation({
