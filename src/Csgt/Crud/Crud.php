@@ -415,8 +415,12 @@ class Crud {
 		foreach(self::$camposEdit as $campo) {
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
-			else if ($campo['tipo']=='combobox')
-				$data[$campo['combokey']] = Input::get($campo['combokey']);
+			else if ($campo['tipo']=='combobox') {
+				if (Input::get($campo['combokey'])=='') 
+					$data[$campo['combokey']] = 'null';
+				else 
+					$data[$campo['combokey']] = Input::get($campo['combokey']);
+			}
 			else if ($campo['tipo']=='date') {
 				$laFecha = explode('/',Input::get($campo['campoReal']));
 				if (count($laFecha)==3) {
