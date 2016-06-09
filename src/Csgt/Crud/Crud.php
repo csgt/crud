@@ -417,7 +417,7 @@ class Crud {
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
 			else if ($campo['tipo']=='combobox') {
 				if (Input::get($campo['combokey'])=='') 
-					$data[$campo['combokey']] = 'null';
+					$data[$campo['combokey']] = null;
 				else 
 					$data[$campo['combokey']] = Input::get($campo['combokey']);
 			}
