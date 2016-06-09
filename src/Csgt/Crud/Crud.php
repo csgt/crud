@@ -397,7 +397,7 @@ class Crud {
 		}
 
 		return View::make('crud::edit')
-			->with('pathstore', self::getUrl(Request::path(), false))
+			->with('pathstore',  self::getUrl(Request::path(), false))
 			->with('template',   self::$template)
 			->with('breadcrum',  array('padre' =>array('titulo'=>self::$titulo,'ruta'=>$path), 'hijo'=>$hijo))
 			->with('columnas',   self::$camposEdit)
@@ -427,7 +427,7 @@ class Crud {
 					$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0];
 				}
 				else {
-					$data[$campo['campoReal']] = 'null';
+					$data[$campo['campoReal']] = null;
 				}
 			}
 			else if ($campo['tipo']=='datetime') {
@@ -435,14 +435,14 @@ class Crud {
 				if (count($fechaHora)==2) {
 					$laFecha = explode('/',$fechaHora[0]);
 					if (count($laFecha)<>3) {
-						$data[$campo['campoReal']] = 'null';
+						$data[$campo['campoReal']] = null;
 					}
 					else {
 						$data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0] . ' ' . $fechaHora[1];
 					}
 				}
 				else {
-					$data[$campo['campoReal']] = 'null';
+					$data[$campo['campoReal']] = null;
 				}
 			}
 			else if ($campo['tipo']=='password') {
