@@ -353,6 +353,7 @@ class Crud {
 		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
 				
 		return View::make('crud::index')
+			->with('stateSave',   self::$stateSave)
 			->with('template',    self::$template)
 			->with('showExport', 	self::$showExport)
 			->with('showSearch', 	self::$showSearch)
