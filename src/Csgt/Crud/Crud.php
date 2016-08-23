@@ -6,6 +6,7 @@ use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 class Crud {
 	private static $showExport = true;
 	private static $showSearch = true;
+	private static $stateSave  = true;
 	private static $softDelete = false;
 	private static $perPage    = 20;
 	private static $tabla;
@@ -122,6 +123,10 @@ class Crud {
 
 	public static function setSoftDelete($aBool){
 		self::$softDelete = $aBool;
+	}
+
+	public static function setStateSave($aBool){
+		self::$stateSave = $aBool;
 	}
 
 	public static function setSlug($aParams){

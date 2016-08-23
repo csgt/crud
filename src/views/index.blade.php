@@ -11,6 +11,9 @@
 			var oTable = $('.tablaCatalogo').dataTable({
 				"processing" : true,
 				"serverSide" : true,
+				@if($stateSave)
+				"stateSave"  : true,
+				@endif
 				@if($orders)
 					"order": [
 						@foreach ($orders as $col=>$orden)
