@@ -6,6 +6,7 @@ use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
 class Crud {
 	private static $showExport = true;
 	private static $showSearch = true;
+	private static $stateSave  = true;
 	private static $softDelete = false;
 	private static $perPage    = 20;
 	private static $tabla;
@@ -124,6 +125,10 @@ class Crud {
 		self::$softDelete = $aBool;
 	}
 
+	public static function setStateSave($aBool){
+		self::$stateSave = $aBool;
+	}
+	
 	public static function setSlug($aParams){
 		$allowed = array('columnas','campo','separator');
 		
@@ -359,6 +364,7 @@ class Crud {
 				
 		return view('csgtcrud::index')
 			->with('template',    self::$template)
+			->with('stateSave',   self::$stateSave)
 			->with('showExport', 	self::$showExport)
 			->with('showSearch', 	self::$showSearch)
 			->with('perPage', 		self::$perPage)
