@@ -1,9 +1,217 @@
 <?php 
 namespace Csgt\Crud;
 
-use Hash, View, DB, Input, Response, Request, Session, Redirect, Crypt;
+use Illuminate\Routing\Controller as BaseController;;
+use Response;
+use Crypt;
+use Illuminate\Http\Request;
 
-class Crud {
+class CrudController extends BaseController {
+	protected $uniqueid   = '___id___';
+	protected $modelo;
+	protected $showExport = true;
+	protected $showSearch = true;
+	protected $stateSave  = true;
+	protected $layout     = 'layouts.app';
+	protected $perPage    = 50;
+	protected $titulo     = '';
+	protected $campos = [];
+	protected $permisos   = ['add'=>true,'edit'=>true,'delete'=>true];
+	protected $orders     = [];
+	protected $botonesExtra = [];
+	protected $joins = [];
+	protected $leftJoins = [];
+	protected $wheres = [];
+	protected $wheresRaw = [];
+
+
+	public function index() {
+		return view('csgtcrud::index')
+			->with('layout',       $this->layout)
+			->with('stateSave',    $this->stateSave)
+			->with('showExport', 	 $this->showExport)
+			->with('showSearch', 	 $this->showSearch)
+			->with('perPage', 		 $this->perPage)
+			->with('titulo', 			 $this->titulo)
+			->with('columnas', 		 $this->getCamposShow())
+			->with('permisos', 		 $this->permisos)
+			->with('orders', 			 $this->orders)
+			->with('botonesExtra', $this->botonesExtra)
+			->with('nuevasVars',  '');
+	}
+
+	private function getCamposShow(){
+		return array_values(array_filter($this->campos, function($c){ return $c['show'] == true; }));
+	}
+
+	private function getSelect($aCampos){
+		return array_map(function($c){ return $c['campo']; }, $aCampos);
+	}
+
+	public function data(Request $request){
+		//Definimos las variables que nos ayudar'an en el proceso de devolver la data
+		$search = $request->search;
+		$columns = $this->getCamposShow();
+		$campos = $this->getSelect($columns);
+		$recordsFiltered = 0;
+		$recordsTotal = 0;
+		//Se obtienen los campos a mostrar desde el modelo
+		$data = $this->modelo->select($campos)
+			->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
+		//Aplicamos los joins hechos por los modelos
+		foreach ($this->joins as $join){
+			$data->with($join);
+			//$data->with([$join => function($query){ return $query->get([])->where(''); }]);
+		}
+		//Aplicamos los left-joins
+		foreach($this->leftJoins as $leftJoin){
+			$data->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
+		}
+		//Filtramos a partir del where
+		foreach($this->wheres as $where){
+			$data->where($where['columna'], $where['operador'], $where['valor']);
+		}
+		//Filtramos a partir de WhereRaw
+		foreach($this->wheresRaw as $whereRaw){
+			$data->whereRaw($whereRaw);
+		}
+		//Obtenemos la cantidad de registros antes de filtrar
+		$recordsTotal = $data->count();
+		//Filtramos con el campo de la vista
+		$data->where(function($q) use ($columns, $search){
+			if ($columns) {
+				foreach ($columns as $column) {
+					if($column['searchable']){
+						//$select = explode(' AS ', $selects[$i]);
+						$q->orWhere($column['campo'], 'like', '%'.$search['value'].'%');
+					}
+				}
+			}
+		});
+		//Obtenemos la cantidad de registros luego de haber filtrado
+		$recordsFiltered = $data->count();
+		//Filtramos los registros y obtenemos el arreglo con la data
+		$items = $data
+			->skip($request->start)
+			->take($request->length)
+			->get()
+			->toArray();
+
+		$arr = [];
+		foreach($items as $item) {
+			$cols = [];
+			foreach($item as $colName => $col) {
+				if ($colName==$this->uniqueid) $cols[] = Crypt::encrypt($col);
+				else $cols[] = $col;
+			}
+			$arr[] = $cols;
+		}
+		return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
+	}
+
+	public function setCampo($aParams) {
+		$allowed = ['campo','nombre','editable','show','tipo','class',
+			'default','reglas', 'reglasmensaje', 'decimales','query','combokey',
+			'enumarray','filepath','filewidth','fileheight','target'];
+		$tipos   = ['string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote'];
+		
+		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed)) {
+				dd('setCampo no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+			}
+		}
+
+		if(!array_key_exists('campo', $aParams)) dd('setCampo debe tener un valor para "campo"');
+
+		$nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']); 
+		$edit          = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
+		$show          = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
+		$tipo          = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
+		$class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
+		$default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
+		$reglas        = (!array_key_exists('reglas', $aParams) ? [] : $aParams['reglas']);
+		$decimales     = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
+		$query         = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
+		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
+		$reglasmensaje = (!array_key_exists('reglasmensaje', $aParams) ? '' : $aParams['reglasmensaje']);
+		$filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
+		$filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
+		$fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
+		$target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
+		$enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
+		$searchable    = true;
+
+		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
+
+		if($tipo == 'combobox' && ($query == '' || $combokey == '')) dd('Para el tipo combobox el query y combokey son requeridos');
+		if($tipo == 'file' && $filepath == '') dd('Para el tipo file hay que especifiarle el filepath');
+		if($tipo == 'image' && $filepath == '') dd('Para el tipo image hay que especifiarle el filepath');
+
+		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
+		
+		if (!strpos($aParams['campo'], ')')) {
+			$arr = explode('.', $aParams['campo']);
+			if (count($arr)>=2) $campoReal = $arr[count($arr) - 1]; else $campoReal = $aParams['campo'];
+			$alias = str_replace('.','__', $aParams['campo']);
+		} 
+		else {
+			$campoReal  = $aParams['campo'];
+			$alias 			= 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
+			$searchable = false;
+		}
+
+		if($aParams['campo']==$this->modelo->getKeyName()) {
+			$alias = 'idsinenc'  . count($this->getCamposShow());
+			$edit  = false;
+		}
+
+		$arr = array(
+			'nombre'   			=> $nombre,
+			'campo'    			=> $aParams['campo'],
+			'alias'    			=> $alias,
+			'campoReal'			=> $campoReal,
+			'tipo'     			=> $tipo,
+			'show'     			=> $show,
+			'editable' 			=> $edit,
+			'default'  			=> $default,
+			'reglas'   			=> $reglas,
+			'reglasmensaje' => $reglasmensaje,
+			'class'    			=> $class,
+			'decimales'			=> $decimales,
+			'query'    			=> $query,
+			'combokey' 			=> $combokey,
+			'searchable'    => $searchable,
+			'enumarray'     => $enumarray,
+			'filepath'			=> $filepath,
+			'filewidth'			=> $filewidth,
+			'fileheight'		=> $fileheight,
+			'target'        => $target,
+		);
+		$this->campos[] = $arr;
+	}
+
+	public function setJoin($aRelation){
+		$this->joins[] = $aRelation;
+	}
+
+	public function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2) {
+		$this->leftJoins[] = array('tabla'=>$aTabla, 'col1'=>$aCol1, 'operador'=>$aOperador, 'col2'=>$aCol2);
+	}
+
+	public function setWhere($aColumna, $aOperador, $aValor=null) {
+		if($aValor == null){
+			$aValor    = $aOperador;
+			$aOperador = '=';
+		}
+
+		$this->wheres[] = array('columna'=>$aColumna, 'operador'=>$aOperador, 'valor'=>$aValor);
+	}
+
+	public function setWhereRaw($aStatement) {
+		$this->wheresRaw[] = $aStatement;
+	}
+
+	/*
 	private static $showExport = true;
 	private static $showSearch = true;
 	private static $stateSave  = true;
@@ -26,41 +234,41 @@ class Crud {
 	private static $orders        = array();
 	private static $groups        = array();
 	private static $permisos      = array('add'=>false,'edit'=>false,'delete'=>false);
-	private static $template      = 'template/template';
+	private static $template      = 'layouts/app';
 
 	public static function getData($showEdit) {
 		$response = array();
 		$dataarr  = array();
 
 		$selects = array();
-		$query = DB::table(self::$tabla);
+		$query = DB::table($this->tabla);
 		
 		if($showEdit=='1')
-			$campos = self::$camposEdit;
+			$campos = $this->camposEdit;
 		else
-			$campos = self::$camposShow;
+			$campos = $this->getCamposShow();
 
 		foreach ($campos as $campo) {
 			$selects[] = $campo['campo'].' AS '.$campo['alias'];
 		}
-		$selects[] = self::$tabla . '.' . self::$tablaId;
+		$selects[] = $this->tabla . '.' . $this->tablaId;
 		
 		$query->selectRaw(implode(',',$selects));
 
-		foreach(self::$leftJoins as $leftJoin){
+		foreach($this->leftJoins as $leftJoin){
 			$query->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
 		}
 
-		foreach(self::$wheres as $where){
+		foreach($this->wheres as $where){
 			$query->where($where['columna'], $where['operador'], $where['valor']);
 		}
 
-		foreach(self::$wheresRaw as $whereRaw){
+		foreach($this->wheresRaw as $whereRaw){
 			$query->whereRaw($whereRaw);
 		}
-		if (self::$softDelete) $query->whereNull(self::$tabla . '.deleted_at');
+		if ($this->softDelete) $query->whereNull($this->tabla . '.deleted_at');
 
-		foreach(self::$groups as $group) {
+		foreach($this->groups as $group) {
 			$query->groupBy($group);
 		}
 
@@ -102,7 +310,7 @@ class Crud {
 		foreach($data as $d){
 			$tmparr = array();
 			foreach($d as $columna => $valor){
-				if ($columna==self::$tablaId) $tmparr[] = Crypt::encrypt($valor);
+				if ($columna==$this->tablaId) $tmparr[] = Crypt::encrypt($valor);
 				else $tmparr[] = $valor;
 			}
 
@@ -114,19 +322,19 @@ class Crud {
 	}
 
 	public static function setExport($aBool){
-		self::$showExport = $aBool;
+		$this->showExport = $aBool;
 	}
 
 	public static function setSearch($aBool){
-		self::$showSearch = $aBool;
+		$this->showSearch = $aBool;
 	}
 
 	public static function setSoftDelete($aBool){
-		self::$softDelete = $aBool;
+		$this->softDelete = $aBool;
 	}
 
 	public static function setStateSave($aBool){
-		self::$stateSave = $aBool;
+		$this->stateSave = $aBool;
 	}
 	
 	public static function setSlug($aParams){
@@ -139,36 +347,36 @@ class Crud {
 			else {
 				if($key == 'columnas') {
 					foreach($val as $columnas)
-						self::$camposSlug[] = $columnas;
+						$this->camposSlug[] = $columnas;
 				}
 
 				elseif($key == 'campo')
-					self::$colSlug = $val;
+					$this->colSlug = $val;
 
 				elseif($key == 'separator')
-					self::$slugSeparator = $val;
+					$this->slugSeparator = $val;
 			}
 		}
 	}
 
 	public static function getSoftDelete(){
-		return self::$softDelete;
+		return $this->softDelete;
 	}
 
 	public static function setPerPage($aCuantos){
-		self::$perPage = $aCuantos;
+		$this->perPage = $aCuantos;
 	}
 
 	public static function setTabla($aTabla){
-		self::$tabla = $aTabla;
+		$this->tabla = $aTabla;
 	}
 
 	public static function setTablaId($aNombre){
-		self::$tablaId = $aNombre;
+		$this->tablaId = $aNombre;
 	}
 
 	public static function setTitulo($aNombre){
-		self::$titulo = $aNombre;
+		$this->titulo = $aNombre;
 	}
 
 	public static function setBotonExtra($aParams) {
@@ -200,7 +408,7 @@ class Crud {
 			'confirmmessage' => $confirmmessage,
 		];
 		
-		self::$botonesExtra[] = $arr;
+		$this->botonesExtra[] = $arr;
 	}
 
 	public static function setHidden($aParams) {
@@ -215,7 +423,7 @@ class Crud {
 			'campo' => $aParams['campo'],
 			'valor'	=> $aParams['valor']
 		);
-		self::$camposHidden[] = $arr;
+		$this->camposHidden[] = $arr;
 	}
 
 	public static function setOrderBy($aParams) {
@@ -229,11 +437,11 @@ class Crud {
 		$columna    = (!array_key_exists('columna', $aParams) ? 0: $aParams['columna']);
 		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
 
-		self::$orders[$columna] = $direccion;
+		$this->orders[$columna] = $direccion;
 	}
 
 	public static function setGroupBy($aCampo) {
-		self::$groups[] = $aCampo;
+		$this->groups[] = $aCampo;
 	}
 
 	public static function setCampo($aParams) {
@@ -283,12 +491,12 @@ class Crud {
 		} 
 		else {
 			$campoReal  = $aParams['campo'];
-			$alias 			= 'a' . date('U') . count(self::$camposShow); //Nos inventamos un alias para los subqueries
+			$alias 			= 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
 			$searchable = false;
 		}
 
-		if($aParams['campo']==self::$tablaId) {
-			$alias = 'idsinenc'  . count(self::$camposShow);
+		if($aParams['campo']==$this->tablaId) {
+			$alias = 'idsinenc'  . count($this->getCamposShow());
 			$edit  = false;
 		}
 
@@ -314,33 +522,16 @@ class Crud {
 			'fileheight'		=> $fileheight,
 			'target'        => $target,
 		);
-		if ($show) self::$camposShow[] = $arr;
-		if ($edit) self::$camposEdit[] = $arr;
-	}
-
-	public static function setWhere($aColumna, $aOperador, $aValor=null) {
-		if($aValor == null){
-			$aValor    = $aOperador;
-			$aOperador = '=';
-		}
-
-		self::$wheres[] = array('columna'=>$aColumna, 'operador'=>$aOperador, 'valor'=>$aValor);
-	}
-
-	public static function setWhereRaw($aStatement) {
-		self::$wheresRaw[] = $aStatement;
-	}
-
-	public static function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2) {
-		self::$leftJoins[] = array('tabla'=>$aTabla, 'col1'=>$aCol1, 'operador'=>$aOperador, 'col2'=>$aCol2);
+		if ($show) $this->getCamposShow()[] = $arr;
+		if ($edit) $this->camposEdit[] = $arr;
 	}
 
 	public static function setPermisos($aPermisos) {
-		self::$permisos = $aPermisos;
+		$this->permisos = $aPermisos;
 	}
 
 	public static function setTemplate($aTemplate){
-		self::$template = $aTemplate;
+		$this->template = $aTemplate;
 	}
 
 	private static function getUrl($aPath, $aEdit=false) {
@@ -359,20 +550,20 @@ class Crud {
 	}
 
 	public static function index() {
-		if (self::$tabla=='')   dd('setTabla es obligatorio.');
-		if (self::$tablaId=='') dd('setTablaId es obligatorio.');
+		if ($this->tabla=='')   dd('setTabla es obligatorio.');
+		if ($this->tablaId=='') dd('setTablaId es obligatorio.');
 				
 		return view('csgtcrud::index')
-			->with('template',    self::$template)
-			->with('stateSave',   self::$stateSave)
-			->with('showExport', 	self::$showExport)
-			->with('showSearch', 	self::$showSearch)
-			->with('perPage', 		self::$perPage)
-			->with('titulo', 			self::$titulo)
-			->with('columnas', 		self::$camposShow)
-			->with('permisos', 		self::$permisos)
-			->with('orders', 			self::$orders)
-			->with('botonesExtra',self::$botonesExtra)
+			->with('template',    $this->template)
+			->with('stateSave',   $this->stateSave)
+			->with('showExport', 	$this->showExport)
+			->with('showSearch', 	$this->showSearch)
+			->with('perPage', 		$this->perPage)
+			->with('titulo', 			$this->titulo)
+			->with('columnas', 		$this->getCamposShow())
+			->with('permisos', 		$this->permisos)
+			->with('orders', 			$this->orders)
+			->with('botonesExtra',$this->botonesExtra)
 			->with('nuevasVars', self::getGetVars());
 	}
 
@@ -381,8 +572,8 @@ class Crud {
 		$hijo  = 'Nuevo';
 
 		if(!$aId==0){
-			$data = DB::table(self::$tabla)
-				->where(self::$tablaId, Crypt::decrypt($aId))
+			$data = DB::table($this->tabla)
+				->where($this->tablaId, Crypt::decrypt($aId))
 				->first();
 			$hijo = 'Editar';
 			$path = self::getUrl(Request::path(), true);
@@ -394,7 +585,7 @@ class Crud {
 		$route = str_replace($aId, '', $path);
 
 		$combos = null;
-		foreach(self::$camposEdit as $campo){
+		foreach($this->camposEdit as $campo){
 			if($campo['tipo'] == 'combobox'){
 				$resultados = DB::select(DB::raw($campo['query']));
 				$temp       = array();
@@ -414,9 +605,9 @@ class Crud {
 
 		return View::make('csgtcrud::edit')
 			->with('pathstore', self::getUrl(Request::path(), false))
-			->with('template',   self::$template)
-			->with('breadcrum',  array('padre' =>array('titulo'=>self::$titulo,'ruta'=>$path), 'hijo'=>$hijo))
-			->with('columnas',   self::$camposEdit)
+			->with('template',   $this->template)
+			->with('breadcrum',  array('padre' =>array('titulo'=>$this->titulo,'ruta'=>$path), 'hijo'=>$hijo))
+			->with('columnas',   $this->camposEdit)
 			->with('data',       $data)
 			->with('combos',     $combos)
 			->with('nuevasVars', self::getGetVars());
@@ -428,7 +619,7 @@ class Crud {
 		$no_permitidas = array ("á","é","í","ó","ú","Á","É","Í","Ó","Ú","ñ","À","Ã","Ì","Ò","Ù","Ã™","Ã ","Ã¨","Ã¬","Ã²","Ã¹","ç","Ç","Ã¢","ê","Ã®","Ã´","Ã»","Ã‚","ÃŠ","ÃŽ","Ã”","Ã›","ü","Ã¶","Ã–","Ã¯","Ã¤","«","Ò","Ã","Ã„","Ã‹");
 		$permitidas    = array ("a","e","i","o","u","A","E","I","O","U","n","N","A","E","I","O","U","a","e","i","o","u","c","C","a","e","i","o","u","A","E","I","O","U","u","o","O","i","a","e","U","I","A","E");
 
-		foreach(self::$camposEdit as $campo) {
+		foreach($this->camposEdit as $campo) {
 			if ($campo['tipo']=='bool') 
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
 			else if ($campo['tipo']=='combobox') {
@@ -488,9 +679,9 @@ class Crud {
 			else
 				$data[$campo['campoReal']] = Input::get($campo['campoReal']);
 
-			if(in_array($campo['campoReal'], self::$camposSlug)) {
+			if(in_array($campo['campoReal'], $this->camposSlug)) {
 				$temp  = strtolower(Input::get($campo['campoReal']));
-				$temp  = str_replace(' ', self::$slugSeparator, $temp);
+				$temp  = str_replace(' ', $this->slugSeparator, $temp);
 				$temp  = str_replace('\\', 'y', $temp);
 				$temp  = str_replace('+', 'y', $temp);
 				$temp  = str_replace('-', '', $temp);
@@ -501,33 +692,33 @@ class Crud {
 		}
 
 		if($slug <> '' && $id == null) {
-			$result = DB::table(self::$tabla)->where(self::$colSlug, $slug)->first();
+			$result = DB::table($this->tabla)->where($this->colSlug, $slug)->first();
 			if(!$result)
-				$data[self::$colSlug] = $slug;
+				$data[$this->colSlug] = $slug;
 
 			else {
 
 				$i = 1;
 				while ($result) {
 					$i++;
-					$result = DB::table(self::$tabla)->where(self::$colSlug, $slug.self::$slugSeparator.$i)->first();
+					$result = DB::table($this->tabla)->where($this->colSlug, $slug.$this->slugSeparator.$i)->first();
 				}
 				
-				$data[self::$colSlug] = $slug.self::$slugSeparator.$i;
+				$data[$this->colSlug] = $slug.$this->slugSeparator.$i;
 			}
 
 		}
 
 		$data['updated_at'] = date_create();
 
-		foreach (self::$camposHidden as $campo) {
+		foreach ($this->camposHidden as $campo) {
 			$data[$campo['campo']] = $campo['valor'];
 		}
 
 		if($id == null){
 			$data['created_at'] = date_create();
 			try {
-				$query = DB::table(self::$tabla)
+				$query = DB::table($this->tabla)
 					->insert($data);
 				Session::flash('message', trans('csgtcrud::crud.registrook'));
 				Session::flash('type', 'success');
@@ -542,8 +733,8 @@ class Crud {
 
 		else {
 			try {
-				$query = DB::table(self::$tabla)
-					->where(self::$tablaId, Crypt::decrypt($id))
+				$query = DB::table($this->tabla)
+					->where($this->tablaId, Crypt::decrypt($id))
 					->update($data);
 
 				Session::flash('message',  trans('csgtcrud::crud.registrook'));
@@ -559,14 +750,14 @@ class Crud {
 
 	public static function destroy($aId) {
 		try{
-			if (self::$softDelete){
-				$query = DB::table(self::$tabla)
-					->where(self::$tablaId, Crypt::decrypt($aId))
+			if ($this->softDelete){
+				$query = DB::table($this->tabla)
+					->where($this->tablaId, Crypt::decrypt($aId))
 					->update(array('deleted_at'=>date_create()));
 			}
 			else
-				$query = DB::table(self::$tabla)
-					->where(self::$tablaId, Crypt::decrypt($aId))
+				$query = DB::table($this->tabla)
+					->where($this->tablaId, Crypt::decrypt($aId))
 					->delete();
 
 			Session::flash('message', trans('csgtcrud::crud.registroeliminado'));
@@ -579,4 +770,5 @@ class Crud {
 
 				return Redirect::to(self::getUrl(Request::path(), false) . '?' . Request::server('QUERY_STRING'));
 	}
+	*/
 }

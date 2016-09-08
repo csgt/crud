@@ -1,23 +1,14 @@
-@extends($template)
+@extends($layout)
 
-@section('content')
-	
-  @if($showExport)
+@section('javascript')
+	@if($showExport)
   	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
-  @endif
-  <?php
-  	$fontawesome = false;
-  	foreach ($botonesExtra as $botonExtra) {
-  		if( strpos($botonExtra['icon'], 'fa-')) {
-  			$fontawesome = true;
-  		} 
-  	}
-  ?>
-  @if($fontawesome)
-  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/font-awesome.min.css'!!}">
   @endif
  	<script>
 		$(document).ready(function(){
+			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) { 
+				console.log(JSON.stringify(message));
+			};
 			var oTable = $('.tabla-catalogo').dataTable({
 				"processing" : true,
 				"serverSide" : true,
@@ -31,7 +22,11 @@
 						@endforeach
 					],
 				@endif
-				"ajax" : "/{!!Request::path()!!}/0{!!$nuevasVars!!}",
+				"ajax" : {
+					"url": "/{!!Request::path()!!}/data",
+					"headers": {"X-CSRF-Token": "{{csrf_token()}}" },
+					"method": "POST",
+				},
 				"bLengthChange": false,
 				"sDom": '<"row" @if($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"pull-left"i><"pull-right"p>',
 				"iDisplayLength": {!!$perPage!!},
@@ -41,7 +36,7 @@
 			    "data": null,
 			    "sortable": false,
 			    "render": function ( data, type, full, meta ) {
-			    	var col = data.length-1;
+			    	var col = data.length - 1;
 			    	var id = data[col];	 
 			    	var html = '';
 			    	@foreach ($botonesExtra as $botonExtra)
@@ -50,16 +45,17 @@
 								$urlarr  = explode('{id}', $url);
 								$urlVars = '';
 								$parte1  = $urlarr[0];
-								$parte2  = (count($urlarr)==1?'':$urlarr[1]);
+								$parte2  = (count($urlarr) == 1?'':$urlarr[1]);
 			    			if ($nuevasVars!='') {
-			    				$urlVars = (strpos($url, '?')===false?'?':'&') . substr($nuevasVars,1);
+			    				$urlVars = (!strpos($url, '?')?'?':'&') . substr($nuevasVars,1);
 			    			}
 			    			$target = $botonExtra["target"];
 			    			if ($target<>'') $target='target="' . $target . '"';
 			    		?>
 							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
-			    	@if($permisos['edit'])   	
+
+			    	@if($permisos['edit'])   	;
 							html += '<a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="{!! URL::to(Request::url())!!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="glyphicon glyphicon-pencil"></span></a>';
 						@endif;
 						@if($permisos['delete'])
@@ -74,16 +70,16 @@
 			      return html;
 			    }
 			  }, 
-			  <?php $i=0; ?>
+	
 			  @foreach ($columnas as $columna) {
-			  		"targets" : {!!$i!!},
+			  		"targets" : {{ $loop->index }},
 			  		"class" : "{!!$columna["class"]!!}",
 			  		"searchable" : "{!!$columna["searchable"]!!}",
 
 				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime")) 
 				  	"data" : null,
 				  	"render" : function(data) {
-				  		var fecha = data[{!!$i!!}];
+				  		var fecha = data[{{$loop->index}}];
 				  		if (fecha==null) return null;
 				  		var arrhf = fecha.split(" "); 
 				  		var arrf  = arrhf[0].split("-");
@@ -95,7 +91,7 @@
 					@elseif ($columna["tipo"]=="image") 
 						"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{!!$i!!}];
+				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
 				  		return '<img width="{!!$columna["filewidth"]!!}" src="{!!$columna["filepath"]!!}' + val + '">';
 				  	}
@@ -103,7 +99,7 @@
 				  @elseif ($columna["tipo"]=="file") 
 						"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{!!$i!!}];
+				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
 				  		return '<a href="{!!$columna["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
 				  	}
@@ -111,7 +107,7 @@
 					@elseif ($columna["tipo"]=="numeric") 
 						"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{!!$i!!}];
+				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
 
 				  		val = Number(val);
@@ -121,7 +117,7 @@
 			  	@elseif($columna["tipo"]=="bool") 
 			  	 	"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{!!$i!!}];
+				  		var val = data[{{$loop->index}}];
 							if (val==null) return null;
 
 							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">{{trans('csgtcrud::crud.si')}}</span>');
@@ -130,13 +126,12 @@
 					@elseif ($columna["tipo"]=="url") 
 						"data" : null,
 				  	"render" : function(data) {
-				  		var val = data[{!!$i!!}];
+				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
 				  		return '<a href="' + val + '" target="{!!$columna["target"]!!}">' + val + '</a>';
 				  	}
 		  		@endif
 		  		},
-			  	<?php $i++; ?>
 			  @endforeach
 			  ],
 
@@ -198,6 +193,21 @@
           + (aDec ? "." + Math.abs(n - i).toFixed(aDec).slice(2) : "");
     };
 	</script>
+@stop
+
+@section('content')
+  <?php
+  	$fontawesome = false;
+  	foreach ($botonesExtra as $botonExtra) {
+  		if( strpos($botonExtra['icon'], 'fa-')) {
+  			$fontawesome = true;
+  		} 
+  	}
+  ?>
+  @if($fontawesome)
+  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/font-awesome.min.css'!!}">
+  @endif
+
 	<style>
 		.btn { margin-left: 2px; margin-right: 2px; margin-bottom: 1px; margin-top: 1px;}
 		.hr-crud {margin-top:0; margin-bottom: 4px;}
@@ -213,16 +223,20 @@
 			{!! Session::get('message') !!}
 		</div>
 	@endif
-	<table class="table table-striped table-bordered table-condensed table-hover tabla-catalogo display">
-		<thead>
-      <tr>
-      	@foreach ($columnas as $columna) 
-        	<th>{!!$columna["nombre"]!!}</th>
-        @endforeach
-        <th>&nbsp;</th>
-      </tr>
-    </thead>
-	</table>
+	<div class="box">
+		<div class="box-body">
+			<table class="table table-bordered table-condensed table-hover tabla-catalogo display">
+				<thead>
+		      <tr>
+		      	@foreach ($columnas as $columna) 
+		        	<th>{!!$columna["nombre"]!!}</th>
+		        @endforeach
+		        	<th>&nbsp;</th>
+		      </tr>
+		    </thead>
+			</table>
+		</div>
+	</div>
 	<div class="modal" id="modal-procesando">
 	  <div class="modal-dialog modal-sm">
 	    <div class="modal-content">
