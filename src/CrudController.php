@@ -2,32 +2,36 @@
 namespace Csgt\Crud;
 
 use Illuminate\Routing\Controller as BaseController;;
-use Response;
-use Crypt;
+use Response,Crypt, Session;
 use Illuminate\Http\Request;
 
 class CrudController extends BaseController {
-	protected $uniqueid   = '___id___';
-	protected $modelo;
-	protected $showExport = true;
-	protected $showSearch = true;
-	protected $stateSave  = true;
-	protected $layout     = 'layouts.app';
-	protected $perPage    = 50;
-	protected $titulo     = '';
-	protected $campos = [];
-	protected $permisos   = ['add'=>true,'edit'=>true,'delete'=>true];
-	protected $orders     = [];
-	protected $botonesExtra = [];
-	protected $joins = [];
-	protected $leftJoins = [];
-	protected $wheres = [];
-	protected $wheresRaw = [];
+	private $uniqueid     = '___id___';
+	private $modelo 			= null;
+	private $showExport   = true;
+	private $showSearch   = true;
+	private $stateSave    = true;
+	private $layout       = 'layouts.app';
+	private $perPage      = 50;
+	private $titulo       = '';
+	private $campos       = [];
+	private $permisos     = ['add'=>true,'edit'=>true,'delete'=>true];
+	private $orders       = [];
+	private $botonesExtra = [];
+	private $joins        = [];
+	private $leftJoins    = [];
+	private $wheres       = [];
+	private $wheresRaw    = [];
+	private $noGuardar    = ['_token'];
+	private $breadcrumb   = ['mostrar'=>true, 'breadcrumb'=>[]];
 
 
 	public function index() {
+		if($this->modelo === null) dd('setModelo es requerido.');
+		$breadcrumb = $this->generarBreadcrumb('index');
 		return view('csgtcrud::index')
 			->with('layout',       $this->layout)
+			->with('breadcrumb',   $breadcrumb)
 			->with('stateSave',    $this->stateSave)
 			->with('showExport', 	 $this->showExport)
 			->with('showSearch', 	 $this->showSearch)
@@ -40,30 +44,226 @@ class CrudController extends BaseController {
 			->with('nuevasVars',  '');
 	}
 
+	public function edit(Request $request, $aId) {
+		$data       = $this->modelo->find(Crypt::decrypt($aId));
+		$path       = $this->downLevel($request->path());
+		$camposEdit = $this->getCamposEditMine();
+		$combos     = $this->fillCombos($camposEdit);
+		$breadcrumb = $this->generarBreadcrumb('edit', $this->downLevel($path));
+
+		return view('csgtcrud::edit')
+			->with('pathstore', $path)
+			->with('template',   $this->layout)
+			->with('breadcrumb',  $breadcrumb)
+			->with('columnas',   $camposEdit)
+			->with('data',       $data)
+			->with('combos',     $combos)
+			->with('nuevasVars', '');
+	}
+
+	public function create(Request $request) {
+		$data       = null;
+		$path       = $this->downLevel($request->path());
+		$camposEdit = $this->getCamposEditMine();
+		$combos     = $this->fillCombos($camposEdit);
+		$breadcrumb = $this->generarBreadcrumb('create', $path);
+		
+		return view('csgtcrud::edit')
+			->with('pathstore', $path)
+			->with('template',   $this->layout)
+			->with('breadcrumb',  $breadcrumb)
+			->with('columnas',   $camposEdit)
+			->with('data',       $data)
+			->with('combos',     $combos)
+			->with('nuevasVars', '');
+	}
+
+	public function store(Request $request){
+		$campos = array_except($request->all(), $this->noGuardar);
+		$this->modelo->create($campos);
+		return redirect()->to($request->path());
+	}
+
+	public function update(Request $request, $aId){
+		$campos = array_except($request->all(), $this->noGuardar);
+		$m = $this->modelo->find(Crypt::decrypt($aId));
+		$m->update($campos);
+		return redirect()->to($this->downLevel($request->path()));
+	}
+
+	public function destroy(Request $request, $aId) {
+		try {
+			$this->modelo->destroy(Crypt::decrypt($aId));
+			Session::flash('message', trans('csgtcrud::crud.registroeliminado'));
+			Session::flash('type', 'warning');
+		} 
+		catch (\Exception $e) {
+			Session::flash('message', trans('csgtcrud::crud.registroelimiandoe'));
+			Session::flash('type', 'danger');
+		}
+		return redirect($this->downLevel($request->path()));
+	}
+
+	private function downLevel($aPath) {
+		$arr = explode('/', $aPath);
+		array_pop($arr);
+		$route = implode('/', $arr);
+		return $route;
+	}
+
+	private function fillCombos($aCampos){
+		$combos = [];
+		foreach($aCampos as $campo){
+			if($campo['tipo'] == 'combobox'){
+				$arr = [];
+				foreach($campo['collection']->toArray() as $item){
+					$arr[current($item)] = next($item); 
+				}
+
+				$combos[$campo['alias']] = $arr;
+			}
+		}
+		return $combos;
+	}
+
+	private function getCamposOrden(){
+		$tempArray = array_filter($this->campos, function($c) {
+			return $c['show'] === true;
+		});
+		$tempArray = array_map(function($campo){
+			return $campo['campo'];
+		}, $tempArray);
+		$tempArray[] = $this->uniqueid;
+		return array_values($tempArray);
+	}
+
 	private function getCamposShow(){
-		return array_values(array_filter($this->campos, function($c){ return $c['show'] == true; }));
+		return array_values(array_filter($this->campos, function($c){ return ($c['show'] == true); }));
+	}
+
+	private function getCamposShowMine(){
+		return array_values(array_filter($this->campos, function($c){ return ($c['show'] == true && strpos($c['campo'],'.') === false); }));
+	}
+
+	private function getCamposEditMine(){
+		return array_values(array_filter($this->campos, function($c){ return ($c['editable'] == true && strpos($c['campo'],'.') === false); }));
+	}
+
+	private function getCamposShowForeign(){
+		$arr = [];
+		$foreigns = 
+		array_filter($this->campos, 
+			function($c){ 
+				return ($c['show'] == true && strpos($c['campo'],'.') != 0); 
+			}
+		);
+		foreach ($foreigns as $foreign) {
+			$partes = explode('.', $foreign['campo']);
+			$arr[$partes[0]][] = $partes[1];
+		}
+		return $arr;
+	}
+
+	private function getCamposEdit(){
+		return array_values(array_filter($this->campos, function($c){ return $c['editable'] == true; }));
 	}
 
 	private function getSelect($aCampos){
 		return array_map(function($c){ return $c['campo']; }, $aCampos);
 	}
 
+	private function generarBreadcrumb($aTipo, $aUrl='') {
+		$html = '';
+		if ($this->breadcrumb['mostrar']) {
+			$html .= '<ol class="breadcrumb">';
+			if (empty($this->breadcrumb['breadcrumb'])) {
+				switch ($aTipo) {
+					case 'edit':
+						$html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+						break;
+					case 'create':
+						$html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+						break;
+					default:
+						$html .= '<li class="active">' . $this->titulo . '</li>';
+						break;
+				}
+			}
+			else {
+				$array = $this->breadcrumb['breadcrumb'];
+				$htmlArray = [];
+				$lastItem = end($array);
+				switch ($aTipo) {
+					case 'edit':
+						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
+							if($item == $lastItem){
+								return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+							else if($item['url'] == ''){
+								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+							}else{
+								return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+						}, $array);
+
+						$htmlArray[] = '<li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+						break;
+					case 'create':
+						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
+							if($item == $lastItem){
+								return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+							else if($item['url'] == ''){
+								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+							}else{
+								return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+						}, $array);
+
+						$htmlArray[] = '<li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+						break;
+					default:
+						$htmlArray = array_map(function($item) use ($aUrl){
+							if($item['url'] == ''){
+								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+							}else{
+								return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+						}, $array);
+						break;
+				}
+				$html .= implode('', $htmlArray);
+				
+				//Armarlo a partir del array
+			}
+			$html .= '</ol>';
+		}
+		return $html;
+	}
+
 	public function data(Request $request){
 		//Definimos las variables que nos ayudar'an en el proceso de devolver la data
 		$search = $request->search;
-		$columns = $this->getCamposShow();
+		$columns = $this->getCamposShowMine();
 		$campos = $this->getSelect($columns);
 		$recordsFiltered = 0;
 		$recordsTotal = 0;
+
 		//Se obtienen los campos a mostrar desde el modelo
-		$data = $this->modelo->select($campos)
-			->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
-		//Aplicamos los joins hechos por los modelos
-		foreach ($this->joins as $join){
-			$data->with($join);
-			//$data->with([$join => function($query){ return $query->get([])->where(''); }]);
+		$data = $this->modelo->select($campos);
+
+		$foreigns = $this->getCamposShowForeign();  
+
+		foreach($foreigns as $relation => $fields) {
+			// $data->with($relation)->select($fields)->get();
+			array_unshift($fields, 'moduloid');
+			$data->with([$relation=>function($query) use ($fields) {
+				 $query->select($fields);
+			 }]);
 		}
-		//Aplicamos los left-joins
+
+		$data->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
+
 		foreach($this->leftJoins as $leftJoin){
 			$data->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
 		}
@@ -94,24 +294,47 @@ class CrudController extends BaseController {
 		$items = $data
 			->skip($request->start)
 			->take($request->length)
-			->get()
-			->toArray();
+			->get()->toArray();
 
 		$arr = [];
+		$ordenColumnas = $this->getCamposOrden();
 		foreach($items as $item) {
 			$cols = [];
-			foreach($item as $colName => $col) {
-				if ($colName==$this->uniqueid) $cols[] = Crypt::encrypt($col);
-				else $cols[] = $col;
+			$lastItem = '';
+			for ($i = 0; $i < sizeof($ordenColumnas); $i++){
+				$colName = '';
+				$relationName = '';
+				$esRelacion = (strpos($ordenColumnas[$i], '.') !== false);
+
+				if($esRelacion){
+					$helperString = explode('.', $ordenColumnas[$i]);
+					$colName = $helperString[1];
+					$relationName = $helperString[0];
+				}
+				else{
+					$colName = $ordenColumnas[$i];
+				}
+				
+				if ($colName == $this->uniqueid) $lastItem = Crypt::encrypt($item[$colName]);
+				else if($esRelacion){
+					$cols[] = $item[$relationName][0][$colName];
+				}
+				else $cols[] = $item[$colName];
 			}
+
+			$cols[] = $lastItem;
 			$arr[] = $cols;
 		}
 		return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
 	}
 
+	public function setModelo($aModelo){
+		$this->modelo = $aModelo;
+	}
+
 	public function setCampo($aParams) {
 		$allowed = ['campo','nombre','editable','show','tipo','class',
-			'default','reglas', 'reglasmensaje', 'decimales','query','combokey',
+			'default','reglas', 'reglasmensaje', 'decimales','collection',
 			'enumarray','filepath','filewidth','fileheight','target'];
 		$tipos   = ['string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote'];
 		
@@ -131,8 +354,7 @@ class CrudController extends BaseController {
 		$default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
 		$reglas        = (!array_key_exists('reglas', $aParams) ? [] : $aParams['reglas']);
 		$decimales     = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
-		$query         = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
-		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
+		$collection    = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
 		$reglasmensaje = (!array_key_exists('reglasmensaje', $aParams) ? '' : $aParams['reglasmensaje']);
 		$filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
 		$filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
@@ -143,7 +365,8 @@ class CrudController extends BaseController {
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
 
-		if($tipo == 'combobox' && ($query == '' || $combokey == '')) dd('Para el tipo combobox el query y combokey son requeridos');
+		if($tipo == 'combobox' && ($collection == '')) dd('Para el tipo combobox el collection es requerido');
+		if($tipo == 'combobox') $show = false;
 		if($tipo == 'file' && $filepath == '') dd('Para el tipo file hay que especifiarle el filepath');
 		if($tipo == 'image' && $filepath == '') dd('Para el tipo image hay que especifiarle el filepath');
 
@@ -165,7 +388,7 @@ class CrudController extends BaseController {
 			$edit  = false;
 		}
 
-		$arr = array(
+		$arr = [
 			'nombre'   			=> $nombre,
 			'campo'    			=> $aParams['campo'],
 			'alias'    			=> $alias,
@@ -178,15 +401,14 @@ class CrudController extends BaseController {
 			'reglasmensaje' => $reglasmensaje,
 			'class'    			=> $class,
 			'decimales'			=> $decimales,
-			'query'    			=> $query,
-			'combokey' 			=> $combokey,
+			'collection'   	=> $collection,
 			'searchable'    => $searchable,
 			'enumarray'     => $enumarray,
 			'filepath'			=> $filepath,
 			'filewidth'			=> $filewidth,
 			'fileheight'		=> $fileheight,
 			'target'        => $target,
-		);
+		];
 		$this->campos[] = $arr;
 	}
 
@@ -209,6 +431,54 @@ class CrudController extends BaseController {
 
 	public function setWhereRaw($aStatement) {
 		$this->wheresRaw[] = $aStatement;
+	}
+
+	public function setTitulo($aTitulo){
+		$this->titulo = $aTitulo;
+	}
+
+	public function setNoGuardar($aCampo) {
+		$this->noGuardar[] = $aCampo;
+	}
+
+	public function mostrarBreadcrumb($aBool) {
+		$this->breadcrumb['mostrar'] = $aBool;
+	}
+
+	public function setBreadcrumb($aArray) {
+		$this->breadcrumb['breadcrumb'] = $aArray;
+	}
+
+	public function setBotonExtra($aParams) {
+		$allowed = array('url','titulo','target','icon','class','confirm','confirmmessage');
+
+
+		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed)) {
+				dd('setBotonExtra no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+			}
+		}
+		if(!array_key_exists('url', $aParams)) dd('setBotonExtra debe tener un valor para "url"');
+
+		$icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
+		$class          = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
+		$titulo         = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
+		$target         = (!array_key_exists('target', $aParams) ? '': $aParams['target']); 
+		$confirm        = (!array_key_exists('confirm', $aParams) ? false: $aParams['confirm']);
+		$confirmmessage = (!array_key_exists('confirmmessage', $aParams) ? '¿Estas seguro?': $aParams['confirmmessage']);
+
+
+		$arr = [
+			'url'            => $aParams['url'],
+			'titulo'         => $titulo,
+			'icon'           => $icon,
+			'class'          => $class,
+			'target'         => $target,
+			'confirm'        => $confirm,
+			'confirmmessage' => $confirmmessage,
+		];
+		
+		$this->botonesExtra[] = $arr;
 	}
 
 	/*
@@ -534,7 +804,7 @@ class CrudController extends BaseController {
 		$this->template = $aTemplate;
 	}
 
-	private static function getUrl($aPath, $aEdit=false) {
+	private static function downLevel($aPath, $aEdit=false) {
 		$arr = explode('/', $aPath);
 		array_pop($arr);
 		if($aEdit) array_pop($arr);
@@ -576,10 +846,10 @@ class CrudController extends BaseController {
 				->where($this->tablaId, Crypt::decrypt($aId))
 				->first();
 			$hijo = 'Editar';
-			$path = self::getUrl(Request::path(), true);
+			$path = self::downLevel(Request::path(), true);
 		}
 		else {
-			$path  = self::getUrl(Request::path(), false);
+			$path  = self::downLevel(Request::path(), false);
 		}
 		
 		$route = str_replace($aId, '', $path);
@@ -604,7 +874,7 @@ class CrudController extends BaseController {
 		}
 
 		return View::make('csgtcrud::edit')
-			->with('pathstore', self::getUrl(Request::path(), false))
+			->with('pathstore', self::downLevel(Request::path(), false))
 			->with('template',   $this->template)
 			->with('breadcrum',  array('padre' =>array('titulo'=>$this->titulo,'ruta'=>$path), 'hijo'=>$hijo))
 			->with('columnas',   $this->camposEdit)
@@ -744,7 +1014,7 @@ class CrudController extends BaseController {
 				Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
 				Session::flash('type', 'danger');
 			}
-			return Redirect::to(self::getUrl(Request::path(), false) . self::getGetVars());	
+			return Redirect::to(self::downLevel(Request::path(), false) . self::getGetVars());	
 		}
 	}
 
@@ -768,7 +1038,7 @@ class CrudController extends BaseController {
 			Session::flash('type', 'danger');
 		}
 
-				return Redirect::to(self::getUrl(Request::path(), false) . '?' . Request::server('QUERY_STRING'));
+				return Redirect::to(self::downLevel(Request::path(), false) . '?' . Request::server('QUERY_STRING'));
 	}
 	*/
 }

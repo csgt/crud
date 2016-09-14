@@ -1,5 +1,6 @@
 @extends($layout)
-
+@section('titulo', $titulo)
+@section('breadcrumb', $breadcrumb)
 @section('javascript')
 	@if($showExport)
   	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
@@ -38,7 +39,7 @@
 			    "render": function ( data, type, full, meta ) {
 			    	var col = data.length - 1;
 			    	var id = data[col];	 
-			    	var html = '';
+			    	var html = '<div class="btn-toolbar pull-right">';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php 
 								$url     = $botonExtra["url"];
@@ -52,21 +53,23 @@
 			    			$target = $botonExtra["target"];
 			    			if ($target<>'') $target='target="' . $target . '"';
 			    		?>
-							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a>';
+							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
 						@endforeach
 
 			    	@if($permisos['edit'])   	;
-							html += '<a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="{!! URL::to(Request::url())!!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="glyphicon glyphicon-pencil"></span></a>';
+							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="{!! URL::to(Request::url())!!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="fa fa-pencil"></span></a></div>';
 						@endif;
 						@if($permisos['delete'])
-							html += '<form action="{!! URL::to(Request::url())!!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
+							html += '<div class="btn-group btn-group-xs">\
+								<form action="{!! URL::to(Request::url())!!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
 								<input type="hidden" name="_method" value="DELETE">\
 								<input type="hidden" name="_token" value="{{csrf_token()}}">\
 								<button type="submit" class="btn btn-xs btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
-								<i class="glyphicon glyphicon-trash"></i>\
+								<i class="fa fa-trash"></i>\
 								</button>\
-								</form>';
+								</form></div>';
 						@endif;
+						html += '</div>';
 			      return html;
 			    }
 			  }, 
@@ -208,15 +211,7 @@
   	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/font-awesome.min.css'!!}">
   @endif
 
-	<style>
-		.btn { margin-left: 2px; margin-right: 2px; margin-bottom: 1px; margin-top: 1px;}
-		.hr-crud {margin-top:0; margin-bottom: 4px;}
-		.pagination { margin: 0;}
-		.tabla-catalogo { margin-bottom: 5px;}
-	</style>
-	{!! $titulo !!}
 	<div class="clearfix"></div>
-	<hr class="hr-crud">
 	@if(Session::get('message'))
 		<div class="alert alert-{!! Session::get('type') !!} alert-dismissable .mrgn-top">
 			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>

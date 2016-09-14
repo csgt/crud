@@ -1,5 +1,5 @@
 @extends($template)
-
+@section('breadcrumb', $breadcrumb)
 @section('content')
 	<?php 
 		$includefechas     = false;
@@ -18,36 +18,25 @@
 	  }
   ?>
   <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/formValidation.min.css">
-  <script src="{!!config('csgtcrud.pathToAssets','/')!!}js/formValidation.min.js"></script>
-	<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/framework/bootstrap.min.js"></script>
 
   @if($includefechas)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/bootstrap-datetimepicker.min.css">
-		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/moment-with-locales.min.js"></script>
-		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/bootstrap-datetimepicker.min.js"></script>
 	@endif
 
  	@if($includeselect)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/selectize.css">
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/selectize.bootstrap3.css">
-		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/selectize.min.js"></script>
 	@endif
 
 	@if($includesummernote)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/summernote.min.css">
-		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote.min.js"></script>
-		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote-es-ES.js"></script>
 	@endif
 
-	<ol class="breadcrumb">
-	  <li><a href="{!! URL::to($breadcrum['padre']['ruta']) !!}">{!! $breadcrum['padre']['titulo'] !!}</a></li>
-	  <li class="active">{!! $breadcrum['hijo'] !!}</li>
-	</ol>
-	@if(!$data)
-		{!! Form::open(array('url'=>URL::to($pathstore . $nuevasVars),'class'=>'form-horizontal','id'=>'frmCrud', 'files'=>'true')) !!}
-	@else
-		{!! Form::open(array('url'=>URL::to($pathstore . $nuevasVars),'class'=>'form-horizontal', 'method'=>'put','id'=>'frmCrud', 'files'=>'true')) !!}
-	@endif
+	<form method="POST" action="{{URL::to($pathstore)}}" class="form-horizontal" id="frmCrud" enctype="multipart/form-data">
+		@if($data)
+			<input type="hidden" name="_method" value="PUT">
+		@endif
+		{{csrf_field()}}
 		@foreach($columnas as $columna)
 			<?php 
 				$valor = ($data ? $data->{$columna['campoReal']} : $columna['default']); 
@@ -161,8 +150,8 @@
 					?>
 					{!!$label!!}
 					<div class="col-sm-10">
-						<?php $combokey = ($data ? $data->{$columna['combokey']} : '') ?>
-						{!! Form::select($columna['combokey'], $combos[$columna['alias']], $combokey, $arr) !!}
+						<?php $campo = ($data ? $data->{$columna['campo']} : '') ?>
+						{!! Form::select($columna['campo'], $combos[$columna['alias']], $campo, $arr) !!}
 					</div>
 				<!---------------------------- ENUM ---------------------------------->
 				@elseif($columna['tipo'] == 'enum')
@@ -205,7 +194,27 @@
 				<a href="javascript:window.history.back();" class="btn btn-default">{{trans('csgtcrud::crud.cancelar')}}</a>
 			</div>	
 		</div>
-	{!! Form::close() !!}
+	</form>
+@endsection
+
+@section ('javascript')
+  <script src="{!!config('csgtcrud.pathToAssets','/')!!}js/formValidation.min.js"></script>
+	<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/framework/bootstrap.min.js"></script>
+
+  @if($includefechas)
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/moment-with-locales.min.js"></script>
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/bootstrap-datetimepicker.min.js"></script>
+	@endif
+
+ 	@if($includeselect)
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/selectize.min.js"></script>
+	@endif
+
+	@if($includesummernote)
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote.min.js"></script>
+		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote-es-ES.js"></script>
+	@endif
+
 	<script type="text/javascript">
 		$(function() {
 			@if($includefechas)
@@ -229,4 +238,4 @@
 			});
 		});
 	</script>
-@stop
+@endsection
