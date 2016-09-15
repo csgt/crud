@@ -481,6 +481,10 @@ class CrudController extends BaseController {
 		$this->botonesExtra[] = $arr;
 	}
 
+	public function setPermisos($aPermisos) {
+		$this->permisos = $aPermisos;
+	}
+
 	/*
 	private static $showExport = true;
 	private static $showSearch = true;
