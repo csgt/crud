@@ -43,7 +43,7 @@
 			    "render": function ( data, type, full, meta ) {
 			    	var col = data.length-1;
 			    	var id = data[col];	 
-			    	var html = '';
+			    	var html = '<div class="btn-toolbar pull-right">';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php 
 								$url     = $botonExtra["url"];
@@ -71,6 +71,7 @@
 								</button></div>\
 								</form>';
 						@endif;
+			      html += '</div>';
 			      return html;
 			    }
 			  }, 
@@ -199,7 +200,6 @@
     };
 	</script>
 	<style>
-		.btn { margin-left: 2px; margin-right: 2px; margin-bottom: 1px; margin-top: 1px;}
 		.hr-crud {margin-top:0; margin-bottom: 4px;}
 		.pagination { margin: 0;}
 		.tabla-catalogo { margin-bottom: 5px;}
