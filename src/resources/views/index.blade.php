@@ -57,18 +57,18 @@
 			    			$target = $botonExtra["target"];
 			    			if ($target<>'') $target='target="' . $target . '"';
 			    		?>
-							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a>';
+							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
 						@endforeach
 			    	@if($permisos['edit'])   	
-							html += '<a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="{!! URL::to(Request::url())!!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="glyphicon glyphicon-pencil"></span></a>';
+							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="{!! URL::to(Request::url())!!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="glyphicon glyphicon-pencil"></span></a></div>';
 						@endif;
 						@if($permisos['delete'])
 							html += '<form action="{!! URL::to(Request::url())!!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
 								<input type="hidden" name="_method" value="DELETE">\
 								<input type="hidden" name="_token" value="{{csrf_token()}}">\
-								<button type="submit" class="btn btn-xs btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
+								<div class="btn-group btn-group-xs"><button type="submit" class="btn btn-xs btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
 								<i class="glyphicon glyphicon-trash"></i>\
-								</button>\
+								</button></div>\
 								</form>';
 						@endif;
 			      return html;
