@@ -524,36 +524,73 @@ class Crud {
 			$data[$campo['campo']] = $campo['valor'];
 		}
 
+		$isAjax = strstr($_SERVER['CONTENT_TYPE'], 'application/json');
+		$realId = null;
+
 		if($id == null){
 			$data['created_at'] = date_create();
 			try {
-				$query = DB::table(self::$tabla)
-					->insert($data);
-				Session::flash('message', trans('csgtcrud::crud.registrook'));
-				Session::flash('type', 'success');
+				$realId = DB::table(self::$tabla)
+					->insertGetId($data);
+				if ($isAjax) {
+					$record = DB::table(self::$tabla)
+						->where(self::$tablaId, $realId)
+						->first();
+					return Response::json($record, 201);
+				} else {
+					Session::flash('message', trans('csgtcrud::crud.registrook'));
+					Session::flash('type', 'success');
+				}
 			}
 			catch (\Exception $e) {
-				Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
-				Session::flash('type', 'danger');
+				if ($isAjax) {
+					return Response::json([
+						'error' => [
+							'descripcion' => $e->getMessage(),
+							'trace' => $e->getTraceAsString()
+						]
+					], 500);
+				} else {
+					Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
+					Session::flash('type', 'danger');
+				}
 			}
-			
 			return Redirect::to(Request::path() . self::getGetVars());
 		}
 
 		else {
+			$realId = Crypt::decrypt($id);
 			try {
 				$query = DB::table(self::$tabla)
-					->where(self::$tablaId, Crypt::decrypt($id))
+					->where(self::$tablaId, $realId)
 					->update($data);
 
-				Session::flash('message',  trans('csgtcrud::crud.registrook'));
-				Session::flash('type', 'success');
+				if (!$isAjax) {
+					Session::flash('message',  trans('csgtcrud::crud.registrook'));
+					Session::flash('type', 'success');
+				}
 			}
 			catch (\Exception $e) {
-				Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
-				Session::flash('type', 'danger');
+				if ($isAjax) {
+					return Response::json([
+						'error' => [
+							'descripcion' => $e->getMessage(),
+							'trace' => $e->getTraceAsString()
+						]
+					], 500);
+				} else {
+					Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
+					Session::flash('type', 'danger');
+				}
 			}
-			return Redirect::to(self::getUrl(Request::path(), false) . self::getGetVars());	
+			if ($isAjax) {
+				$record = DB::table(self::$tabla)
+					->where(self::$tablaId, $realId)
+					->first();
+				return Response::json($record, 200);
+			} else {
+				return Redirect::to(self::getUrl(Request::path(), false) . self::getGetVars());
+			}	
 		}
 	}
 
