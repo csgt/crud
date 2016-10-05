@@ -95,8 +95,10 @@
 					<div class="col-sm-10">
 						<div class="checkbox">
 					    <label>
-					      {!! Form::checkbox($columna['campoReal'], '1', ($valor == 1? true:false)) !!} {!! $columna['nombre'] !!}
+					    	<input type="checkbox" name="{{$columna['campoReal']}}" value="1" {{$valor == 1? "checked":""}}>
+					      {!! $columna['nombre'] !!}
 					    </label>
+					    <input class="hiddencheckbox" type='hidden' value='0' name='{{$columna['campoReal']}}'>
 				    </div>
 				  </div>
 				<!---------------------------- DATE ---------------------------------->
@@ -235,6 +237,19 @@
           invalid: 'glyphicon glyphicon-remove',
           validating: 'glyphicon glyphicon-refresh'
         }
+			});
+			function makeCheckValidation(checkbox){
+				if($(checkbox).is(":checked")){
+					$(checkbox).parent().next().attr('disabled', true);
+				}else{
+					$(checkbox).parent().next().attr('disabled', false);
+				}
+			}
+			$('input[type="checkbox"]').each(function(){
+				makeCheckValidation(this);
+				$(this).change(function(){
+					makeCheckValidation(this);
+				})
 			});
 		});
 	</script>
