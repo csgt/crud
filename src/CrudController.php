@@ -263,10 +263,12 @@ class CrudController extends BaseController {
 				foreach($fields as $field) 
 					$query->addSelect($field);
 			 }]);
+			//dd($foreigns);
+			foreach($fields as $field) {
+				$data->addSelect($field[0]);
+			}
 		}
-
 		$data->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
-
 		foreach($this->leftJoins as $leftJoin){
 			$data->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
 		}
