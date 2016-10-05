@@ -324,7 +324,7 @@ class CrudController extends BaseController {
 				if ($colName == $this->uniqueid) $lastItem = Crypt::encrypt($item[$colName]);
 				else if($esRelacion){
 					//Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
-					if(is_array($item[$relationName]))
+					if(array_key_exists(0, $item[$relationName]))
 						$cols[] = $item[$relationName][0][$colName];
 					else
 						$cols[] = $item[$relationName][$colName];
