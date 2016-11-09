@@ -79,6 +79,7 @@ class CrudController extends BaseController {
 	}
 
 	public function store(Request $request){
+		//Aqui falta procesar fechas, files, images, etc
 		$campos = array_except($request->all(), $this->noGuardar);
 		$this->modelo->create($campos);
 		return redirect()->to($request->path());
@@ -346,7 +347,7 @@ class CrudController extends BaseController {
 		$allowed = ['campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','collection',
 			'enumarray','filepath','filewidth','fileheight','target','foreignkey'];
-		$tipos   = ['string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote'];
+		$tipos   = ['string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote','securefile'];
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -381,6 +382,7 @@ class CrudController extends BaseController {
 		if($tipo == 'combobox') $show = false;
 		if($tipo == 'file' && $filepath == '') dd('Para el tipo file hay que especifiarle el filepath');
 		if($tipo == 'image' && $filepath == '') dd('Para el tipo image hay que especifiarle el filepath');
+		if($tipo == 'securefile' && $filepath == '') dd('Para el tipo securefile hay que especifiarle el filepath');
 
 		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
 		
