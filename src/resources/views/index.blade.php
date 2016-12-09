@@ -212,12 +212,6 @@
   @endif
 
 	<div class="clearfix"></div>
-	@if(Session::get('message'))
-		<div class="alert alert-{!! Session::get('type') !!} alert-dismissable .mrgn-top">
-			<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-			{!! Session::get('message') !!}
-		</div>
-	@endif
 	<div class="box">
 		<div class="box-body">
 			<table class="table table-bordered table-condensed table-hover tabla-catalogo display">
