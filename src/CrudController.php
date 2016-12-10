@@ -343,6 +343,10 @@ class CrudController extends BaseController {
 		$this->modelo = $aModelo;
 	}
 
+	public function setLayout($aLayout){
+		$this->layout = $aLayout;
+	}
+
 	public function setCampo($aParams) {
 		$allowed = ['campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','collection',
