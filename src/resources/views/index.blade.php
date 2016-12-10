@@ -88,7 +88,12 @@
 				  		var arrf  = arrhf[0].split("-");
 				  		var hora  = '';
 				  		if (arrhf.length==2) {hora = ' ' + arrhf[1].substring(0,5);}
-				  		return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
+				  		if($columna["tipo"] == "date") {
+				  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0];
+				  		}
+				  		else {
+				  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
+				  		}	
 				  	}
 
 					@elseif ($columna["tipo"]=="image") 
