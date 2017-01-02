@@ -159,10 +159,9 @@ class CrudController extends BaseController {
 			}
 		);
 		$i=0;
-
+		//dd($foreigns);
 		foreach ($foreigns as $foreign) {
 			$partes = explode('.', $foreign['campo']);
-			$arr[$partes[0]][$i][] = $foreign['foreignkey'];
 			$arr[$partes[0]][$i][] = $partes[1];
 			$i++;
 		}
@@ -260,13 +259,16 @@ class CrudController extends BaseController {
 		$foreigns = $this->getCamposShowForeign();  
 
 		foreach($foreigns as $relation => $fields) {
-			$data->with([$relation=>function($query) use ($fields) {
+			$foreignModel = $this->modelo->{$relation}();
+
+			$data->with([$relation=>function($query) use ($fields, $foreignModel) {
+				$query->addSelect($foreignModel->getPlainForeignKey());
 				foreach($fields as $field) 
 					$query->addSelect($field);
 			 }]);
-			//dd($foreigns);
+
 			foreach($fields as $field) {
-				$data->addSelect($field[0]);
+				$data->addSelect($foreignModel->getQualifiedParentKeyName());
 			}
 		}
 		$data->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
@@ -350,7 +352,7 @@ class CrudController extends BaseController {
 	public function setCampo($aParams) {
 		$allowed = ['campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','collection',
-			'enumarray','filepath','filewidth','fileheight','target','foreignkey'];
+			'enumarray','filepath','filewidth','fileheight','target'];
 		$tipos   = ['string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote','securefile'];
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
@@ -377,7 +379,6 @@ class CrudController extends BaseController {
 		$fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
 		$target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
 		$enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
-		$foreignkey    = (!array_key_exists('foreignkey', $aParams) ? '' : $aParams['foreignkey']);
 		$searchable    = true;
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
@@ -390,8 +391,6 @@ class CrudController extends BaseController {
 
 		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
 		
-		if(strpos($aParams['campo'], '.') !== false && $foreignkey=='') dd('Para ' . $aParams['campo'] . ', se necesita asignar foreignkey');
-
 		if (!strpos($aParams['campo'], ')')) {
 			$arr = explode('.', $aParams['campo']);
 			if (count($arr)>=2) $campoReal = $arr[count($arr) - 1]; else $campoReal = $aParams['campo'];
@@ -428,7 +427,6 @@ class CrudController extends BaseController {
 			'filewidth'			=> $filewidth,
 			'fileheight'		=> $fileheight,
 			'target'        => $target,
-			'foreignkey'		=> $foreignkey,
 		];
 		$this->campos[] = $arr;
 	}
