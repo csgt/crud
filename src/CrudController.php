@@ -15,6 +15,7 @@ class CrudController extends BaseController {
 	private $perPage      = 50;
 	private $titulo       = '';
 	private $campos       = [];
+	private $camposHidden = [];
 	private $permisos     = ['add'=>true,'edit'=>true,'delete'=>true];
 	private $orders       = [];
 	private $botonesExtra = [];
@@ -26,9 +27,10 @@ class CrudController extends BaseController {
 	private $breadcrumb   = ['mostrar'=>true, 'breadcrumb'=>[]];
 
 
-	public function index() {
+	public function index(Request $request) {
 		if($this->modelo === null) dd('setModelo es requerido.');
 		$breadcrumb = $this->generarBreadcrumb('index');
+
 		return view('csgtcrud::index')
 			->with('layout',       $this->layout)
 			->with('breadcrumb',   $breadcrumb)
@@ -41,15 +43,16 @@ class CrudController extends BaseController {
 			->with('permisos', 		 $this->permisos)
 			->with('orders', 			 $this->orders)
 			->with('botonesExtra', $this->botonesExtra)
-			->with('nuevasVars',  '');
+			->with('nuevasVars',   $this->getQueryString($request));
 	}
 
 	public function edit(Request $request, $aId) {
 		$data       = $this->modelo->find(Crypt::decrypt($aId));
-		$path       = $this->downLevel($request->path());
+		$path       = $this->downLevel($request->path()) . '/';
 		$camposEdit = $this->getCamposEditMine();
 		$combos     = $this->fillCombos($camposEdit);
 		$breadcrumb = $this->generarBreadcrumb('edit', $this->downLevel($path));
+		$nuevasVars = $this->getQueryString($request);
 
 		return view('csgtcrud::edit')
 			->with('pathstore', $path)
@@ -58,7 +61,7 @@ class CrudController extends BaseController {
 			->with('columnas',   $camposEdit)
 			->with('data',       $data)
 			->with('combos',     $combos)
-			->with('nuevasVars', '');
+			->with('nuevasVars', $nuevasVars);
 	}
 
 	public function create(Request $request) {
@@ -67,7 +70,8 @@ class CrudController extends BaseController {
 		$camposEdit = $this->getCamposEditMine();
 		$combos     = $this->fillCombos($camposEdit);
 		$breadcrumb = $this->generarBreadcrumb('create', $path);
-		
+		$nuevasVars = $this->getQueryString($request);
+
 		return view('csgtcrud::edit')
 			->with('pathstore', $path)
 			->with('template',   $this->layout)
@@ -75,21 +79,27 @@ class CrudController extends BaseController {
 			->with('columnas',   $camposEdit)
 			->with('data',       $data)
 			->with('combos',     $combos)
-			->with('nuevasVars', '');
+			->with('nuevasVars', $nuevasVars);
 	}
 
 	public function store(Request $request){
 		//Aqui falta procesar fechas, files, images, etc
-		$campos = array_except($request->all(), $this->noGuardar);
+		$campos = array_except($request->request->all(), $this->noGuardar);
+		$campos = array_merge($campos, $this->camposHidden);
+		$nuevasVars = $this->getQueryString($request);
+
 		$this->modelo->create($campos);
-		return redirect()->to($request->path());
+		return redirect()->to($request->path() . $nuevasVars);
 	}
 
 	public function update(Request $request, $aId){
-		$campos = array_except($request->all(), $this->noGuardar);
+		$campos = array_except($request->request->all(), $this->noGuardar);
+		$campos = array_merge($campos, $this->camposHidden);
+		$nuevasVars = $this->getQueryString($request);
+
 		$m = $this->modelo->find(Crypt::decrypt($aId));
 		$m->update($campos);
-		return redirect()->to($this->downLevel($request->path()));
+		return redirect()->to($this->downLevel($request->path()) . $nuevasVars);
 	}
 
 	public function destroy(Request $request, $aId) {
@@ -503,6 +513,23 @@ class CrudController extends BaseController {
 	public function setPermisos($aPermisos) {
 		$this->permisos = $aPermisos;
 	}
+
+	public function setHidden($aParams) {
+		$allowed = ['campo','valor'];
+
+		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed)) 
+				dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+			
+		$this->camposHidden[$aParams['campo']] = $aParams['valor'];
+	}
+
+	private function getQueryString($request) {
+		$query = '?' . $request->getQueryString();
+		if ($query=='?') $query = '';
+		return $query;
+	}
+
 
 	/*
 	private static $showExport = true;

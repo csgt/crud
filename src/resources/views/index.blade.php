@@ -24,7 +24,7 @@
 					],
 				@endif
 				"ajax" : {
-					"url": "/{!!Request::path()!!}/data",
+					"url": "/{!!Request::path()!!}/data{{$nuevasVars}}",
 					"headers": {"X-CSRF-Token": "{{csrf_token()}}" },
 					"method": "POST",
 				},
