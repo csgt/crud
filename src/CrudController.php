@@ -193,10 +193,10 @@ class CrudController extends BaseController {
 			if (empty($this->breadcrumb['breadcrumb'])) {
 				switch ($aTipo) {
 					case 'edit':
-						$html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+						$html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
 						break;
 					case 'create':
-						$html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+						$html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
 						break;
 					default:
 						$html .= '<li class="active">' . $this->titulo . '</li>';
@@ -211,12 +211,12 @@ class CrudController extends BaseController {
 					case 'edit':
 						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
 							if($item == $lastItem){
-								return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+								return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
 							}
 							else if($item['url'] == ''){
 								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
 							}else{
-								return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
 							}
 						}, $array);
 
@@ -225,12 +225,12 @@ class CrudController extends BaseController {
 					case 'create':
 						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
 							if($item == $lastItem){
-								return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+								return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
 							}
 							else if($item['url'] == ''){
 								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
 							}else{
-								return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
 							}
 						}, $array);
 
@@ -241,7 +241,7 @@ class CrudController extends BaseController {
 							if($item['url'] == ''){
 								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
 							}else{
-								return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
 							}
 						}, $array);
 						break;
