@@ -1,5 +1,7 @@
 @extends($template)
-@section('breadcrumb', $breadcrumb)
+@section('breadcrumb')
+	{!! $breadcrumb !!}
+@stop
 @section('content')
 	<?php 
 		$includefechas     = false;
