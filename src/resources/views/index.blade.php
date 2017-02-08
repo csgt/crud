@@ -1,6 +1,8 @@
 @extends($layout)
 @section('titulo', $titulo)
-@section('breadcrumb', $breadcrumb)
+@section('breadcrumb')
+	{!! $breadcrumb !!}
+@stop
 @section('javascript')
 	@if($showExport)
   	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
