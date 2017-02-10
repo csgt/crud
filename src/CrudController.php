@@ -530,6 +530,20 @@ class CrudController extends BaseController {
 		return $query;
 	}
 
+	public static function setOrderBy($aParams) {
+		$allowed     = array('columna','direccion');
+		$direcciones = array('asc','desc');
+
+		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
+			if (!in_array($key, $allowed))
+				dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+		
+		$columna    = (!array_key_exists('columna', $aParams) ? 0: $aParams['columna']);
+		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
+
+		$this->orders[$columna] = $direccion;
+	}
+
 
 	/*
 	private static $showExport = true;
@@ -746,19 +760,7 @@ class CrudController extends BaseController {
 		$this->camposHidden[] = $arr;
 	}
 
-	public static function setOrderBy($aParams) {
-		$allowed     = array('columna','direccion');
-		$direcciones = array('asc','desc');
 
-		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
-			if (!in_array($key, $allowed))
-				dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
-		
-		$columna    = (!array_key_exists('columna', $aParams) ? 0: $aParams['columna']);
-		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
-
-		$this->orders[$columna] = $direccion;
-	}
 
 	public static function setGroupBy($aCampo) {
 		$this->groups[] = $aCampo;
