@@ -258,6 +258,7 @@ class CrudController extends BaseController {
 	public function data(Request $request){
 		//Definimos las variables que nos ayudar'an en el proceso de devolver la data
 		$search          = $request->search;
+		$orders           = $request->order;
 		$columns         = $this->getCamposShowMine();
 		$campos          = $this->getSelect($columns);
 		$recordsFiltered = 0;
@@ -306,6 +307,13 @@ class CrudController extends BaseController {
 				}
 			}
 		});
+
+		if ($orders) {
+			foreach($orders as $order){
+				$orderArray = explode(' AS ', $selects[$order['column']]);
+				$data->orderBy(reset($orderArray), $order['dir']);
+			}
+		}
 
 		//Obtenemos la cantidad de registros luego de haber filtrado
 		$recordsFiltered = $data->count();
