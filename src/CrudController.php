@@ -530,9 +530,9 @@ class CrudController extends BaseController {
 		return $query;
 	}
 
-	public static function setOrderBy($aParams) {
-		$allowed     = array('columna','direccion');
-		$direcciones = array('asc','desc');
+	public function setOrderBy($aParams) {
+		$allowed     = ['columna','direccion'];
+		$direcciones = ['asc','desc'];
 
 		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed))
