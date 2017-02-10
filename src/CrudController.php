@@ -310,8 +310,7 @@ class CrudController extends BaseController {
 
 		if ($orders) {
 			foreach($orders as $order){
-				$orderArray = explode(' AS ', $columns[$order['column']]);
-				$data->orderBy(reset($orderArray), $order['dir']);
+				$data->orderBy($campos[$order['column']], $order['dir']);
 			}
 		}
 
