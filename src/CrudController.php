@@ -308,14 +308,16 @@ class CrudController extends BaseController {
 			}
 		});
 
+		//Obtenemos la cantidad de registros luego de haber filtrado
+		$recordsFiltered = $data->count();
+
+		//Ahora order by
 		if ($orders) {
 			foreach($orders as $order){
 				$data->orderBy($campos[$order['column']], $order['dir']);
 			}
 		}
 
-		//Obtenemos la cantidad de registros luego de haber filtrado
-		$recordsFiltered = $data->count();
 		//Filtramos los registros y obtenemos el arreglo con la data
 		$items = $data
 			->skip($request->start)
