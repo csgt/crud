@@ -273,7 +273,7 @@ class CrudController extends BaseController {
 			$foreignModel = $this->modelo->{$relation}();
 
 			$data->with([$relation=>function($query) use ($fields, $foreignModel) {
-				$query->addSelect($foreignModel->getPlainForeignKey());
+				$query->addSelect($foreignModel->getForeignKeyName());
 				foreach($fields as $field) 
 					$query->addSelect($field);
 			 }]);
