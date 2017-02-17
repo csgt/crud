@@ -297,16 +297,17 @@ class CrudController extends BaseController {
 		//Obtenemos la cantidad de registros antes de filtrar
 		$recordsTotal = $data->count();
 		//Filtramos con el campo de la vista
-		$data->where(function($q) use ($columns, $search){
-			if ($columns) {
-				foreach ($columns as $column) {
-					if($column['searchable']){
-						//$select = explode(' AS ', $selects[$i]);
-						$q->orWhere($column['campo'], 'like', '%'.$search['value'].'%');
+		if ($search['value']<>'') {
+			$data->where(function($q) use ($columns, $search){
+				if ($columns) {
+					foreach ($columns as $column) {
+						if($column['searchable']){
+							$q->orWhere($column['campo'], 'LIKE', '%'.$search['value'].'%');
+						}
 					}
 				}
-			}
-		});
+			});
+		}
 
 		//Obtenemos la cantidad de registros luego de haber filtrado
 		$recordsFiltered = $data->count();
