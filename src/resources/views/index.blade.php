@@ -39,8 +39,7 @@
 			    "data": null,
 			    "sortable": false,
 			    "render": function ( data, type, full, meta ) {
-			    	var col = data.length - 1;
-			    	var id = data[col];	 
+			    	var id = data['DT_RowId'];	 
 			    	var html = '<div class="btn-toolbar pull-right">';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php 
@@ -58,7 +57,7 @@
 							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
 						@endforeach
 
-			    	@if($permisos['edit'])   	;
+			    	@if($permisos['edit'])
 							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="{!! URL::to(Request::url())!!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="fa fa-pencil"></span></a></div>';
 						@endif;
 						@if($permisos['delete'])
@@ -75,7 +74,6 @@
 			      return html;
 			    }
 			  }, 
-	
 			  @foreach ($columnas as $columna) {
 			  		"targets" : {{ $loop->index }},
 			  		"class" : "{!!$columna["class"]!!}",
@@ -225,8 +223,11 @@
 		      <tr>
 		      	@foreach ($columnas as $columna) 
 		        	<th>{!!$columna["nombre"]!!}</th>
+		        	@if ($loop->last)
+					    	<th>&nbsp;</th>
+					    @endif
 		        @endforeach
-		        	<th>&nbsp;</th>
+		        	
 		      </tr>
 		    </thead>
 			</table>
