@@ -2,7 +2,7 @@
 namespace Csgt\Crud;
 
 use Illuminate\Routing\Controller as BaseController;;
-use Response,Crypt, Session;
+use Response,Crypt, Session, DB;
 use Illuminate\Http\Request;
 
 class CrudController extends BaseController {
@@ -274,8 +274,11 @@ class CrudController extends BaseController {
 
 			$data->with([$relation=>function($query) use ($fields, $foreignModel) {
 				$query->addSelect($foreignModel->getForeignKeyName());
-				foreach($fields as $field) 
-					$query->addSelect($field);
+				foreach($fields as $field) {
+					foreach($field as $fiel) {
+						$query->addSelect(DB::raw($fiel));
+					}
+				}
 			 }]);
 
 			foreach($fields as $field) {
@@ -302,7 +305,7 @@ class CrudController extends BaseController {
 				if ($columns) {
 					foreach ($columns as $column) {
 						if($column['searchable']){
-							$q->orWhere($column['campo'], 'LIKE', '%'.$search['value'].'%');
+							$q->orWhere(DB::raw($column['campo']), 'like', '%'.$search['value'].'%');
 						}
 					}
 				}
@@ -347,15 +350,24 @@ class CrudController extends BaseController {
 				if ($colName == $this->uniqueid) $lastItem = Crypt::encrypt($item[$colName]);
 				else if($esRelacion){
 					//Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
-					if(array_key_exists(0, $item[$relationName]))
-						$cols[] = $item[$relationName][0][$colName];
-					else
-						$cols[] = $item[$relationName][$colName];
+					if ($item[$relationName]) {
+						if(array_key_exists(0, $item[$relationName]))
+							$cols[] = $item[$relationName][0][$colName];
+						else {
+							if(array_key_exists($colName, $item[$relationName])) 
+								$cols[] = $item[$relationName][$colName];
+							else
+								$cols[] = null;
+						}
+					}
+					else {
+						$cols[] = null;
+					}
 				}
 				else $cols[] = $item[$colName];
 			}
 
-			$cols[] = $lastItem;
+			$cols['DT_RowId'] = $lastItem;
 			$arr[] = $cols;
 		}
 		return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
