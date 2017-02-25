@@ -183,7 +183,7 @@ class CrudController extends BaseController {
 	}
 
 	private function getSelect($aCampos){
-		return array_map(function($c){ return $c['campo']; }, $aCampos);
+		return array_map(function($c){ return DB::raw($c['campo']); }, $aCampos);
 	}
 
 	private function generarBreadcrumb($aTipo, $aUrl='') {
