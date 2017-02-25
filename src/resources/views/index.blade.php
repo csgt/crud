@@ -1,5 +1,7 @@
 @extends($layout)
-@section('titulo', $titulo)
+@section('titulo')
+ {!! $titulo !!}
+@stop
 @section('breadcrumb')
 	{!! $breadcrumb !!}
 @stop
