@@ -42,7 +42,7 @@
 			    "sortable": false,
 			    "render": function ( data, type, full, meta ) {
 			    	var id = data['DT_RowId'];	 
-			    	var html = '<div class="btn-toolbar pull-right">';
+			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-right">';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php 
 								$url     = $botonExtra["url"];
@@ -216,6 +216,14 @@
   @if($fontawesome)
   	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/font-awesome.min.css'!!}">
   @endif
+  <style>
+  	.btn-toolbar-flex {
+		  display: flex;
+		}
+		.btn-toolbar-flex .btn-group {
+			margin-left: 2px;
+		}
+  </style>
 
 	<div class="clearfix"></div>
 	<div class="box">
