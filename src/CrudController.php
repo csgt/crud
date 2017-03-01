@@ -22,6 +22,7 @@ class CrudController extends BaseController {
 	private $joins        = [];
 	private $leftJoins    = [];
 	private $wheres       = [];
+	private $wheresIn     = [];
 	private $wheresRaw    = [];
 	private $noGuardar    = ['_token'];
 	private $breadcrumb   = ['mostrar'=>true, 'breadcrumb'=>[]];
@@ -293,6 +294,10 @@ class CrudController extends BaseController {
 		foreach($this->wheres as $where){
 			$data->where($where['columna'], $where['operador'], $where['valor']);
 		}
+		//Filtramos a partir del whereIn
+		foreach($this->wheresIn as $whereIn) {
+			$data->whereIn($whereIn['columna'], $whereIn['arreglo']);
+		}
 		//Filtramos a partir de WhereRaw
 		foreach($this->wheresRaw as $whereRaw){
 			$data->whereRaw($whereRaw);
@@ -468,7 +473,7 @@ class CrudController extends BaseController {
 	}
 
 	public function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2) {
-		$this->leftJoins[] = array('tabla'=>$aTabla, 'col1'=>$aCol1, 'operador'=>$aOperador, 'col2'=>$aCol2);
+		$this->leftJoins[] = ['tabla'=>$aTabla, 'col1'=>$aCol1, 'operador'=>$aOperador, 'col2'=>$aCol2];
 	}
 
 	public function setWhere($aColumna, $aOperador, $aValor=null) {
@@ -477,7 +482,11 @@ class CrudController extends BaseController {
 			$aOperador = '=';
 		}
 
-		$this->wheres[] = array('columna'=>$aColumna, 'operador'=>$aOperador, 'valor'=>$aValor);
+		$this->wheres[] = ['columna'=>$aColumna, 'operador'=>$aOperador, 'valor'=>$aValor];
+	}
+
+	public function setWhereIn($aColumna, $aArray) {
+		$this->whereIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
 	}
 
 	public function setWhereRaw($aStatement) {
