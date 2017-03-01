@@ -15,24 +15,24 @@ class Crud {
 	private static $data;
 	private static $colSlug       = 'slug';
 	private static $slugSeparator = '-';
-	private static $camposSlug    = array();
-	private static $camposShow    = array();
-	private static $camposEdit    = array();
-	private static $camposHidden  = array();
-	private static $wheres        = array();
-	private static $wheresRaw     = array();
-	private static $leftJoins     = array();
-	private static $botonesExtra  = array();
-	private static $orders        = array();
-	private static $groups        = array();
-	private static $permisos      = array('add'=>false,'edit'=>false,'delete'=>false);
+	private static $camposSlug    = [];
+	private static $camposShow    = [];
+	private static $camposEdit    = [];
+	private static $camposHidden  = [];
+	private static $wheres        = [];
+	private static $wheresRaw     = [];
+	private static $leftJoins     = [];
+	private static $botonesExtra  = [];
+	private static $orders        = [];
+	private static $groups        = [];
+	private static $permisos      = ['add'=>false,'edit'=>false,'delete'=>false];
 	private static $template      = 'template/template';
 
 	public static function getData($showEdit) {
-		$response = array();
-		$dataarr  = array();
+		$response = [];
+		$dataarr  = [];
 
-		$selects = array();
+		$selects = [];
 		$query = DB::table(self::$tabla);
 		
 		if($showEdit=='1')
@@ -100,7 +100,7 @@ class Crud {
 		$response['recordsTotal']    = $registros;
 		$response['recordsFiltered'] = $filtrados;
 		foreach($data as $d){
-			$tmparr = array();
+			$tmparr = [];
 			foreach($d as $columna => $valor){
 				if ($columna==self::$tablaId) $tmparr[] = Crypt::encrypt($valor);
 				else $tmparr[] = $valor;
@@ -236,7 +236,7 @@ class Crud {
 	public static function setCampo($aParams) {
 		$allowed = array('campo','nombre','editable','show','tipo','class',
 			'default','reglas', 'reglasmensaje', 'decimales','query','combokey','enumarray','filepath','filewidth','fileheight');
-		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea');
+		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','securefile','image','textarea');
 		
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
@@ -252,7 +252,7 @@ class Crud {
 		$tipo          = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
 		$class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
 		$default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
-		$reglas        = (!array_key_exists('reglas', $aParams) ? array() : $aParams['reglas']);
+		$reglas        = (!array_key_exists('reglas', $aParams) ? [] : $aParams['reglas']);
 		$decimales     = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
 		$query         = (!array_key_exists('query', $aParams) ? '' : $aParams['query']);
 		$combokey      = (!array_key_exists('combokey', $aParams) ? '' : $aParams['combokey']);
@@ -260,7 +260,7 @@ class Crud {
 		$filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
 		$filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
 		$fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
-		$enumarray     = (!array_key_exists('enumarray', $aParams) ? array() : $aParams['enumarray']);
+		$enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
 		$searchable    = true;
 
 		if (!in_array($tipo, $tipos)) dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
@@ -268,7 +268,8 @@ class Crud {
 		if($tipo == 'combobox' && ($query == '' || $combokey == '')) dd('Para el tipo combobox el query y combokey son requeridos');
 		if($tipo == 'file' && $filepath == '') dd('Para el tipo file hay que especifiarle el filepath');
 		if($tipo == 'image' && $filepath == '') dd('Para el tipo image hay que especifiarle el filepath');
-
+		if($tipo == 'securefile' && $filepath == '') dd('Para el tipo securefile hay que especifiarle el filepath');
+		
 		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
 		
 		if (!strpos($aParams['campo'], ')')) {
@@ -387,7 +388,7 @@ class Crud {
 		foreach(self::$camposEdit as $campo){
 			if($campo['tipo'] == 'combobox'){
 				$resultados = DB::select(DB::raw($campo['query']));
-				$temp       = array();
+				$temp       = [];
 				foreach($resultados as $resultado){
 					$i = 0;
 					foreach($resultado as $columna){
@@ -413,7 +414,7 @@ class Crud {
 	}
 
 	public static function store($id=null) {
-		$data          = array();
+		$data          = [];
 		$slug          = '';
 		$no_permitidas = array ("á","é","í","ó","ú","Á","É","Í","Ó","Ú","ñ","À","Ã","Ì","Ò","Ù","Ã™","Ã ","Ã¨","Ã¬","Ã²","Ã¹","ç","Ç","Ã¢","ê","Ã®","Ã´","Ã»","Ã‚","ÃŠ","ÃŽ","Ã”","Ã›","ü","Ã¶","Ã–","Ã¯","Ã¤","«","Ò","Ã","Ã„","Ã‹");
 		$permitidas    = array ("a","e","i","o","u","A","E","I","O","U","n","N","A","E","I","O","U","a","e","i","o","u","c","C","a","e","i","o","u","A","E","I","O","U","u","o","O","i","a","e","U","I","A","E");
@@ -465,6 +466,21 @@ class Crud {
 					
 					$filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
 					$path     = public_path() . $campo['filepath'];
+
+					if (!file_exists($path)) {
+    				mkdir($path, 0777, true);
+					}
+
+					$file->move($path, $filename);
+					
+					$data[$campo['campoReal']] = $filename;
+				}
+			}
+			else if ($campo['tipo']=='securefile') {
+				if (Input::hasFile($campo['campoReal'])) {
+					$file     = Input::file($campo['campoReal']);
+					$filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
+					$path     = $campo['filepath'];
 
 					if (!file_exists($path)) {
     				mkdir($path, 0777, true);

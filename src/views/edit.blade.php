@@ -130,7 +130,7 @@
 						{{ Form::select($columna['campoReal'], $columna['enumarray'], $valor,$arr) }}
 					</div>
 				<!---------------------------- FILE/IMAGE ---------------------------------->
-				@elseif(($columna['tipo'] == 'file')||($columna['tipo'] == 'image'))
+				@elseif(($columna['tipo'] == 'file')||($columna['tipo'] == 'image')||($columna['tipo'] == 'securefile'))
 					{{$label}}
 					<div class="col-sm-10">
 						{{ Form::file($columna['campoReal']) }}
