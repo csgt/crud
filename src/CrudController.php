@@ -486,7 +486,7 @@ class CrudController extends BaseController {
 	}
 
 	public function setWhereIn($aColumna, $aArray) {
-		$this->whereIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
+		$this->wheresIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
 	}
 
 	public function setWhereRaw($aStatement) {
