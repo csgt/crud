@@ -173,7 +173,14 @@ class CrudController extends BaseController {
 		//dd($foreigns);
 		foreach ($foreigns as $foreign) {
 			$partes = explode('.', $foreign['campo']);
-			$arr[$partes[0]][$i][] = $partes[1];
+			$key = $partes[0];
+			array_shift($partes);
+			if (is_array($partes))
+				$valor = implode('.', $partes);
+			else
+				$valor = $partes;
+
+			$arr[$key][$i][] = $valor;
 			$i++;
 		}
 		return $arr;
