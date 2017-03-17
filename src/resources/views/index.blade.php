@@ -19,6 +19,11 @@
 				"serverSide" : true,
 				@if($stateSave)
 				"stateSave"  : true,
+				"stateSaveParams": function(settings, data) {
+					data.columns.forEach(function(column) {
+						delete column.visible;
+					});
+				},
 				@endif
 				@if($orders)
 					"order": [

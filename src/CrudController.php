@@ -194,6 +194,8 @@ class CrudController extends BaseController {
 		return array_map(function($c){ return DB::raw($c['campo']); }, $aCampos);
 	}
 
+	
+
 	private function generarBreadcrumb($aTipo, $aUrl='') {
 		$html = '';
 		if ($this->breadcrumb['mostrar']) {
@@ -548,8 +550,17 @@ class CrudController extends BaseController {
 		$this->botonesExtra[] = $arr;
 	}
 
-	public function setPermisos($aPermisos) {
-		$this->permisos = $aPermisos;
+
+	public function setPermisos($aFuncionPermisos, $aModulo=false) {
+		if(!$aModulo) {
+			$this->permisos = $aFuncionPermisos;
+		}
+		else {
+			$this->middleware(function($request, $next) use ($aFuncionPermisos, $aModulo) {
+			$this->permisos = $aFuncionPermisos($aModulo);
+				return $next($request);
+			});	
+		}
 	}
 
 	public function setHidden($aParams) {
