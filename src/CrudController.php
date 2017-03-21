@@ -47,6 +47,14 @@ class CrudController extends BaseController {
 			->with('nuevasVars',   $this->getQueryString($request));
 	}
 
+	public function show(Request $request, $aId) {
+		$data       = $this->modelo->find(Crypt::decrypt($aId));
+		if ($request->expectsJson()) {
+			return response()->json($data);
+		}
+	}
+
+
 	public function edit(Request $request, $aId) {
 		$data       = $this->modelo->find(Crypt::decrypt($aId));
 		$path       = $this->downLevel($request->path()) . '/';
@@ -89,7 +97,10 @@ class CrudController extends BaseController {
 		$campos = array_merge($campos, $this->camposHidden);
 		$nuevasVars = $this->getQueryString($request);
 
-		$this->modelo->create($campos);
+		$item = $this->modelo->create($campos);
+		if ($request->expectsJson()) {
+			return response()->json($item);
+		}
 		return redirect()->to($request->path() . $nuevasVars);
 	}
 
@@ -100,6 +111,9 @@ class CrudController extends BaseController {
 
 		$m = $this->modelo->find(Crypt::decrypt($aId));
 		$m->update($campos);
+		if ($request->expectsJson()) {
+			return response()->json($m);
+		}
 		return redirect()->to($this->downLevel($request->path()) . $nuevasVars);
 	}
 
@@ -112,6 +126,9 @@ class CrudController extends BaseController {
 		catch (\Exception $e) {
 			Session::flash('message', trans('csgtcrud::crud.registroelimiandoe'));
 			Session::flash('type', 'danger');
+		}
+		if ($request->expectsJson()) {
+			return response()->json('ok');
 		}
 		return redirect($this->downLevel($request->path()));
 	}
