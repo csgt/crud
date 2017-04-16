@@ -54,7 +54,6 @@ class CrudController extends BaseController {
 		}
 	}
 
-
 	public function edit(Request $request, $aId) {
 		$data       = $this->modelo->find(Crypt::decrypt($aId));
 		$path       = $this->downLevel($request->path()) . '/';
@@ -131,155 +130,6 @@ class CrudController extends BaseController {
 			return response()->json('ok');
 		}
 		return redirect($this->downLevel($request->path()));
-	}
-
-	private function downLevel($aPath) {
-		$arr = explode('/', $aPath);
-		array_pop($arr);
-		$route = implode('/', $arr);
-		return $route;
-	}
-
-	private function fillCombos($aCampos){
-		$combos = [];
-		foreach($aCampos as $campo){
-			if($campo['tipo'] == 'combobox'){
-				$arr = [];
-				foreach($campo['collection']->toArray() as $item){
-					$arr[current($item)] = next($item); 
-				}
-
-				$combos[$campo['alias']] = $arr;
-			}
-		}
-		return $combos;
-	}
-
-	private function getCamposOrden(){
-		$tempArray = array_filter($this->campos, function($c) {
-			return $c['show'] === true;
-		});
-		$tempArray = array_map(function($campo){
-			return $campo['campo'];
-		}, $tempArray);
-		$tempArray[] = $this->uniqueid;
-		return array_values($tempArray);
-	}
-
-	private function getCamposShow(){
-		return array_values(array_filter($this->campos, function($c){ return ($c['show'] == true); }));
-	}
-
-	private function getCamposShowMine(){
-		return array_values(array_filter($this->campos, function($c){ return ($c['show'] == true && strpos($c['campo'],'.') === false); }));
-	}
-
-	private function getCamposEditMine(){
-		return array_values(array_filter($this->campos, function($c){ return ($c['editable'] == true && strpos($c['campo'],'.') === false); }));
-	}
-
-	private function getCamposShowForeign(){
-		$arr = [];
-		$foreigns = 
-		array_filter($this->campos, 
-			function($c){ 
-				return ($c['show'] == true && strpos($c['campo'],'.') != 0); 
-			}
-		);
-		$i=0;
-		//dd($foreigns);
-		foreach ($foreigns as $foreign) {
-			$partes = explode('.', $foreign['campo']);
-			$key = $partes[0];
-			array_shift($partes);
-			if (is_array($partes))
-				$valor = implode('.', $partes);
-			else
-				$valor = $partes;
-
-			$arr[$key][$i][] = $valor;
-			$i++;
-		}
-		return $arr;
-	}
-
-	private function getCamposEdit(){
-		return array_values(array_filter($this->campos, function($c){ return $c['editable'] == true; }));
-	}
-
-	private function getSelect($aCampos){
-		return array_map(function($c){ return DB::raw($c['campo']); }, $aCampos);
-	}
-
-	
-
-	private function generarBreadcrumb($aTipo, $aUrl='') {
-		$html = '';
-		if ($this->breadcrumb['mostrar']) {
-			$html .= '<ol class="breadcrumb">';
-			if (empty($this->breadcrumb['breadcrumb'])) {
-				switch ($aTipo) {
-					case 'edit':
-						$html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
-						break;
-					case 'create':
-						$html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
-						break;
-					default:
-						$html .= '<li class="active">' . $this->titulo . '</li>';
-						break;
-				}
-			}
-			else {
-				$array = $this->breadcrumb['breadcrumb'];
-				$htmlArray = [];
-				$lastItem = end($array);
-				switch ($aTipo) {
-					case 'edit':
-						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
-							if($item == $lastItem){
-								return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
-							}
-							else if($item['url'] == ''){
-								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
-							}else{
-								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
-							}
-						}, $array);
-
-						$htmlArray[] = '<li class="active"><i class="fa fa-pencil"></i> Editar</li>';
-						break;
-					case 'create':
-						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
-							if($item == $lastItem){
-								return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
-							}
-							else if($item['url'] == ''){
-								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
-							}else{
-								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
-							}
-						}, $array);
-
-						$htmlArray[] = '<li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
-						break;
-					default:
-						$htmlArray = array_map(function($item) use ($aUrl){
-							if($item['url'] == ''){
-								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
-							}else{
-								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
-							}
-						}, $array);
-						break;
-				}
-				$html .= implode('', $htmlArray);
-				
-				//Armarlo a partir del array
-			}
-			$html .= '</ol>';
-		}
-		return $html;
 	}
 
 	public function data(Request $request){
@@ -403,7 +253,160 @@ class CrudController extends BaseController {
 		}
 		return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
 	}
+	
+	private function downLevel($aPath) {
+		$arr = explode('/', $aPath);
+		array_pop($arr);
+		$route = implode('/', $arr);
+		return $route;
+	}
 
+	private function fillCombos($aCampos){
+		$combos = [];
+		foreach($aCampos as $campo){
+			if($campo['tipo'] == 'combobox'){
+				$arr = [];
+				foreach($campo['collection']->toArray() as $item){
+					$arr[current($item)] = next($item); 
+				}
+
+				$combos[$campo['alias']] = $arr;
+			}
+		}
+		return $combos;
+	}
+
+	private function generarBreadcrumb($aTipo, $aUrl='') {
+		$html = '';
+		if ($this->breadcrumb['mostrar']) {
+			$html .= '<ol class="breadcrumb">';
+			if (empty($this->breadcrumb['breadcrumb'])) {
+				switch ($aTipo) {
+					case 'edit':
+						$html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+						break;
+					case 'create':
+						$html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+						break;
+					default:
+						$html .= '<li class="active">' . $this->titulo . '</li>';
+						break;
+				}
+			}
+			else {
+				$array = $this->breadcrumb['breadcrumb'];
+				$htmlArray = [];
+				$lastItem = end($array);
+				switch ($aTipo) {
+					case 'edit':
+						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
+							if($item == $lastItem){
+								return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+							else if($item['url'] == ''){
+								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+							}else{
+								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+						}, $array);
+
+						$htmlArray[] = '<li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+						break;
+					case 'create':
+						$htmlArray = array_map(function($item) use ($aUrl, $lastItem){
+							if($item == $lastItem){
+								return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+							else if($item['url'] == ''){
+								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+							}else{
+								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+						}, $array);
+
+						$htmlArray[] = '<li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+						break;
+					default:
+						$htmlArray = array_map(function($item) use ($aUrl){
+							if($item['url'] == ''){
+								return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+							}else{
+								return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+							}
+						}, $array);
+						break;
+				}
+				$html .= implode('', $htmlArray);
+				
+				//Armarlo a partir del array
+			}
+			$html .= '</ol>';
+		}
+		return $html;
+	}
+
+	public function mostrarBreadcrumb($aBool) {
+		$this->breadcrumb['mostrar'] = $aBool;
+	}
+
+	/*==================== GETTERS =====================================*/
+	private function getCamposOrden(){
+		$tempArray = array_filter($this->campos, function($c) {
+			return $c['show'] === true;
+		});
+		$tempArray = array_map(function($campo){
+			return $campo['campo'];
+		}, $tempArray);
+		$tempArray[] = $this->uniqueid;
+		return array_values($tempArray);
+	}
+
+	private function getCamposShow(){
+		return array_values(array_filter($this->campos, function($c){ return ($c['show'] == true); }));
+	}
+
+	private function getCamposShowMine(){
+		return array_values(array_filter($this->campos, function($c){ return ($c['show'] == true && strpos($c['campo'],'.') === false); }));
+	}
+
+	private function getCamposEditMine(){
+		return array_values(array_filter($this->campos, function($c){ return ($c['editable'] == true && strpos($c['campo'],'.') === false); }));
+	}
+
+	private function getCamposShowForeign(){
+		$arr = [];
+		$foreigns = 
+		array_filter($this->campos, 
+			function($c){ 
+				return ($c['show'] == true && strpos($c['campo'],'.') != 0); 
+			}
+		);
+		$i=0;
+		//dd($foreigns);
+		foreach ($foreigns as $foreign) {
+			$partes = explode('.', $foreign['campo']);
+			$key = $partes[0];
+			array_shift($partes);
+			if (is_array($partes))
+				$valor = implode('.', $partes);
+			else
+				$valor = $partes;
+
+			$arr[$key][$i][] = $valor;
+			$i++;
+		}
+		return $arr;
+	}
+
+	private function getCamposEdit(){
+		return array_values(array_filter($this->campos, function($c){ return $c['editable'] == true; }));
+	}
+
+	private function getSelect($aCampos){
+		return array_map(function($c){ return DB::raw($c['campo']); }, $aCampos);
+	}
+
+	/*==================== SETTERS =====================================*/
 	public function setModelo($aModelo){
 		$this->modelo = $aModelo;
 	}
@@ -527,10 +530,6 @@ class CrudController extends BaseController {
 		$this->noGuardar[] = $aCampo;
 	}
 
-	public function mostrarBreadcrumb($aBool) {
-		$this->breadcrumb['mostrar'] = $aBool;
-	}
-
 	public function setBreadcrumb($aArray) {
 		$this->breadcrumb['breadcrumb'] = $aArray;
 	}
@@ -567,7 +566,6 @@ class CrudController extends BaseController {
 		$this->botonesExtra[] = $arr;
 	}
 
-
 	public function setPermisos($aFuncionPermisos, $aModulo=false) {
 		if(!$aModulo) {
 			$this->permisos = $aFuncionPermisos;
@@ -590,6 +588,10 @@ class CrudController extends BaseController {
 		$this->camposHidden[$aParams['campo']] = $aParams['valor'];
 	}
 
+	public function setPerPage($aCuantos){
+		$this->perPage = $aCuantos;
+	}
+
 	private function getQueryString($request) {
 		$query = '?' . $request->getQueryString();
 		if ($query=='?') $query = '';
@@ -609,7 +611,6 @@ class CrudController extends BaseController {
 
 		$this->orders[$columna] = $direccion;
 	}
-
 
 	/*
 	private static $showExport = true;
