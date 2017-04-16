@@ -2,7 +2,7 @@
 namespace Csgt\Crud;
 
 use Illuminate\Routing\Controller as BaseController;;
-use Response,Crypt, Session, DB;
+use Response,Crypt, Session, DB, Exception;
 use Illuminate\Http\Request;
 
 class CrudController extends BaseController {
@@ -211,13 +211,14 @@ class CrudController extends BaseController {
 
 		$arr = [];
 		$ordenColumnas = $this->getCamposOrden();
+		//dd($items);
 		foreach($items as $item) {
 			$cols = [];
 			$lastItem = '';
 			for ($i = 0; $i < sizeof($ordenColumnas); $i++){
 				$colName = '';
 				$relationName = '';
-				$esRelacion = (strpos($ordenColumnas[$i], '.') !== false);
+				$esRelacion = (strpos($ordenColumnas[$i], '.') !== false)&&(strpos($ordenColumnas[$i], '"') === false);
 
 				if($esRelacion){
 					$helperString = explode('.', $ordenColumnas[$i]);
@@ -366,7 +367,14 @@ class CrudController extends BaseController {
 	}
 
 	private function getCamposShowMine(){
-		return array_values(array_filter($this->campos, function($c){ return ($c['show'] == true && strpos($c['campo'],'.') === false); }));
+		return array_values(array_filter($this->campos, function($c) { 
+			return (
+				$c['show'] == true && 
+				(strpos($c['campo'],'.') === false || 
+				strpos($c['campo'], '"') !== false)
+			);
+			}
+		));
 	}
 
 	private function getCamposEditMine(){
@@ -378,7 +386,7 @@ class CrudController extends BaseController {
 		$foreigns = 
 		array_filter($this->campos, 
 			function($c){ 
-				return ($c['show'] == true && strpos($c['campo'],'.') != 0); 
+				return ($c['show'] == true && strpos($c['campo'],'.') != 0 && strpos($c['campo'], '"') === false); 
 			}
 		);
 		$i=0;
