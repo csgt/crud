@@ -580,7 +580,7 @@ class CrudController extends BaseController {
 		}
 		else {
 			$this->middleware(function($request, $next) use ($aFuncionPermisos, $aModulo) {
-			$this->permisos = $aFuncionPermisos($aModulo);
+				$this->permisos = call_user_func($aFuncionPermisos, $aModulo);
 				return $next($request);
 			});	
 		}
