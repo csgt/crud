@@ -16,7 +16,7 @@ class CrudController extends BaseController {
 	private $titulo       = '';
 	private $campos       = [];
 	private $camposHidden = [];
-	private $permisos     = ['add'=>true,'edit'=>true,'delete'=>true];
+	private $permisos     = ['add'=>false,'edit'=>false,'delete'=>false];
 	private $orders       = [];
 	private $botonesExtra = [];
 	private $joins        = [];
