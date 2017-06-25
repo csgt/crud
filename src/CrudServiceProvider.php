@@ -26,4 +26,10 @@ class CrudServiceProvider extends ServiceProvider {
       __DIR__.'/resources/lang/' => base_path('/resources/lang/vendor/csgtcrud'),
     ], 'lang');
 	}
+
+	 public function register() {
+    $this->commands([
+      Console\MakeCrudCommand::class
+    ]);
+  }
 }

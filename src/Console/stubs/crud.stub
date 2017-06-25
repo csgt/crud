@@ -1,0 +1,18 @@
+<?php
+
+namespace DummyNamespace;
+
+use Illuminate\Http\Request;
+use Csgt\Crud\CrudController;
+use Cancerbero;
+//use App\Models\Modelo;
+
+class DummyClass extends CrudController {
+	public function __construct() {
+		// $this->setModelo(new Modelo);
+		// $this->setTitulo('Titulo');
+		// $this->setCampo(['nombre' =>'Nombre', 'campo' => 'nombre']);
+		// $this->setCampo(['nombre' =>'Descripción', 'campo' => 'descripcion']);
+		// $this->setPermisos("\Cancerbero::tienePermisosCrud", 'ruta');
+	}
+}
