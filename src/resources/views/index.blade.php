@@ -6,9 +6,7 @@
 	{!! $breadcrumb !!}
 @stop
 @section('javascript')
-	@if($showExport)
-  	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
-  @endif
+  <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
  	<script>
 		$(document).ready(function(){
 			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) { 
@@ -218,8 +216,9 @@
   		} 
   	}
   ?>
+  <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
   @if($fontawesome)
-  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/') . 'css/font-awesome.min.css'!!}">
+  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.font-awesome','/css/font-awesome.min.css')!!}">
   @endif
   <style>
   	.btn-toolbar-flex {

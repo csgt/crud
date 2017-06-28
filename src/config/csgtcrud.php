@@ -1,4 +1,8 @@
 <?php
-return array(
-	'pathToAssets'        => '/packages/csgt/components/',
-);
+return [
+	'datatables' => [
+		'js'  => '/js/datatables.min.js',
+		'css' => '/css/datatables.min.css',
+	],
+	'font-awesome' => '/css/font-awesome-min.css'
+];

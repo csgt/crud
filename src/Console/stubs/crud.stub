@@ -11,6 +11,10 @@ class DummyClass extends CrudController {
 	public function __construct() {
 		// $this->setModelo(new Modelo);
 		// $this->setTitulo('Titulo');
+		// $this->setBreadcrumb([
+		// 	['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-archive'],
+		// 	['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
+		// ]);
 		// $this->setCampo(['nombre' =>'Nombre', 'campo' => 'nombre']);
 		// $this->setCampo(['nombre' =>'Descripción', 'campo' => 'descripcion']);
 		// $this->setPermisos("\Cancerbero::tienePermisosCrud", 'ruta');
