@@ -133,6 +133,32 @@ class CrudController extends BaseController {
 	public function update(Request $request, $aId){
 		$campos = array_except($request->request->all(), $this->noGuardar);
 		$campos = array_merge($campos, $this->camposHidden);
+
+		foreach ($this->campos as $campo) {
+			if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
+				$aFecha    = $campos[$campo['campo']];
+				$fechahora = explode(' ', $campos[$campo['campo']]);
+
+				if (sizeof($fechahora)==2) {
+		      $formato    = 'd/m/Y H:i';
+		      $formatoOut = 'Y-m-d H:i';
+		      $aFecha = substr($aFecha, 0, 16);
+		    }
+		    else {
+		      $formato    = 'd/m/Y';
+		      $formatoOut = 'Y-m-d';
+		    }
+
+		    try {
+		      $fecha = Carbon::createFromFormat($formato, $aFecha);
+		      $campos[$campo['campo']] = $fecha;
+		    }
+		    catch (Exception $e) {
+		      $campos[$campo['campo']] = '0000-00-00 00:00';
+		    }
+			}
+		}
+
 		$nuevasVars = $this->getQueryString($request);
 
 		$m = $this->modelo->find(Crypt::decrypt($aId));
