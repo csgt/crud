@@ -197,9 +197,11 @@ class CrudController extends BaseController {
 		$recordsFiltered = $data->count();
 
 		//Ahora order by
+		$ordenColumnas = $this->getCamposOrden();
+
 		if ($orders) {
 			foreach($orders as $order){
-				$data->orderBy($campos[$order['column']], $order['dir']);
+				$data->orderBy($ordenColumnas[$order['column']], $order['dir']);
 			}
 		}
 
@@ -210,7 +212,6 @@ class CrudController extends BaseController {
 			->get()->toArray();
 
 		$arr = [];
-		$ordenColumnas = $this->getCamposOrden();
 		//dd($items);
 		foreach($items as $item) {
 			$cols = [];
