@@ -1,9 +1,10 @@
-<?php 
+<?php
 namespace Csgt\Crud;
 
 use Illuminate\Routing\Controller as BaseController;;
 use Response,Crypt, Session, DB, Exception;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class CrudController extends BaseController {
 	private $uniqueid     = '___id___';
@@ -94,6 +95,32 @@ class CrudController extends BaseController {
 		//Aqui falta procesar fechas, files, images, etc
 		$campos = array_except($request->request->all(), $this->noGuardar);
 		$campos = array_merge($campos, $this->camposHidden);
+
+		foreach ($this->campos as $campo) {
+			if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
+				$aFecha    = $campos[$campo['campo']];
+				$fechahora = explode(' ', $campos[$campo['campo']]);
+
+				if (sizeof($fechahora)==2) {
+		      $formato    = 'd/m/Y H:i';
+		      $formatoOut = 'Y-m-d H:i';
+		      $aFecha = substr($aFecha, 0, 16);
+		    }
+		    else {
+		      $formato    = 'd/m/Y';
+		      $formatoOut = 'Y-m-d';
+		    }
+
+		    try {
+		      $fecha = Carbon::createFromFormat($formato, $aFecha);
+		      $campos[$campo['campo']] = $fecha;
+		    }
+		    catch (Exception $e) {
+		      $campos[$campo['campo']] = '0000-00-00 00:00';
+		    }
+			}
+		}
+
 		$nuevasVars = $this->getQueryString($request);
 
 		$item = $this->modelo->create($campos);
@@ -106,6 +133,32 @@ class CrudController extends BaseController {
 	public function update(Request $request, $aId){
 		$campos = array_except($request->request->all(), $this->noGuardar);
 		$campos = array_merge($campos, $this->camposHidden);
+
+		foreach ($this->campos as $campo) {
+			if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
+				$aFecha    = $campos[$campo['campo']];
+				$fechahora = explode(' ', $campos[$campo['campo']]);
+
+				if (sizeof($fechahora)==2) {
+		      $formato    = 'd/m/Y H:i';
+		      $formatoOut = 'Y-m-d H:i';
+		      $aFecha = substr($aFecha, 0, 16);
+		    }
+		    else {
+		      $formato    = 'd/m/Y';
+		      $formatoOut = 'Y-m-d';
+		    }
+
+		    try {
+		      $fecha = Carbon::createFromFormat($formato, $aFecha);
+		      $campos[$campo['campo']] = $fecha;
+		    }
+		    catch (Exception $e) {
+		      $campos[$campo['campo']] = '0000-00-00 00:00';
+		    }
+			}
+		}
+
 		$nuevasVars = $this->getQueryString($request);
 
 		$m = $this->modelo->find(Crypt::decrypt($aId));
@@ -121,7 +174,7 @@ class CrudController extends BaseController {
 			$this->modelo->destroy(Crypt::decrypt($aId));
 			Session::flash('message', trans('csgtcrud::crud.registroeliminado'));
 			Session::flash('type', 'warning');
-		} 
+		}
 		catch (\Exception $e) {
 			Session::flash('message', trans('csgtcrud::crud.registroelimiandoe'));
 			Session::flash('type', 'danger');
@@ -144,7 +197,7 @@ class CrudController extends BaseController {
 		//Se obtienen los campos a mostrar desde el modelo
 		$data = $this->modelo->select($campos);
 
-		$foreigns = $this->getCamposShowForeign();  
+		$foreigns = $this->getCamposShowForeign();
 
 		foreach($foreigns as $relation => $fields) {
 			$foreignModel = $this->modelo->{$relation}();
@@ -229,7 +282,7 @@ class CrudController extends BaseController {
 				else{
 					$colName = $ordenColumnas[$i];
 				}
-				
+
 				if ($colName == $this->uniqueid) $lastItem = Crypt::encrypt($item[$colName]);
 				else if($esRelacion){
 					//Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
@@ -237,7 +290,7 @@ class CrudController extends BaseController {
 						if(array_key_exists(0, $item[$relationName]))
 							$cols[] = $item[$relationName][0][$colName];
 						else {
-							if(array_key_exists($colName, $item[$relationName])) 
+							if(array_key_exists($colName, $item[$relationName]))
 								$cols[] = $item[$relationName][$colName];
 							else
 								$cols[] = null;
@@ -255,7 +308,7 @@ class CrudController extends BaseController {
 		}
 		return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
 	}
-	
+
 	private function downLevel($aPath) {
 		$arr = explode('/', $aPath);
 		array_pop($arr);
@@ -269,7 +322,7 @@ class CrudController extends BaseController {
 			if($campo['tipo'] == 'combobox'){
 				$arr = [];
 				foreach($campo['collection']->toArray() as $item){
-					$arr[current($item)] = next($item); 
+					$arr[current($item)] = next($item);
 				}
 
 				$combos[$campo['alias']] = $arr;
@@ -339,7 +392,7 @@ class CrudController extends BaseController {
 						break;
 				}
 				$html .= implode('', $htmlArray);
-				
+
 				//Armarlo a partir del array
 			}
 			$html .= '</ol>';
@@ -368,10 +421,10 @@ class CrudController extends BaseController {
 	}
 
 	private function getCamposShowMine(){
-		return array_values(array_filter($this->campos, function($c) { 
+		return array_values(array_filter($this->campos, function($c) {
 			return (
-				$c['show'] == true && 
-				(strpos($c['campo'],'.') === false || 
+				$c['show'] == true &&
+				(strpos($c['campo'],'.') === false ||
 				strpos($c['campo'], '"') !== false)
 			);
 			}
@@ -384,10 +437,10 @@ class CrudController extends BaseController {
 
 	private function getCamposShowForeign(){
 		$arr = [];
-		$foreigns = 
-		array_filter($this->campos, 
-			function($c){ 
-				return ($c['show'] == true && strpos($c['campo'],'.') != 0 && strpos($c['campo'], '"') === false); 
+		$foreigns =
+		array_filter($this->campos,
+			function($c){
+				return ($c['show'] == true && strpos($c['campo'],'.') != 0 && strpos($c['campo'], '"') === false);
 			}
 		);
 		$i=0;
@@ -429,7 +482,7 @@ class CrudController extends BaseController {
 			'default','reglas', 'reglasmensaje', 'decimales','collection',
 			'enumarray','filepath','filewidth','fileheight','target'];
 		$tipos   = ['string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote','securefile'];
-		
+
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
 				dd('setCampo no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
@@ -439,7 +492,7 @@ class CrudController extends BaseController {
 
 		if(!array_key_exists('campo', $aParams)) dd('setCampo debe tener un valor para "campo"');
 
-		$nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']); 
+		$nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']);
 		$edit          = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
 		$show          = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
 		$tipo          = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
@@ -465,12 +518,12 @@ class CrudController extends BaseController {
 		if($tipo == 'securefile' && $filepath == '') dd('Para el tipo securefile hay que especifiarle el filepath');
 
 		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
-		
+
 		if (!strpos($aParams['campo'], ')')) {
 			$arr = explode('.', $aParams['campo']);
 			if (count($arr)>=2) $campoReal = $arr[count($arr) - 1]; else $campoReal = $aParams['campo'];
 			$alias = str_replace('.','__', $aParams['campo']);
-		} 
+		}
 		else {
 			$campoReal  = $aParams['campo'];
 			$alias 			= 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
@@ -554,10 +607,10 @@ class CrudController extends BaseController {
 		}
 		if(!array_key_exists('url', $aParams)) dd('setBotonExtra debe tener un valor para "url"');
 
-		$icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
-		$class          = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
-		$titulo         = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
-		$target         = (!array_key_exists('target', $aParams) ? '': $aParams['target']); 
+		$icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']);
+		$class          = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']);
+		$titulo         = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']);
+		$target         = (!array_key_exists('target', $aParams) ? '': $aParams['target']);
 		$confirm        = (!array_key_exists('confirm', $aParams) ? false: $aParams['confirm']);
 		$confirmmessage = (!array_key_exists('confirmmessage', $aParams) ? '¿Estas seguro?': $aParams['confirmmessage']);
 
@@ -571,7 +624,7 @@ class CrudController extends BaseController {
 			'confirm'        => $confirm,
 			'confirmmessage' => $confirmmessage,
 		];
-		
+
 		$this->botonesExtra[] = $arr;
 	}
 
@@ -583,7 +636,7 @@ class CrudController extends BaseController {
 			$this->middleware(function($request, $next) use ($aFuncionPermisos, $aModulo) {
 				$this->permisos = call_user_func($aFuncionPermisos, $aModulo);
 				return $next($request);
-			});	
+			});
 		}
 	}
 
@@ -591,9 +644,9 @@ class CrudController extends BaseController {
 		$allowed = ['campo','valor'];
 
 		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
-			if (!in_array($key, $allowed)) 
+			if (!in_array($key, $allowed))
 				dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
-			
+
 		$this->camposHidden[$aParams['campo']] = $aParams['valor'];
 	}
 
@@ -614,7 +667,7 @@ class CrudController extends BaseController {
 		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed))
 				dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
-		
+
 		$columna    = (!array_key_exists('columna', $aParams) ? 0: $aParams['columna']);
 		$direccion  = (!array_key_exists('direccion', $aParams) ? 'asc': $aParams['direccion']);
 
@@ -652,7 +705,7 @@ class CrudController extends BaseController {
 
 		$selects = array();
 		$query = DB::table($this->tabla);
-		
+
 		if($showEdit=='1')
 			$campos = $this->camposEdit;
 		else
@@ -662,7 +715,7 @@ class CrudController extends BaseController {
 			$selects[] = $campo['campo'].' AS '.$campo['alias'];
 		}
 		$selects[] = $this->tabla . '.' . $this->tablaId;
-		
+
 		$query->selectRaw(implode(',',$selects));
 
 		foreach($this->leftJoins as $leftJoin){
@@ -683,7 +736,7 @@ class CrudController extends BaseController {
 		}
 
 		$registros = $query->count();
-		
+
 		$orders = Input::get('order');
 		if ($orders) {
 			foreach($orders as $order){
@@ -746,10 +799,10 @@ class CrudController extends BaseController {
 	public static function setStateSave($aBool){
 		$this->stateSave = $aBool;
 	}
-	
+
 	public static function setSlug($aParams){
 		$allowed = array('columnas','campo','separator');
-		
+
 		foreach ($aParams as $key=>$val) {  //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed))
 				dd('setSlug no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
@@ -800,10 +853,10 @@ class CrudController extends BaseController {
 		}
 		if(!array_key_exists('url', $aParams)) dd('setBotonExtra debe tener un valor para "url"');
 
-		$icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']); 
-		$class          = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']); 
-		$titulo         = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']); 
-		$target         = (!array_key_exists('target', $aParams) ? '': $aParams['target']); 
+		$icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star': $aParams['icon']);
+		$class          = (!array_key_exists('class', $aParams) ? 'default': $aParams['class']);
+		$titulo         = (!array_key_exists('titulo', $aParams) ? '': $aParams['titulo']);
+		$target         = (!array_key_exists('target', $aParams) ? '': $aParams['target']);
 		$confirm        = (!array_key_exists('confirm', $aParams) ? false: $aParams['confirm']);
 		$confirmmessage = (!array_key_exists('confirmmessage', $aParams) ? '¿Estas seguro?': $aParams['confirmmessage']);
 
@@ -817,7 +870,7 @@ class CrudController extends BaseController {
 			'confirm'        => $confirm,
 			'confirmmessage' => $confirmmessage,
 		];
-		
+
 		$this->botonesExtra[] = $arr;
 	}
 
@@ -825,9 +878,9 @@ class CrudController extends BaseController {
 		$allowed = array('campo','valor');
 
 		foreach ($aParams as $key=>$val)  //Validamos que todas las variables del array son permitidas.
-			if (!in_array($key, $allowed)) 
+			if (!in_array($key, $allowed))
 				dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
-			
+
 
 		$arr = array(
 			'campo' => $aParams['campo'],
@@ -847,7 +900,7 @@ class CrudController extends BaseController {
 			'default','reglas', 'reglasmensaje', 'decimales','query','combokey',
 			'enumarray','filepath','filewidth','fileheight','target');
 		$tipos   = array('string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote');
-		
+
 		foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
 			if (!in_array($key, $allowed)) {
 				dd('setCampo no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
@@ -856,7 +909,7 @@ class CrudController extends BaseController {
 
 		if(!array_key_exists('campo', $aParams)) dd('setCampo debe tener un valor para "campo"');
 
-		$nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']); 
+		$nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']);
 		$edit          = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
 		$show          = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
 		$tipo          = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
@@ -881,12 +934,12 @@ class CrudController extends BaseController {
 		if($tipo == 'image' && $filepath == '') dd('Para el tipo image hay que especifiarle el filepath');
 
 		if($tipo == 'emum' && count($enumarray) == 0) dd('Para el tipo enum el enumarray es requerido');
-		
+
 		if (!strpos($aParams['campo'], ')')) {
 			$arr = explode('.', $aParams['campo']);
 			if (count($arr)>=2) $campoReal = $arr[count($arr) - 1]; else $campoReal = $aParams['campo'];
 			$alias = str_replace('.','__', $aParams['campo']);
-		} 
+		}
 		else {
 			$campoReal  = $aParams['campo'];
 			$alias 			= 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
@@ -950,7 +1003,7 @@ class CrudController extends BaseController {
 	public static function index() {
 		if ($this->tabla=='')   dd('setTabla es obligatorio.');
 		if ($this->tablaId=='') dd('setTablaId es obligatorio.');
-				
+
 		return view('csgtcrud::index')
 			->with('template',    $this->template)
 			->with('stateSave',   $this->stateSave)
@@ -979,7 +1032,7 @@ class CrudController extends BaseController {
 		else {
 			$path  = self::downLevel(Request::path(), false);
 		}
-		
+
 		$route = str_replace($aId, '', $path);
 
 		$combos = null;
@@ -1018,12 +1071,12 @@ class CrudController extends BaseController {
 		$permitidas    = array ("a","e","i","o","u","A","E","I","O","U","n","N","A","E","I","O","U","a","e","i","o","u","c","C","a","e","i","o","u","A","E","I","O","U","u","o","O","i","a","e","U","I","A","E");
 
 		foreach($this->camposEdit as $campo) {
-			if ($campo['tipo']=='bool') 
+			if ($campo['tipo']=='bool')
 				$data[$campo['campoReal']] = Input::get($campo['campoReal'],0);
 			else if ($campo['tipo']=='combobox') {
-				if (Input::get($campo['combokey'])=='') 
+				if (Input::get($campo['combokey'])=='')
 					$data[$campo['combokey']] = null;
-				else 
+				else
 					$data[$campo['combokey']] = Input::get($campo['combokey']);
 			}
 			else if ($campo['tipo']=='date') {
@@ -1061,7 +1114,7 @@ class CrudController extends BaseController {
 			else if (($campo['tipo']=='file')||($campo['tipo']=='image')) {
 				if (Input::hasFile($campo['campoReal'])) {
 					$file = Input::file($campo['campoReal']);
-					
+
 					$filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
 					$path     = public_path() . $campo['filepath'];
 
@@ -1070,7 +1123,7 @@ class CrudController extends BaseController {
 					}
 
 					$file->move($path, $filename);
-					
+
 					$data[$campo['campoReal']] = $filename;
 				}
 			}
@@ -1085,7 +1138,7 @@ class CrudController extends BaseController {
 				$temp  = str_replace('-', '', $temp);
 				$temp  = str_replace('\'', '', $temp);
 				$temp  = str_replace($no_permitidas, $permitidas ,$temp);
-				$slug .= $temp; 
+				$slug .= $temp;
 			}
 		}
 
@@ -1101,7 +1154,7 @@ class CrudController extends BaseController {
 					$i++;
 					$result = DB::table($this->tabla)->where($this->colSlug, $slug.$this->slugSeparator.$i)->first();
 				}
-				
+
 				$data[$this->colSlug] = $slug.$this->slugSeparator.$i;
 			}
 
@@ -1125,7 +1178,7 @@ class CrudController extends BaseController {
 				Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
 				Session::flash('type', 'danger');
 			}
-			
+
 			return Redirect::to(Request::path() . self::getGetVars());
 		}
 
@@ -1142,7 +1195,7 @@ class CrudController extends BaseController {
 				Session::flash('message', trans('csgtcrud::crud.registroerror') . $e->getMessage());
 				Session::flash('type', 'danger');
 			}
-			return Redirect::to(self::downLevel(Request::path(), false) . self::getGetVars());	
+			return Redirect::to(self::downLevel(Request::path(), false) . self::getGetVars());
 		}
 	}
 
