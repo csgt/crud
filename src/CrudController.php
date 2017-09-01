@@ -219,6 +219,7 @@ class CrudController extends BaseController {
 		foreach($this->leftJoins as $leftJoin){
 			$data->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
 		}
+
 		//Filtramos a partir del where
 		foreach($this->wheres as $where){
 			$data->where($where['columna'], $where['operador'], $where['valor']);
@@ -231,38 +232,45 @@ class CrudController extends BaseController {
 		foreach($this->wheresRaw as $whereRaw){
 			$data->whereRaw($whereRaw);
 		}
+
+		$data = $data->get();
 		//Obtenemos la cantidad de registros antes de filtrar
 		$recordsTotal = $data->count();
+
 		//Filtramos con el campo de la vista
 		if ($search['value']<>'') {
-			$data->where(function($q) use ($columns, $search){
-				if ($columns) {
-					foreach ($columns as $column) {
-						if($column['searchable']){
-							$q->orWhere(DB::raw($column['campo']), 'like', '%'.$search['value'].'%');
-						}
-					}
+			$data = $data->filter(function($item) use($columns, $search) {
+				$result = false;
+				//dd($columns);
+				foreach($columns as $column) {
+					if($column['searchable'])
+						$result = $result || stristr($item->{$column['campo']}, $search['value']);
 				}
+				return $result;
 			});
 		}
-
+		
 		//Obtenemos la cantidad de registros luego de haber filtrado
 		$recordsFiltered = $data->count();
 
 		//Ahora order by
 		$ordenColumnas = $this->getCamposOrden();
-
 		if ($orders) {
 			foreach($orders as $order){
-				$data->orderBy($ordenColumnas[$order['column']], $order['dir']);
+				if ($order['dir'] == 'asc') {
+					$data = $data->sortBy($ordenColumnas[$order['column']]);
+				}
+				else {
+					$data = $data->sortByDesc($ordenColumnas[$order['column']]);
+				}
 			}
 		}
 
 		//Filtramos los registros y obtenemos el arreglo con la data
 		$items = $data
-			->skip($request->start)
+			->splice($request->start)
 			->take($request->length)
-			->get()->toArray();
+			->toArray();
 
 		$arr = [];
 		//dd($items);
