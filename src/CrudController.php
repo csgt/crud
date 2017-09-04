@@ -118,6 +118,22 @@ class CrudController extends BaseController {
 		    catch (Exception $e) {
 		      $campos[$campo['campo']] = '0000-00-00 00:00';
 		    }
+			}else if (($campo['tipo']=='file')||($campo['tipo']=='image')) {
+
+				if ($request->hasFile($campo['campo'])) {
+					$file = $request->file($campo['campo']);
+
+					$filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
+					$path     = public_path() . $campo['filepath'];
+
+					if (!file_exists($path)) {
+    				mkdir($path, 0777, true);
+					}
+
+					$file->move($path, $filename);
+
+					$campos[$campo['campo']] = $filename;
+				}
 			}
 		}
 
@@ -156,6 +172,22 @@ class CrudController extends BaseController {
 		    catch (Exception $e) {
 		      $campos[$campo['campo']] = '0000-00-00 00:00';
 		    }
+			}else if (($campo['tipo']=='file')||($campo['tipo']=='image')) {
+
+				if ($request->hasFile($campo['campo'])) {
+					$file = $request->file($campo['campo']);
+
+					$filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
+					$path     = public_path() . $campo['filepath'];
+
+					if (!file_exists($path)) {
+    				mkdir($path, 0777, true);
+					}
+
+					$file->move($path, $filename);
+
+					$campos[$campo['campo']] = $filename;
+				}
 			}
 		}
 
