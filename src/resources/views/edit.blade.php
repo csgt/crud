@@ -204,7 +204,7 @@
 						@elseif($columna['tipo'] == 'numeric')
 							{!!$label!!}
 							<div class="col-sm-3">
-			    				<input type="number" name="{{ $columna['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields	($arr) !!}>
+			    				<input type="text" name="{{ $columna['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields	($arr) !!}>
 			    			</div>
 						<!---------------------------- DEFAULT ---------------------------------->
 				    	@else
