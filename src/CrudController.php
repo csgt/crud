@@ -133,21 +133,23 @@ class CrudController extends BaseController
                     } catch (Exception $e) {
                         $fields[$campo['campo']] = null;
                     }
-                } elseif (($campo['tipo']=='file')||($campo['tipo']=='image')) {
-                    if ($request->hasFile($campo['campo'])) {
-                        $file = $request->file($campo['campo']);
+                }
+            }
 
-                        $filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
-                        $path     = public_path() . $campo['filepath'];
+            if (($campo['tipo']=='file')||($campo['tipo']=='image')) {
+                if ($request->hasFile($campo['campo'])) {
+                    $file = $request->file($campo['campo']);
 
-                        if (!file_exists($path)) {
-                            mkdir($path, 0777, true);
-                        }
+                    $filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
+                    $path     = public_path() . $campo['filepath'];
 
-                        $file->move($path, $filename);
-
-                        $campos[$campo['campo']] = $filename;
+                    if (!file_exists($path)) {
+                        mkdir($path, 0777, true);
                     }
+
+                    $file->move($path, $filename);
+                    $campos[$campo['campo']] = $filename;
+                    $fields[$campo['campo']] = $filename;
                 }
             }
         }
