@@ -2,21 +2,27 @@
 
 namespace DummyNamespace;
 
-use Illuminate\Http\Request;
 use Csgt\Crud\CrudController;
-use Cancerbero;
+
 //use App\Models\Modelo;
 
-class DummyClass extends CrudController {
-	public function __construct() {
-		// $this->setModelo(new Modelo);
-		// $this->setTitulo('Titulo');
-		// $this->setBreadcrumb([
-		// 	['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-archive'],
-		// 	['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
-		// ]);
-		// $this->setCampo(['nombre' =>'Nombre', 'campo' => 'nombre']);
-		// $this->setCampo(['nombre' =>'Descripción', 'campo' => 'descripcion']);
-		// $this->setPermisos("\Cancerbero::tienePermisosCrud", 'ruta');
-	}
+class DummyClass extends CrudController
+{
+    public function __construct()
+    {
+        // $this->setModelo(new Modelo);
+        // $this->setTitulo('Titulo');
+        // $this->setBreadcrumb([
+        // 	['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-archive'],
+        // 	['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
+        // ]);
+        // $this->setCampo(['nombre' => 'Nombre', 'campo' => 'nombre']);
+        // $this->setCampo(['nombre' => 'Descripción', 'campo' => 'descripcion']);
+        // $this->setCampo(['nombre' => 'Protocolo', 'campo' => 'protocoloid', 'tipo' => 'combobox',
+        //    'collection' => Protocolo::select('protocoloid', 'nombre')->get()]);
+        // $this->setHidden(['campo' => 'clienteid', 'valor' => 1]);
+        // $this->setBotonExtra(['url' => '/configuracion/sensores?gatewayid={id}', 'icon' => 'fa fa-thermometer', 'titulo' => 'Sensores', 'class' => 'warning']);
+
+        // $this->setPermisos("\Cancerbero::tienePermisosCrud", 'ruta');
+    }
 }
