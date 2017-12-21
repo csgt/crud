@@ -9,7 +9,7 @@
   <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
  	<script>
 		$(document).ready(function(){
-			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) { 
+			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
 				console.log(JSON.stringify(message));
 			};
 			var oTable = $('.tabla-catalogo').dataTable({
@@ -44,21 +44,23 @@
 			    "data": null,
 			    "sortable": false,
 			    "render": function ( data, type, full, meta ) {
-			    	var id = data['DT_RowId'];	 
+			    	var id = data['DT_RowId'];
 			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-right">';
 			    	@foreach ($botonesExtra as $botonExtra)
-			    		<?php 
-								$url     = $botonExtra["url"];
-								$urlarr  = explode('{id}', $url);
-								$urlVars = '';
-								$parte1  = $urlarr[0];
-								$parte2  = (count($urlarr) == 1?'':$urlarr[1]);
-			    			if ($nuevasVars!='') {
-			    				$urlVars = (!strpos($url, '?')?'?':'&') . substr($nuevasVars,1);
-			    			}
-			    			$target = $botonExtra["target"];
-			    			if ($target<>'') $target='target="' . $target . '"';
-			    		?>
+			    		<?php
+                                $url     = $botonExtra["url"];
+                                $urlarr  = explode('{id}', $url);
+                                $urlVars = '';
+                                $parte1  = $urlarr[0];
+                                $parte2  = (count($urlarr) == 1?'':$urlarr[1]);
+                            if ($nuevasVars!='') {
+                                $urlVars = (!strpos($url, '?')?'?':'&') . substr($nuevasVars, 1);
+                            }
+                            $target = $botonExtra["target"];
+                            if ($target<>'') {
+                                $target='target="' . $target . '"';
+                            }
+                        ?>
 							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
 						@endforeach
 
@@ -78,29 +80,29 @@
 						html += '</div>';
 			      return html;
 			    }
-			  }, 
+			  },
 			  @foreach ($columnas as $columna) {
 			  		"targets" : {{ $loop->index }},
 			  		"class" : "{!!$columna["class"]!!}",
 			  		"searchable" : "{!!$columna["searchable"]!!}",
 
-				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime")) 
+				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime"))
 				  	"data" : null,
 				  	"render" : function(data) {
 				  		var fecha = data[{{$loop->index}}];
 				  		if (fecha==null) return null;
-				  		var arrhf = fecha.split(" "); 
+				  		var arrhf = fecha.split(" ");
 				  		var arrf  = arrhf[0].split("-");
 				  		var hora  = '';
 				  		if (arrhf.length==2) {hora = ' ' + arrhf[1].substring(0,5);}
-				  		@if($columna["tipo"] == "date") 
+				  		@if($columna["tipo"] == "date")
 				  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0];
 				  		@else
 				  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
 				  		@endif
 				  	}
 
-					@elseif ($columna["tipo"]=="image") 
+					@elseif ($columna["tipo"]=="image")
 						"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
@@ -108,7 +110,7 @@
 				  		return '<img width="{!!$columna["filewidth"]!!}" src="{!!$columna["filepath"]!!}' + val + '">';
 				  	}
 
-				  @elseif ($columna["tipo"]=="file") 
+				  @elseif ($columna["tipo"]=="file")
 						"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
@@ -116,7 +118,7 @@
 				  		return '<a href="{!!$columna["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
 				  	}
 
-					@elseif ($columna["tipo"]=="numeric") 
+					@elseif ($columna["tipo"]=="numeric")
 						"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
@@ -126,7 +128,7 @@
 				  		return val.formatMoney({!!$columna["decimales"]!!});
 				  	}
 
-			  	@elseif($columna["tipo"]=="bool") 
+			  	@elseif($columna["tipo"]=="bool")
 			  	 	"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
@@ -135,13 +137,15 @@
 							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">{{trans('csgtcrud::crud.si')}}</span>');
 				  		return text;
 					  }
-					@elseif ($columna["tipo"]=="url") 
+					@elseif ($columna["tipo"]=="url")
 						"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
 				  		return '<a href="' + val + '" target="{!!$columna["target"]!!}">' + val + '</a>';
 				  	}
+				@else
+				  	"render" : $.fn.dataTable.render.text()
 		  		@endif
 		  		},
 			  @endforeach
@@ -169,7 +173,7 @@
 	    @endif
 
 			});
-			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))   	   
+			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 
@@ -201,7 +205,7 @@
       sign = n < 0 ? "-" : "",
       i = parseInt(n = Math.abs(+n || 0).toFixed(aDec)) + "",
       j = (j = i.length) > 3 ? j % 3 : 0;
-        return sign + (j ? i.substr(0, j) + "," : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ",") 
+        return sign + (j ? i.substr(0, j) + "," : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ",")
           + (aDec ? "." + Math.abs(n - i).toFixed(aDec).slice(2) : "");
     };
 	</script>
@@ -209,12 +213,12 @@
 
 @section('content')
   <?php
-  	$fontawesome = false;
-  	foreach ($botonesExtra as $botonExtra) {
-  		if( strpos($botonExtra['icon'], 'fa-')) {
-  			$fontawesome = true;
-  		} 
-  	}
+    $fontawesome = false;
+    foreach ($botonesExtra as $botonExtra) {
+        if (strpos($botonExtra['icon'], 'fa-')) {
+            $fontawesome = true;
+        }
+    }
   ?>
   <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
   @if($fontawesome)
@@ -235,13 +239,13 @@
 			<table class="table table-bordered table-condensed table-hover tabla-catalogo display">
 				<thead>
 		      <tr>
-		      	@foreach ($columnas as $columna) 
+		      	@foreach ($columnas as $columna)
 		        	<th>{!!$columna["nombre"]!!}</th>
 		        	@if ($loop->last)
 					    	<th>&nbsp;</th>
 					    @endif
 		        @endforeach
-		        	
+
 		      </tr>
 		    </thead>
 			</table>
