@@ -144,6 +144,8 @@
 				  			if (val==null) return null;
 				  			return '<a href="' + val + '" target="{!!$columna["target"]!!}">' + val + '</a>';
 				  		}
+				  	@else
+				  		"render" : $.fn.dataTable.render.text()
 		  			@endif
 		  		},
 			  	@endforeach
