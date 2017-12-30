@@ -579,7 +579,6 @@ class CrudController extends BaseController
         } else {
             $campoReal  = $aParams['campo'];
             $alias            = 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
-            $searchable = false;
         }
 
         if ($aParams['campo']==$this->modelo->getKeyName()) {
@@ -588,24 +587,24 @@ class CrudController extends BaseController
         }
 
         $arr = [
-            'nombre'            => $nombre,
-            'campo'                => $aParams['campo'],
-            'alias'                => $alias,
-            'campoReal'            => $campoReal,
-            'tipo'                 => $tipo,
-            'show'                 => $show,
-            'editable'            => $edit,
-            'default'            => $default,
-            'reglas'            => $reglas,
+            'nombre'        => $nombre,
+            'campo'         => $aParams['campo'],
+            'alias'         => $alias,
+            'campoReal'     => $campoReal,
+            'tipo'          => $tipo,
+            'show'          => $show,
+            'editable'      => $edit,
+            'default'       => $default,
+            'reglas'        => $reglas,
             'reglasmensaje' => $reglasmensaje,
-            'class'                => $class,
-            'decimales'            => $decimales,
+            'class'         => $class,
+            'decimales'     => $decimales,
             'collection'    => $collection,
             'searchable'    => $searchable,
             'enumarray'     => $enumarray,
-            'filepath'            => $filepath,
-            'filewidth'            => $filewidth,
-            'fileheight'        => $fileheight,
+            'filepath'      => $filepath,
+            'filewidth'     => $filewidth,
+            'fileheight'    => $fileheight,
             'target'        => $target,
         ];
         $this->campos[] = $arr;
