@@ -581,7 +581,6 @@ class CrudController extends BaseController
         } else {
             $campoReal  = $aParams['campo'];
             $alias            = 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
-            $searchable = false;
         }
 
         if ($aParams['campo']==$this->modelo->getKeyName()) {
