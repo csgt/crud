@@ -242,16 +242,15 @@ class CrudController extends BaseController
 
         //Filtramos con el campo de la vista
         if ($search['value']<>'') {
-            $data = $data->filter(function ($item) use ($columns, $search) {
-                $result = false;
-                //dd($columns);
-                foreach ($columns as $column) {
-                    if ($column['searchable']) {
-                        $result = $result || stristr($item->{$column['campo']}, $search['value']);
+            if ($recordsTotal > 0) {
+                $data = $data->filter(function ($item) use ($search) {
+                    $result = false;
+                    foreach ($item->getAttributes() as $column) {
+                        $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
                     }
-                }
-                return $result;
-            });
+                    return $result;
+                });
+            }
         }
 
         //Obtenemos la cantidad de registros luego de haber filtrado
@@ -283,12 +282,17 @@ class CrudController extends BaseController
             for ($i = 0; $i < sizeof($ordenColumnas); $i++) {
                 $colName = '';
                 $relationName = '';
-                $esRelacion = (strpos($ordenColumnas[$i], '.') !== false)&&(strpos($ordenColumnas[$i], '"') === false);
+                $tienePunto = (strpos($ordenColumnas[$i], '.') !== false) && (strpos($ordenColumnas[$i], '"') === false);
 
-                if ($esRelacion) {
+                $esRelacion = ($tienePunto)&& (array_key_exists($ordenColumnas[$i], $columns));
+
+                if ($tienePunto) {
                     $helperString = explode('.', $ordenColumnas[$i]);
                     $colName = $helperString[1];
                     $relationName = $helperString[0];
+                    if (strpos($colName, ' AS ')) {
+                        $colName = explode('AS ', $colName)[1];
+                    }
                 } else {
                     $colName = $ordenColumnas[$i];
                 }
@@ -445,7 +449,7 @@ class CrudController extends BaseController
                 return (
                 $c['show'] == true &&
                 (strpos($c['campo'], '.') === false ||
-                strpos($c['campo'], '"') !== false)
+                strpos($c['campo'], '"') !== false || !$c['isforeign'])
             );
             }
         ));
@@ -471,17 +475,19 @@ class CrudController extends BaseController
         $i=0;
         //dd($foreigns);
         foreach ($foreigns as $foreign) {
-            $partes = explode('.', $foreign['campo']);
-            $key = $partes[0];
-            array_shift($partes);
-            if (is_array($partes)) {
-                $valor = implode('.', $partes);
-            } else {
-                $valor = $partes;
-            }
+            if ($foreign['isforeign']) {
+                $partes = explode('.', $foreign['campo']);
+                $key = $partes[0];
+                array_shift($partes);
+                if (is_array($partes)) {
+                    $valor = implode('.', $partes);
+                } else {
+                    $valor = $partes;
+                }
 
-            $arr[$key][$i][] = $valor;
-            $i++;
+                $arr[$key][$i][] = $valor;
+                $i++;
+            }
         }
         return $arr;
     }
@@ -515,7 +521,7 @@ class CrudController extends BaseController
     {
         $allowed = ['campo','nombre','editable','show','tipo','class',
             'default','reglas', 'reglasmensaje', 'decimales','collection',
-            'enumarray','filepath','filewidth','fileheight','target'];
+            'enumarray','filepath','filewidth','fileheight','target', 'isforeign'];
         $tipos   = ['string','numeric','date','datetime','bool','combobox','password','enum','file','image','textarea','url','summernote','securefile'];
 
         foreach ($aParams as $key=>$val) { //Validamos que todas las variables del array son permitidas.
@@ -544,6 +550,7 @@ class CrudController extends BaseController
         $fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
         $target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
+        $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
         $searchable    = true;
 
         if (!in_array($tipo, $tipos)) {
@@ -608,6 +615,7 @@ class CrudController extends BaseController
             'filewidth'     => $filewidth,
             'fileheight'    => $fileheight,
             'target'        => $target,
+            'isforeign'     => $isforeign,
         ];
         $this->campos[] = $arr;
     }
