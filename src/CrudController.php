@@ -284,7 +284,7 @@ class CrudController extends BaseController
                 $relationName = '';
                 $tienePunto = (strpos($ordenColumnas[$i], '.') !== false) && (strpos($ordenColumnas[$i], '"') === false);
 
-                $esRelacion = ($tienePunto)&& (array_key_exists($ordenColumnas[$i], $columns));
+                $esRelacion = ($tienePunto) && ($columns[$i]['isforeign'] ==1);
 
                 if ($tienePunto) {
                     $helperString = explode('.', $ordenColumnas[$i]);
