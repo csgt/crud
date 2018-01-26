@@ -279,12 +279,20 @@ class CrudController extends BaseController
         foreach ($items as $item) {
             $cols = [];
             $lastItem = '';
+
             for ($i = 0; $i < sizeof($ordenColumnas); $i++) {
                 $colName = '';
                 $relationName = '';
+                $actualOrdenColumnas = $ordenColumnas[$i];
                 $tienePunto = (strpos($ordenColumnas[$i], '.') !== false) && (strpos($ordenColumnas[$i], '"') === false);
-
-                $esRelacion = ($tienePunto) && ($columns[$i]['isforeign'] ==1);
+                
+                $column = array_filter($columns, function($item) use ($actualOrdenColumnas) {
+                    return $item['campo'] == $actualOrdenColumnas;
+                });
+                $esRelacion = false;
+                if (array_key_exists('isforeign', $column)) {
+                    $esRelacion = ($tienePunto) && ($column['isforeign'] == 1);
+                }
 
                 if ($tienePunto) {
                     $helperString = explode('.', $ordenColumnas[$i]);
@@ -349,7 +357,11 @@ class CrudController extends BaseController
         return $combos;
     }
 
-    private function generarBreadcrumb($aTipo, $aUrl='')
+    public function getTemplate() {
+        return $this->layout;
+    }
+
+    public function generarBreadcrumb($aTipo, $aUrl='')
     {
         $html = '';
         if ($this->breadcrumb['mostrar']) {
@@ -357,10 +369,10 @@ class CrudController extends BaseController
             if (empty($this->breadcrumb['breadcrumb'])) {
                 switch ($aTipo) {
                     case 'edit':
-                        $html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
                         break;
                     case 'create':
-                        $html .= '<li><a href="' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
                         break;
                     default:
                         $html .= '<li class="active">' . $this->titulo . '</li>';
@@ -374,11 +386,11 @@ class CrudController extends BaseController
                     case 'edit':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             } elseif ($item['url'] == '') {
                                 return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
 
@@ -387,11 +399,11 @@ class CrudController extends BaseController
                     case 'create':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             } elseif ($item['url'] == '') {
                                 return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
 
@@ -402,7 +414,7 @@ class CrudController extends BaseController
                             if ($item['url'] == '') {
                                 return '<li class="active">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == ''?'':'<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
                         break;
@@ -653,6 +665,11 @@ class CrudController extends BaseController
     public function setTitulo($aTitulo)
     {
         $this->titulo = $aTitulo;
+    }
+
+    public function getTitulo() 
+    {
+        return $this->titulo;
     }
 
     public function setNoGuardar($aCampo)
