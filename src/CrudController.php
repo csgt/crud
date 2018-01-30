@@ -285,13 +285,17 @@ class CrudController extends BaseController
                 $relationName = '';
                 $actualOrdenColumnas = $ordenColumnas[$i];
                 $tienePunto = (strpos($ordenColumnas[$i], '.') !== false) && (strpos($ordenColumnas[$i], '"') === false);
-                
-                $column = array_filter($columns, function($item) use ($actualOrdenColumnas) {
+
+                $column = collect($this->campos)->first(function($item, $key) use ($actualOrdenColumnas) {
                     return $item['campo'] == $actualOrdenColumnas;
                 });
+
                 $esRelacion = false;
-                if (array_key_exists('isforeign', $column)) {
-                    $esRelacion = ($tienePunto) && ($column['isforeign'] == 1);
+
+                if ($column) {
+                    if (array_key_exists('isforeign', $column)) {
+                        $esRelacion = ($tienePunto) && ($column['isforeign'] == true);
+                    }
                 }
 
                 if ($tienePunto) {
@@ -667,7 +671,7 @@ class CrudController extends BaseController
         $this->titulo = $aTitulo;
     }
 
-    public function getTitulo() 
+    public function getTitulo()
     {
         return $this->titulo;
     }
