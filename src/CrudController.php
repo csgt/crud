@@ -248,6 +248,12 @@ class CrudController extends BaseController
                     foreach ($item->getAttributes() as $column) {
                         $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
                     }
+                    $relations = $item->getRelations();
+                    foreach ($relations as $relation) {
+                        foreach ($relation->getAttributes() as $column) {
+                            $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
+                        }
+                    }
                     return $result;
                 });
             }
