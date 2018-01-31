@@ -250,8 +250,10 @@ class CrudController extends BaseController
                     }
                     $relations = $item->getRelations();
                     foreach ($relations as $relation) {
-                        foreach ($relation->getAttributes() as $column) {
-                            $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
+                        if (method_exists($relation, 'getAttributes')) {
+                            foreach ($relation->getAttributes() as $column) {
+                                $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
+                            }
                         }
                     }
                     return $result;
