@@ -101,7 +101,7 @@
 							{!!$label!!}
 							<div class="col-sm-10">
 								<?php $arr   = ['class'=>'summernote']; ?>
-								<textarea name="$columna['campoReal']" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
+								<textarea name="{{$columna['campoReal']}}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
 							</div>
 						<!---------------------------- BOOLEAN ---------------------------------->
 						@elseif($columna['tipo'] == 'bool')
