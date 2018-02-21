@@ -218,7 +218,7 @@ class CrudController extends BaseController
                 $data->addSelect($foreignModel->getQualifiedParentKeyName());
             }
         }
-        $data->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
+        $data->addSelect($this->modelo->getTable() . '.' . $this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
         foreach ($this->leftJoins as $leftJoin) {
             $data->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
         }
