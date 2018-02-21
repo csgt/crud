@@ -314,7 +314,11 @@ class CrudController extends BaseController
                         $colName = explode('AS ', $colName)[1];
                     }
                 } else {
-                    $colName = $ordenColumnas[$i];
+                    if (strpos($ordenColumnas[$i], ' AS ')) {
+                        $colName = explode('AS ', $ordenColumnas[$i])[1];
+                    }else {
+                        $colName = $ordenColumnas[$i];
+                    }
                 }
 
                 if ($colName == $this->uniqueid) {
