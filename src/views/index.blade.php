@@ -1,7 +1,7 @@
 @extends($template)
 
 @section('content')
-	
+
   @if($showExport)
     {{HTML::script(Config::get('crud::pathToAssets','/') . 'js/dataTables.tableTools.min.js')}}
     {{HTML::style(Config::get('crud::pathToAssets','/') . 'css/dataTables.tableTools.min.css')}}
@@ -32,24 +32,26 @@
 			    "sortable": false,
 			    "render": function ( data, type, full, meta ) {
 			    	var col = data.length-1;
-			    	var id = data[col];	 
+			    	var id = data[col];
 			    	var html = '';
 			    	@foreach ($botonesExtra as $botonExtra)
-			    		<?php 
-			    			$url     = $botonExtra["url"];
-			    			$urlarr  = explode('{id}', $url);
-			    			$urlVars = '';
-			    			$parte1  = $urlarr[0];
-			    			$parte2  = (count($urlarr)==1?'':$urlarr[1]);
-			    			if ($nuevasVars!='') {
-			    				$urlVars = (strpos($url, '?')===false?'?':'&') . substr($nuevasVars,1);
-			    			}
-			    			$target = $botonExtra["target"];
-			    			if ($target<>'') $target='target="' . $target . '"';
-			    		?>
+			    		<?php
+                            $url     = $botonExtra["url"];
+                            $urlarr  = explode('{id}', $url);
+                            $urlVars = '';
+                            $parte1  = $urlarr[0];
+                            $parte2  = (count($urlarr)==1?'':$urlarr[1]);
+                            if ($nuevasVars!='') {
+                                $urlVars = (strpos($url, '?')===false?'?':'&') . substr($nuevasVars, 1);
+                            }
+                            $target = $botonExtra["target"];
+                            if ($target<>'') {
+                                $target='target="' . $target . '"';
+                            }
+                        ?>
 							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
-			    	@if($permisos['edit'])   	
+			    	@if($permisos['edit'])
 							html += '<a class="btn btn-xs btn-primary" title="Editar" href="{{ URL::to(Request::url())}}/' + id + '/edit/{{$nuevasVars}}"><span class="glyphicon glyphicon-pencil"></span></a>';
 						@endif;
 						@if($permisos['delete'])
@@ -62,26 +64,32 @@
 						@endif;
 			      return html;
 			    }
-			  }, 
+			  },
 			  <?php $i=0; ?>
 			  @foreach ($columnas as $columna) {
 			  		"targets" : {{$i}},
 			  		"class" : "{{$columna["class"]}}",
 			  		"searchable" : "{{$columna["searchable"]}}",
 
-				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime")) 
+				  @if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime"))
 				  	"data" : null,
 				  	"render" : function(data) {
 				  		var fecha = data[{{$i}}];
 				  		if (fecha==null) return null;
-				  		var arrhf = fecha.split(" "); 
+				  		var arrhf = fecha.split(" ");
 				  		var arrf  = arrhf[0].split("-");
 				  		var hora  = '';
-				  		if (arrhf.length==2) {hora = ' ' + arrhf[1].substring(0,5);}
+				  		if (arrhf.length==2) {
+				  			hora = ' ' + arrhf[1].substring(0,5);
+
+				  			@if ($columna["tipo"]=="date")
+				  				hora = ''
+							@endif
+				  		}
 				  		return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
 				  	}
 
-					@elseif ($columna["tipo"]=="image") 
+					@elseif ($columna["tipo"]=="image")
 						"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$i}}];
@@ -89,7 +97,7 @@
 				  		return '<img width="{{$columna["filewidth"]}}" src="{{$columna["filepath"]}}' + val + '">';
 				  	}
 
-				  @elseif ($columna["tipo"]=="file") 
+				  @elseif ($columna["tipo"]=="file")
 						"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$i}}];
@@ -97,7 +105,7 @@
 				  		return '<a href="{{$columna["filepath"]}}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
 				  	}
 
-					@elseif ($columna["tipo"]=="numeric") 
+					@elseif ($columna["tipo"]=="numeric")
 						"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$i}}];
@@ -107,7 +115,7 @@
 				  		return val.formatMoney({{$columna["decimales"]}});
 				  	}
 
-			  	@elseif($columna["tipo"]=="bool") 
+			  	@elseif($columna["tipo"]=="bool")
 			  	 	"data" : null,
 				  	"render" : function(data) {
 				  		var val = data[{{$i}}];
@@ -138,7 +146,7 @@
 					}
 				}
 			});
-			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))   	   
+			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 
@@ -152,7 +160,7 @@
 				@else
 					txSearch.addClass('hidden');
 			 	@endif
-				
+
 				var txInfo = $(this).closest('.dataTables_wrapper').find('div[id$=_info]');
 				txInfo.addClass('small text-muted');
 
@@ -195,7 +203,7 @@
       sign = n < 0 ? "-" : "",
       i = parseInt(n = Math.abs(+n || 0).toFixed(aDec)) + "",
       j = (j = i.length) > 3 ? j % 3 : 0;
-        return sign + (j ? i.substr(0, j) + "," : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ",") 
+        return sign + (j ? i.substr(0, j) + "," : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ",")
           + (aDec ? "." + Math.abs(n - i).toFixed(aDec).slice(2) : "");
     };
 	</script>
@@ -213,13 +221,13 @@
 	<table class="table table-striped table-bordered table-condensed table-hover tablaCatalogo display">
 		<thead>
       <tr>
-      	@foreach ($columnas as $columna) 
+      	@foreach ($columnas as $columna)
         	<th>{{$columna["nombre"]}}</th>
         @endforeach
         <th>&nbsp;</th>
       </tr>
     </thead>
- 
+
 	</table>
 	@if(isset($extraView))
 		@include($extraView)
