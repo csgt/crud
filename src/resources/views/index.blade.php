@@ -5,8 +5,13 @@
 @section('breadcrumb')
 	{!! $breadcrumb !!}
 @stop
+@section('css')
+  <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
+@stop
 @section('javascript')
   <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
+  <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
  	<script>
 		$(document).ready(function(){
 			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
@@ -237,7 +242,7 @@
 	<div class="clearfix"></div>
 	<div class="box">
 		<div class="box-body">
-			<table class="table table-bordered table-condensed table-hover tabla-catalogo display">
+			<table class="table table-bordered table-condensed table-hover tabla-catalogo display dt-responsive nowrap dt-responsive nowrap">
 				<thead>
 		      <tr>
 		      	@foreach ($columnas as $columna)
