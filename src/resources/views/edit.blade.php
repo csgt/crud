@@ -46,7 +46,7 @@
 	@endif
 	<div class="box">
 		<div class="box-body">
-			<form method="POST" action="{{URL::to($pathstore) . $nuevasVars}}" class="form-horizontal" id="frmCrud" enctype="multipart/form-data">
+			<form method="POST" action="/{{$pathstore . $nuevasVars}}" class="form-horizontal" id="frmCrud" enctype="multipart/form-data">
 				@if($data)
 					<input type="hidden" name="_method" value="PUT">
 				@endif
