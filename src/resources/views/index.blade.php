@@ -71,11 +71,11 @@
 						@endforeach
 
 			    	@if($permisos['edit'])
-							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::url() !!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="fa fa-pencil"></span></a></div>';
+							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="fa fa-pencil"></span></a></div>';
 						@endif;
 						@if($permisos['delete'])
 							html += '<div class="btn-group btn-group-xs">\
-								<form action="/{!! Request::url() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
+								<form action="/{!! Request::path() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
 								<input type="hidden" name="_method" value="DELETE">\
 								<input type="hidden" name="_token" value="{{csrf_token()}}">\
 								<button type="submit" class="btn btn-xs btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
@@ -188,7 +188,7 @@
 				$('.pagination').addClass('pagination-sm');
 				$('.dataTables_info').addClass('small text-muted');
 				@if($permisos['add'])
-					$('.btn-group-agregar').html('<a type="button" class="btn btn-success" href="/{!! Request::url() . '/create/' . $nuevasVars !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
+					$('.btn-group-agregar').html('<a type="button" class="btn btn-success" href="/{!! Request::path() . '/create/' . $nuevasVars !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
 				@endif
 				$('.dt-buttons').addClass('btn-group-sm');
 				$('div[id$=_filter] input').css('width','100%').attr('placeholder','{{trans('csgtcrud::crud.buscar')}}');
