@@ -248,8 +248,8 @@
 		      	@foreach ($columnas as $columna)
 		        	<th>{!!$columna["nombre"]!!}</th>
 		        	@if ($loop->last)
-					    	<th>&nbsp;</th>
-					    @endif
+					    <th data-priority="-1">&nbsp;</th>
+					@endif
 		        @endforeach
 
 		      </tr>
