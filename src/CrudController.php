@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Response;
+use Storage;
 
 class CrudController extends BaseController {
 	private $uniqueid = '___id___';
@@ -146,6 +147,24 @@ class CrudController extends BaseController {
 					$fields[$campo['campo']] = $filename;
 				}
 			}
+
+			if ($campo['tipo'] == 'securefile') {
+				if ($request->hasFile($campo['campo'])) {
+					if ($aId !== 0) {
+						$existing = $this->modelo->find(Crypt::decrypt($aId));
+						if ($existing) {
+							if ($existing->{$campo['campo']} != '') {
+								Storage::disk($campo['filedisk'])->delete($existing->{$campo['campo']});
+							}
+						}
+					}
+
+					$filename = Storage::disk($campo['filedisk'])->putFile($campo['filepath'], $request->file($campo['campo']));
+					$campos[$campo['campo']] = $filename;
+					$fields[$campo['campo']] = $filename;
+				}
+			}
+
 			if ($campo['tipo'] == 'multi') {
 				if (array_key_exists($campo['campo'], $fields)) {
 					$newMulti[$campo['campo']] = $fields[$campo['campo']];
@@ -231,7 +250,7 @@ class CrudController extends BaseController {
 		}
 
 		// foreach ($multiColumns as $multiColumn) {
-		// 	$data->with($multiColumn['campoReal']);
+		//  $data->with($multiColumn['campoReal']);
 		// }
 
 		$data->addSelect($this->modelo->getTable() . '.' . $this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
@@ -355,7 +374,25 @@ class CrudController extends BaseController {
 						$cols[] = null;
 					}
 				} else {
-					$cols[] = $item[$colName];
+					$fullCampo = array_filter($this->campos, function ($campo) use ($colName) {
+						return $campo['campo'] == $colName;
+					});
+					if (count($fullCampo) > 0) {
+						$fullCampoFixed = array_values($fullCampo)[0];
+						if ($fullCampoFixed['tipo'] == 'securefile') {
+							if ($item[$colName] != null) {
+								$cols[] = Storage::disk($fullCampoFixed['filedisk'])->temporaryUrl(
+									$item[$colName], now()->addMinutes(5)
+								);
+							} else {
+								$cols[] = $item[$colName];
+							}
+						} else {
+							$cols[] = $item[$colName];
+						}
+					} else {
+						$cols[] = $item[$colName];
+					}
 				}
 			}
 
@@ -572,7 +609,7 @@ class CrudController extends BaseController {
 	public function setCampo($aParams) {
 		$allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
 			'default', 'reglas', 'reglasmensaje', 'decimales', 'collection',
-			'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign'];
+			'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign'];
 		$tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'time', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
 		foreach ($aParams as $key => $val) {
@@ -602,6 +639,7 @@ class CrudController extends BaseController {
 		$target = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
 		$enumarray = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
 		$isforeign = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
+		$filedisk = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
 		$searchable = true;
 
 		if (!in_array($tipo, $tipos)) {
@@ -622,6 +660,9 @@ class CrudController extends BaseController {
 		}
 		if ($tipo == 'securefile' && $filepath == '') {
 			dd('Para el tipo securefile hay que especifiarle el filepath');
+		}
+		if ($tipo == 'securefile' && $filedisk == '') {
+			dd('Para el tipo securefile hay que especifiarle el filedisk');
 		}
 
 		if ($tipo == 'emum' && count($enumarray) == 0) {
@@ -665,6 +706,7 @@ class CrudController extends BaseController {
 			'filepath' => $filepath,
 			'filewidth' => $filewidth,
 			'fileheight' => $fileheight,
+			'filedisk' => $filedisk,
 			'target' => $target,
 			'isforeign' => $isforeign,
 		];

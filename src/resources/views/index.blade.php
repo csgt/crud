@@ -10,10 +10,8 @@
 @stop
 @section('javascript')
   <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
-  @if($responsive)
   <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
   <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
-  @endif
  	<script>
 		$(document).ready(function(){
 			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
@@ -56,17 +54,17 @@
 			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-right">';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php
-$url     = $botonExtra["url"];
-$urlarr  = explode('{id}', $url);
+$url = $botonExtra["url"];
+$urlarr = explode('{id}', $url);
 $urlVars = '';
-$parte1  = $urlarr[0];
-$parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
+$parte1 = $urlarr[0];
+$parte2 = (count($urlarr) == 1 ? '' : $urlarr[1]);
 if ($nuevasVars != '') {
-    $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
+	$urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
 }
 $target = $botonExtra["target"];
 if ($target != '') {
-    $target = 'target="' . $target . '"';
+	$target = 'target="' . $target . '"';
 }
 ?>
 							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
@@ -123,6 +121,18 @@ if ($target != '') {
 				  		"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
+				  		return '<a href="{!!$columna["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
+				  	}
+				  	@elseif ($columna["tipo"]=="securefile")
+						"data" : null,
+				  		"render" : function(data) {
+				  		var val = data[{{$loop->index}}];
+				  		if (val==null) return null;
+				  		var valArray = val.split('.')
+				  		var extension = valArray[valArray.length - 1]
+				  		if(["jpg", "png", "gif"].indexOf(extension)) {
+				  			return '<img width="{!!$columna["filewidth"]!!}" src="' + val + '">';
+				  		}
 				  		return '<a href="{!!$columna["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
 				  	}
 
@@ -223,9 +233,9 @@ if ($target != '') {
   <?php
 $fontawesome = false;
 foreach ($botonesExtra as $botonExtra) {
-    if (strpos($botonExtra['icon'], 'fa-')) {
-        $fontawesome = true;
-    }
+	if (strpos($botonExtra['icon'], 'fa-')) {
+		$fontawesome = true;
+	}
 }
 ?>
   <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
@@ -250,8 +260,8 @@ foreach ($botonesExtra as $botonExtra) {
 		      	@foreach ($columnas as $columna)
 		        	<th>{!!$columna["nombre"]!!}</th>
 		        	@if ($loop->last)
-					    <th data-priority="-1">&nbsp;</th>
-					@endif
+					    	<th>&nbsp;</th>
+					    @endif
 		        @endforeach
 
 		      </tr>
