@@ -3,35 +3,33 @@
 	{!! $breadcrumb !!}
 @stop
 @section('content')
-	<?php
-$includefechas     = false;
-$includeselect     = false;
-$includesummernote = false;
+@php
+	$includefechas = false;
+	$includeselect = false;
+	$includesummernote = false;
 
-foreach ($columnas as $columna) {
-    if (($columna['tipo'] == 'date') || ($columna['tipo'] == 'datetime')) {
-        $includefechas = true;
-    }
+	foreach ($columnas as $columna) {
+		if (($columna['tipo'] == 'date') || ($columna['tipo'] == 'datetime' || $columna['tipo'] == 'time')) {
+			$includefechas = true;
+		}
 
-    if (($columna['tipo'] == 'combobox') || ($columna['tipo'] == 'enum')) {
-        $includeselect = true;
-    }
+		if (($columna['tipo'] == 'combobox') || ($columna['tipo'] == 'enum') || $columna['tipo'] == 'multi') {
+			$includeselect = true;
+		}
 
-    if ($columna['tipo'] == 'summernote') {
-        $includesummernote = true;
-    }
-}
-function arrayToFields($arr)
-{
-    $callback = function ($key, $value) {
-        return $key . "=\"" . $value . "\"";
-    };
-    $fields = implode(" ", array_map($callback, array_keys($arr), $arr));
+		if ($columna['tipo'] == 'summernote') {
+			$includesummernote = true;
+		}
+	}
+	function arrayToFields($arr) {
+		$callback = function ($key, $value) {
+			return $key . "=\"" . $value . "\"";
+		};
+		$fields = implode(" ", array_map($callback, array_keys($arr), $arr));
 
-    return $fields;
-}
-
-?>
+		return $fields;
+	}
+@endphp
   	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/formValidation.min.css">
 
   	@if($includefechas)
@@ -54,39 +52,38 @@ function arrayToFields($arr)
 				@endif
 				{{csrf_field()}}
 				@foreach($columnas as $columna)
-					<?php
-$valor = ($data ? $data->{$columna['campoReal']} : $columna['default']);
-$label = '<label for="' . $columna['campoReal'] . '" class="col-sm-2 control-label">' . $columna['nombre'] . '</label>';
-$arr   = ['class' => 'form-control'];
-//dd($columnas);
-foreach ($columna['reglas'] as $regla) {
-    $arr['data-fv-' . $regla]              = 'true';
-    $arr['data-fv-' . $regla . '-message'] = $columna['reglasmensaje'];
-}
-
-?>
+					@php
+						$valor = ($data ? $data->{$columna['campoReal']} : $columna['default']);
+						$label = '<label for="' . $columna['campoReal'] . '" class="col-sm-2 control-label">' . $columna['nombre'] . '</label>';
+						$arr = ['class' => 'form-control'];
+						//dd($columnas);
+						foreach ($columna['reglas'] as $regla) {
+							$arr['data-fv-' . $regla] = 'true';
+							$arr['data-fv-' . $regla . '-message'] = $columna['reglasmensaje'];
+						}
+					@endphp
 					<div class="form-group">
 						<!---------------------------- PASSWORD ---------------------------------->
 			    		@if($columna['tipo'] == 'password')
 			    			{!!$label!!}
 			    			<div class="col-sm-5">
-			    				<?php
-$arr['placeholder']               = 'Password';
-$arr['data-fv-identical']         = 'true';
-$arr['data-fv-identical-field']   = $columna['campoReal'] . 'confirm';
-$arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
+								@php
+									$arr['placeholder'] = 'Password';
+									$arr['data-fv-identical'] = 'true';
+									$arr['data-fv-identical-field'] = $columna['campoReal'] . 'confirm';
+									$arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
 
-if (!$data) {
-    $arr['data-fv-notempty']         = 'true';
-    $arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
-}
-?>
+									if (!$data) {
+										$arr['data-fv-notempty'] = 'true';
+										$arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
+									}
+								@endphp
 			    				<input type="password" name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>
 							</div>
 							<div class="col-sm-5">
-								<?php
-$arr['data-fv-identical-field'] = $columna['campoReal'];
-?>
+								@php
+									$arr['data-fv-identical-field'] = $columna['campoReal'];
+								@endphp
 								<input type="password" name="{{ $columna['campoReal'] . 'confirm' }}" {!! arrayToFields($arr) !!}>
 								@if($data)
 									<p class="help-block">* Dejar en blanco para no cambiar {!! $columna['nombre'] !!}</p>
@@ -119,20 +116,20 @@ $arr['data-fv-identical-field'] = $columna['campoReal'];
 						  </div>
 						<!---------------------------- DATE ---------------------------------->
 						@elseif($columna['tipo'] == 'date')
-							<?php
-$datearray = explode('-', $valor);
-if (count($datearray) == 3) {
-    $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
-} else {
-    $laFecha = null;
-}
-$arr['data-date-locale']    = 'es';
-$arr['data-date-language']  = 'es'; //Backwards compatible con datepicker 2
-$arr['data-date-pickTime']  = 'false'; //Backwards compatible con datepicker 2
-$arr['data-date-format']    = 'DD/MM/YYYY';
-$arr['data-fv-date-format'] = 'DD/MM/YYYY';
-$arr['data-fv-date']        = 'true';
-?>
+							@php
+								$datearray = explode('-', $valor);
+								if (count($datearray) == 3) {
+									$laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
+								} else {
+									$laFecha = null;
+								}
+								$arr['data-date-locale'] = 'es';
+								$arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
+								$arr['data-date-pickTime'] = 'false'; //Backwards compatible con datepicker 2
+								$arr['data-date-format'] = 'DD/MM/YYYY';
+								$arr['data-fv-date-format'] = 'DD/MM/YYYY';
+								$arr['data-fv-date'] = 'true';
+							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
 								<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
@@ -142,21 +139,21 @@ $arr['data-fv-date']        = 'true';
 							</div>
 						<!---------------------------- DATETIME ---------------------------------->
 						@elseif($columna['tipo'] == 'datetime')
-							<?php
-$datearray2 = explode(' ', $valor);
-if (count($datearray2) == 2) {
-    $hora      = explode(':', $datearray2[1]);
-    $datearray = explode('-', $datearray2[0]);
-    $laFecha   = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $hora[0] . ':' . $hora[1];
-} else {
-    $laFecha = null;
-}
-$arr['data-date-locale']    = 'es';
-$arr['data-date-language']  = 'es'; //Backwards compatible con datepicker 2
-$arr['data-date-format']    = 'DD/MM/YYYY HH:mm';
-$arr['data-fv-date-format'] = 'DD/MM/YYYY HH:mm';
-$arr['data-fv-date']        = 'true';
-?>
+							@php
+								$datearray2 = explode(' ', $valor);
+								if (count($datearray2) == 2) {
+									$hora = explode(':', $datearray2[1]);
+									$datearray = explode('-', $datearray2[0]);
+									$laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $hora[0] . ':' . $hora[1];
+								} else {
+									$laFecha = null;
+								}
+								$arr['data-date-locale'] = 'es';
+								$arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
+								$arr['data-date-format'] = 'DD/MM/YYYY HH:mm';
+								$arr['data-fv-date-format'] = 'DD/MM/YYYY HH:mm';
+								$arr['data-fv-date'] = 'true';
+							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
 								<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
@@ -164,12 +161,27 @@ $arr['data-fv-date']        = 'true';
 								  	<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 								</div>
 							</div>
+						<!---------------------------- TIME ---------------------------------->
+						@elseif($columna['tipo'] == 'time')
+							@php
+								$arr['data-date-locale'] = 'es';
+								$arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
+								$arr['data-date-format'] = 'HH:mm';
+								$arr['data-fv-date-format'] = 'HH:mm';
+							@endphp
+							{!!$label!!}
+							<div class="col-sm-10">
+								<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
+									<input type="text" name="{{ $columna['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields($arr) !!}>
+								  	<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+								</div>
+							</div>
 						<!---------------------------- COMBOBOX ---------------------------------->
 						@elseif($columna['tipo'] == 'combobox')
-							<?php
-$arr['class']      = 'selectpicker form-control';
-$arr['data-width'] = 'auto';
-?>
+							@php
+								$arr['class'] = 'selectpicker form-control';
+								$arr['data-width'] = 'auto';
+							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
 								<?php $campo = ($data ? $data->{$columna['campo']} : '')?>
@@ -179,12 +191,34 @@ $arr['data-width'] = 'auto';
 									@endforeach
 								</select>
 							</div>
+						<!---------------------------- MULTI ---------------------------------->
+						@elseif($columna['tipo'] == 'multi')
+							@php
+								$arr['class'] = 'selectpicker form-control';
+								$arr['data-width'] = 'auto';
+							@endphp
+							{!!$label!!}
+							<div class="col-sm-10">
+								<?php $campo = ($data ? $data->{$columna['campo']} : '')?>
+								<select multiple="multiple" name="{{ $columna['campo'] }}[]" {!! arrayToFields($arr) !!}>
+
+									@foreach($combos[$columna['alias']] as $id => $opcion)
+									<option
+										value="{{ $id }}"
+										@if($campo != "")
+											{{ ($campo->find($id) ? "selected='selected'" : "") }}
+										@endif
+										>
+									{!! $opcion !!}</option>
+									@endforeach
+								</select>
+							</div>
 						<!---------------------------- ENUM ---------------------------------->
 						@elseif($columna['tipo'] == 'enum')
-							<?php
-$arr['class']      = 'selectpicker form-control';
-$arr['data-width'] = 'auto';
-?>
+							@php
+								$arr['class'] = 'selectpicker form-control';
+								$arr['data-width'] = 'auto';
+							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
 								<select name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>
