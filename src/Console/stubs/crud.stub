@@ -1,5 +1,4 @@
 <?php
-
 namespace DummyNamespace;
 
 use Csgt\Crud\CrudController;
@@ -13,15 +12,30 @@ class DummyClass extends CrudController
         // $this->setModelo(new Modelo);
         // $this->setTitulo('Titulo');
         // $this->setBreadcrumb([
-        // 	['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-archive'],
-        // 	['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
+        //     ['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-archive'],
+        //     ['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
         // ]);
         // $this->setCampo(['nombre' => 'Nombre', 'campo' => 'nombre']);
         // $this->setCampo(['nombre' => 'Descripción', 'campo' => 'descripcion']);
-        // $this->setCampo(['nombre' => 'Protocolo', 'campo' => 'protocoloid', 'tipo' => 'combobox',
-        //    'collection' => Protocolo::select('protocoloid', 'nombre')->get()]);
+
+        // $this->middleware(function ($request, $next) {
+        //     $this->setCampo([
+        //         'nombre'     => 'Protocolo',
+        //         'campo'      => 'protocoloid',
+        //         'tipo'       => 'combobox',
+        //         'collection' => Protocolo::select('protocoloid', 'nombre')->get(),
+        //     ]);
+
+        //     return $next($request);
+        // });
+
         // $this->setHidden(['campo' => 'clienteid', 'valor' => 1]);
-        // $this->setBotonExtra(['url' => '/configuracion/sensores?gatewayid={id}', 'icon' => 'fa fa-thermometer', 'titulo' => 'Sensores', 'class' => 'warning']);
+        // $this->setBotonExtra([
+        //     'url'    => '/configuracion/sensores?gatewayid={id}',
+        //     'icon'   => 'fa fa-thermometer',
+        //     'titulo' => 'Sensores',
+        //     'class'  => 'warning',
+        // ]);
 
         // $this->setPermisos("\Cancerbero::tienePermisosCrud", 'ruta');
     }
