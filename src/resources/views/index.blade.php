@@ -6,9 +6,9 @@
   	<script src="{!!config('csgtcrud.pathToAssets','/') . 'js/datatables.min.js'!!}"></script>
   @endif
   @if($responsive)
-    <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
-  	<script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
-  	<script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.2/css/responsive.bootstrap.min.css">
+  	<script src="https://cdn.datatables.net/responsive/2.2.2/js/dataTables.responsive.min.js"></script>
+  	<script src="https://cdn.datatables.net/responsive/2.2.2/js/responsive.bootstrap.min.js"></script>
   @endif
   <?php
 $fontawesome = false;
@@ -26,6 +26,9 @@ foreach ($botonesExtra as $botonExtra) {
 			var oTable = $('.tabla-catalogo').dataTable({
 				"processing" : true,
 				"serverSide" : true,
+				@if($responsive)
+				"responsive" : true,
+				@endif
 				@if($stateSave)
 				"stateSave"  : true,
 				@endif

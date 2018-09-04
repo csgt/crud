@@ -16,7 +16,7 @@ class Crud
     private static $showExport = true;
     private static $showSearch = true;
     private static $stateSave  = true;
-    private $responsive        = true;
+    private static $responsive = true;
     private static $softDelete = false;
     private static $perPage    = 20;
     private static $tabla;
