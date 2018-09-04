@@ -188,7 +188,7 @@ class Crud
 
     public function setResponsive($aResponsive)
     {
-        $this->responsive = $aResponsive;
+        self::$responsive = $aResponsive;
     }
 
     public static function setTabla($aTabla)
