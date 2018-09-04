@@ -462,7 +462,7 @@ class Crud
             ->with('stateSave', self::$stateSave)
             ->with('showExport', self::$showExport)
             ->with('showSearch', self::$showSearch)
-            ->with('responsive', $this->responsive)
+            ->with('responsive', self::$responsive)
             ->with('perPage', self::$perPage)
             ->with('titulo', self::$titulo)
             ->with('columnas', self::$camposShow)
