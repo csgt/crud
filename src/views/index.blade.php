@@ -6,6 +6,11 @@
     {{HTML::script(Config::get('crud::pathToAssets','/') . 'js/dataTables.tableTools.min.js')}}
     {{HTML::style(Config::get('crud::pathToAssets','/') . 'css/dataTables.tableTools.min.css')}}
   @endif
+  @if($responsive)
+  	<link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
+  	<script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
+  	<script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
+  @endif
 	<script>
 		$(document).ready(function(){
 			var oTable = $('.tablaCatalogo').dataTable({
@@ -36,19 +41,19 @@
 			    	var html = '';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php
-                            $url     = $botonExtra["url"];
-                            $urlarr  = explode('{id}', $url);
-                            $urlVars = '';
-                            $parte1  = $urlarr[0];
-                            $parte2  = (count($urlarr)==1?'':$urlarr[1]);
-                            if ($nuevasVars!='') {
-                                $urlVars = (strpos($url, '?')===false?'?':'&') . substr($nuevasVars, 1);
-                            }
-                            $target = $botonExtra["target"];
-                            if ($target<>'') {
-                                $target='target="' . $target . '"';
-                            }
-                        ?>
+$url     = $botonExtra["url"];
+$urlarr  = explode('{id}', $url);
+$urlVars = '';
+$parte1  = $urlarr[0];
+$parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
+if ($nuevasVars != '') {
+    $urlVars = (strpos($url, '?') === false ? '?' : '&') . substr($nuevasVars, 1);
+}
+$target = $botonExtra["target"];
+if ($target != '') {
+    $target = 'target="' . $target . '"';
+}
+?>
 							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{{$botonExtra["titulo"]}}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {{ $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" }}><span class="{{$botonExtra["icon"]}}"></span></a>';
 						@endforeach
 			    	@if($permisos['edit'])
@@ -65,7 +70,7 @@
 			      return html;
 			    }
 			  },
-			  <?php $i=0; ?>
+			  <?php $i = 0;?>
 			  @foreach ($columnas as $columna) {
 			  		"targets" : {{$i}},
 			  		"class" : "{{$columna["class"]}}",
@@ -126,7 +131,7 @@
 					  }
 		  		@endif
 		  		},
-			  	<?php $i++; ?>
+			  	<?php $i++;?>
 			  @endforeach
 			  ],
 
@@ -218,7 +223,7 @@
 			{{ Session::get('message') }}
 		</div>
 	@endif
-	<table class="table table-striped table-bordered table-condensed table-hover tablaCatalogo display">
+	<table class="table table-striped table-bordered table-condensed table-hover tablaCatalogo display dt-responsive nowrap dt-responsive nowrap">
 		<thead>
       <tr>
       	@foreach ($columnas as $columna)
