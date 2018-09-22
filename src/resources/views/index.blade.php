@@ -5,15 +5,7 @@
 @section('breadcrumb')
 	{!! $breadcrumb !!}
 @stop
-@section('css')
-  <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
-@stop
 @section('javascript')
-  <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
-  @if($responsive)
-  <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
-  @endif
  	<script>
 		$(document).ready(function(){
 			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
@@ -53,39 +45,38 @@
 			    "sortable": false,
 			    "render": function ( data, type, full, meta ) {
 			    	var id = data['DT_RowId'];
-			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-right">';
+			    	var html = '';
 			    	@foreach ($botonesExtra as $botonExtra)
-			    		<?php
-$url     = $botonExtra["url"];
-$urlarr  = explode('{id}', $url);
-$urlVars = '';
-$parte1  = $urlarr[0];
-$parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
-if ($nuevasVars != '') {
-    $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
-}
-$target = $botonExtra["target"];
-if ($target != '') {
-    $target = 'target="' . $target . '"';
-}
-?>
-							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
-						@endforeach
+			    		@php
+                            $url     = $botonExtra["url"];
+                            $urlarr  = explode('{id}', $url);
+                            $urlVars = '';
+                            $parte1  = $urlarr[0];
+                            $parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
+                            if ($nuevasVars != '') {
+                                $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
+                            }
+                            $target = $botonExtra["target"];
+                            if ($target != '') {
+                                $target = 'target="' . $target . '"';
+                            }
+                        @endphp
+							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
+					@endforeach
 
 			    	@if($permisos['edit'])
-							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="fa fa-pencil"></span></a></div>';
+							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><i class="fa fa-pencil-alt"></i></a></div>';
 						@endif;
 						@if($permisos['delete'])
-							html += '<div class="btn-group btn-group-xs">\
+							html += '<div class="btn-group btn-group-sm">\
 								<form action="/{!! Request::path() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
 								<input type="hidden" name="_method" value="DELETE">\
 								<input type="hidden" name="_token" value="{{csrf_token()}}">\
-								<button type="submit" class="btn btn-xs btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
+								<button type="submit" class="btn btn-sm btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
 								<i class="fa fa-trash"></i>\
 								</button>\
 								</form></div>';
 						@endif;
-						html += '</div>';
 			      return html;
 			    }
 			  },
@@ -232,55 +223,32 @@ if ($target != '') {
 @stop
 
 @section('content')
-  <?php
-$fontawesome = false;
-foreach ($botonesExtra as $botonExtra) {
-    if (strpos($botonExtra['icon'], 'fa-')) {
-        $fontawesome = true;
-    }
-}
-?>
-  <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
-  @if($fontawesome)
-  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.font-awesome','/css/font-awesome.min.css')!!}">
-  @endif
-  <style>
-  	.btn-toolbar-flex {
-		  display: flex;
-		}
-		.btn-toolbar-flex .btn-group {
-			margin-left: 2px;
-		}
-  </style>
-
 	<div class="clearfix"></div>
-	<div class="box">
-		<div class="box-body">
+	<div class="card">
+		<div class="card-body">
 			<table class="table table-bordered table-condensed table-hover tabla-catalogo display dt-responsive nowrap dt-responsive nowrap">
 				<thead>
-		      <tr>
-		      	@foreach ($columnas as $columna)
-		        	<th>{!!$columna["nombre"]!!}</th>
-		        	@if ($loop->last)
-					    	<th>&nbsp;</th>
-					    @endif
-		        @endforeach
-
-		      </tr>
-		    </thead>
+                    <tr>
+                        @foreach ($columnas as $columna)
+                            <th>{!!$columna["nombre"]!!}</th>
+                            @if ($loop->last)
+                                <th>&nbsp;</th>
+                            @endif
+                        @endforeach
+                    </tr>
+    		    </thead>
 			</table>
 		</div>
 	</div>
-	<div class="modal" id="modal-procesando">
-	  <div class="modal-dialog modal-sm">
-	    <div class="modal-content">
-	      <div class="modal-body text-center">
-	        <h4>{{trans('csgtcrud::crud.sProcessing')}}...</h4>
-	      </div>
-	    </div><!-- /.modal-content -->
-	  </div><!-- /.modal-dialog -->
-	</div><!-- /.modal -->
-
+    <div class="modal" id="modal-procesando">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <h4>{{trans('csgtcrud::crud.sProcessing')}}...</h4>
+                </div>
+            </div>
+        </div>
+    </div>
 	@if(isset($extraView))
 		@include($extraView)
 	@endif

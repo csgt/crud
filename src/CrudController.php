@@ -455,17 +455,27 @@ class CrudController extends BaseController
     {
         $html = '';
         if ($this->breadcrumb['mostrar']) {
-            $html .= '<ol class="breadcrumb">';
+            $html .= '<ol class="breadcrumb float-sm-right">';
             if (empty($this->breadcrumb['breadcrumb'])) {
                 switch ($aTipo) {
                     case 'edit':
-                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $html .= '<li class="breadcrumb-item">
+                                <a href="/' . $aUrl . '">' . $this->titulo . '</a>
+                            </li>
+                            <li class="breadcrumb-item active">
+                                <i class="far fa-pencil"></i> Editar
+                            </li>';
                         break;
                     case 'create':
-                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $html .= '<li class="breadcrumb-item">
+                                <a href="/' . $aUrl . '">' . $this->titulo . '</a>
+                            </li>
+                            <li class="breadcrumb-item active">
+                                <i class="far fa-plus-circle"></i> Nuevo
+                            </li>';
                         break;
                     default:
-                        $html .= '<li class="active">' . $this->titulo . '</li>';
+                        $html .= '<li class="breadcrumb-item active">' . $this->titulo . '</li>';
                         break;
                 }
             } else {
@@ -476,35 +486,56 @@ class CrudController extends BaseController
                     case 'edit':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item">
+                                        <a href="/' . $aUrl . '">' .
+                                    ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '
+                                        </a>
+                                    </li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' .
+                                    ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] .
+                                    '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item">
+                                            <a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] .
+                                    '</a>
+                                        </li>';
                             }
                         }, $array);
 
-                        $htmlArray[] = '<li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $htmlArray[] = '<li class="breadcrumb-item active">
+                                <i class="fa fa-pencil"></i> Editar
+                            </li>';
                         break;
                     case 'create':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item">
+                                            <a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] .
+                                    '</a>
+                                        </li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' .
+                                    ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] .
+                                    '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item">
+                                            <a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] .
+                                    '</a>
+                                        </li>';
                             }
                         }, $array);
 
-                        $htmlArray[] = '<li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $htmlArray[] = '<li class="breadcrumb-item active">
+                                <i class="fa fa-plus-circle"></i> Nuevo
+                            </li>';
                         break;
                     default:
                         $htmlArray = array_map(function ($item) use ($aUrl) {
                             if ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
                         break;
