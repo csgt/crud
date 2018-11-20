@@ -20,10 +20,10 @@ class CrudController extends BaseController
     private $responsive   = true;
     private $layout       = 'layouts.app';
     private $perPage      = 50;
-    private $titulo       = '';
+    private $title        = '';
     private $campos       = [];
     private $camposHidden = [];
-    private $permisos     = ['add' => false, 'edit' => false, 'delete' => false];
+    private $permisos     = ['create' => false, 'update' => false, 'destroy' => false];
     private $orders       = [];
     private $botonesExtra = [];
     private $joins        = [];
@@ -49,7 +49,7 @@ class CrudController extends BaseController
             ->with('showSearch', $this->showSearch)
             ->with('responsive', $this->responsive)
             ->with('perPage', $this->perPage)
-            ->with('titulo', $this->titulo)
+            ->with('title', $this->title)
             ->with('columnas', $this->getCamposShow())
             ->with('permisos', $this->permisos)
             ->with('orders', $this->orders)
@@ -460,7 +460,7 @@ class CrudController extends BaseController
                 switch ($aTipo) {
                     case 'edit':
                         $html .= '<li class="breadcrumb-item">
-                                <a href="/' . $aUrl . '">' . $this->titulo . '</a>
+                                <a href="/' . $aUrl . '">' . $this->title . '</a>
                             </li>
                             <li class="breadcrumb-item active">
                                 <i class="far fa-pencil"></i> Editar
@@ -468,14 +468,14 @@ class CrudController extends BaseController
                         break;
                     case 'create':
                         $html .= '<li class="breadcrumb-item">
-                                <a href="/' . $aUrl . '">' . $this->titulo . '</a>
+                                <a href="/' . $aUrl . '">' . $this->title . '</a>
                             </li>
                             <li class="breadcrumb-item active">
                                 <i class="far fa-plus-circle"></i> Nuevo
                             </li>';
                         break;
                     default:
-                        $html .= '<li class="breadcrumb-item active">' . $this->titulo . '</li>';
+                        $html .= '<li class="breadcrumb-item active">' . $this->title . '</li>';
                         break;
                 }
             } else {
@@ -799,14 +799,19 @@ class CrudController extends BaseController
         $this->wheresRaw[] = $aStatement;
     }
 
-    public function setTitulo($aTitulo)
+    public function setTitle($aTitle)
     {
-        $this->titulo = $aTitulo;
+        $this->title = $aTitle;
     }
 
-    public function getTitulo()
+    public function getTitle()
     {
-        return $this->titulo;
+        return $this->title;
+    }
+
+    public function getLayout()
+    {
+        return $this->layout;
     }
 
     public function setNoGuardar($aCampo)
@@ -821,7 +826,7 @@ class CrudController extends BaseController
 
     public function setBotonExtra($aParams)
     {
-        $allowed = ['url', 'titulo', 'target', 'icon', 'class', 'confirm', 'confirmmessage'];
+        $allowed = ['url', 'title', 'target', 'icon', 'class', 'confirm', 'confirmmessage'];
 
         foreach ($aParams as $key => $val) {
             //Validamos que todas las variables del array son permitidas.
@@ -835,14 +840,14 @@ class CrudController extends BaseController
 
         $icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star' : $aParams['icon']);
         $class          = (!array_key_exists('class', $aParams) ? 'default' : $aParams['class']);
-        $titulo         = (!array_key_exists('titulo', $aParams) ? '' : $aParams['titulo']);
+        $title          = (!array_key_exists('title', $aParams) ? '' : $aParams['title']);
         $target         = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
         $confirm        = (!array_key_exists('confirm', $aParams) ? false : $aParams['confirm']);
         $confirmmessage = (!array_key_exists('confirmmessage', $aParams) ? '¿Estas seguro?' : $aParams['confirmmessage']);
 
         $arr = [
             'url'            => $aParams['url'],
-            'titulo'         => $titulo,
+            'title'          => $title,
             'icon'           => $icon,
             'class'          => $class,
             'target'         => $target,

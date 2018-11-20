@@ -1,6 +1,6 @@
 @extends($layout)
-@section('titulo')
-	{!! $titulo !!}
+@section('title')
+	{!! $title !!}
 @stop
 @section('breadcrumb')
 	{!! $breadcrumb !!}
@@ -61,23 +61,23 @@
                                 $target = 'target="' . $target . '"';
                             }
                         @endphp
-							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
+							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-outline-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
 					@endforeach
 
-			    	@if($permisos['edit'])
-							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><i class="fa fa-pencil-alt"></i></a></div>';
-						@endif;
-						@if($permisos['delete'])
-							html += '<div class="btn-group btn-group-sm">\
-								<form action="/{!! Request::path() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
-								<input type="hidden" name="_method" value="DELETE">\
-								<input type="hidden" name="_token" value="{{csrf_token()}}">\
-								<button type="submit" class="btn btn-sm btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
-								<i class="fa fa-trash"></i>\
-								</button>\
-								</form></div>';
-						@endif;
-			      return html;
+			    	@if($permisos['update'])
+							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-outline-primary btn-flat" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><i class="fa fa-pencil-alt"></i></a></div>';
+					@endif;
+					@if($permisos['destroy'])
+						html += '<div class="btn-group btn-group-sm">\
+							<form action="/{!! Request::path() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
+							<input type="hidden" name="_method" value="DELETE">\
+							<input type="hidden" name="_token" value="{{csrf_token()}}">\
+							<button type="submit" class="btn btn-sm btn-outline-danger btn-flat" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
+							<i class="fa fa-trash"></i>\
+							</button>\
+							</form></div>';
+					@endif;
+                    return html;
 			    }
 			  },
 			  	@foreach ($columnas as $columna) {
@@ -184,7 +184,7 @@
 	    @endif
 
 			});
-			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))
+			@if((!$permisos['update'])&&(!$permisos['destroy'])&&(count($botonesExtra)==0))
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 
@@ -192,8 +192,8 @@
 				console.log('init');
 				$('.pagination').addClass('pagination-sm');
 				$('.dataTables_info').addClass('small text-muted');
-				@if($permisos['add'])
-					$('.btn-group-agregar').html('<a type="button" class="btn btn-success" href="/{!! Request::path() . '/create/' . $nuevasVars !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
+				@if($permisos['create'])
+					$('.btn-group-agregar').html('<a type="button" class="btn btn-outline-success" href="/{!! Request::path() . '/create/' . $nuevasVars !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
 				@endif
 				$('.dt-buttons').addClass('btn-group-sm');
 				$('div[id$=_filter] input').css('width','100%').attr('placeholder','{{trans('csgtcrud::crud.buscar')}}');
