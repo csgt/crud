@@ -17,7 +17,7 @@ class Crud
     private static $showSearch = true;
     private static $stateSave  = true;
     private static $softDelete = false;
-    private $responsive        = true;
+    private static $responsive = true;
     private static $perPage    = 20;
     private static $tabla;
     private static $tablaId;
@@ -188,7 +188,7 @@ class Crud
 
     public function setResponsive($aResponsive)
     {
-        $this->responsive = $aResponsive;
+        self::$responsive = $aResponsive;
     }
 
     public static function setTabla($aTabla)
@@ -460,7 +460,7 @@ class Crud
             ->with('orders', self::$orders)
             ->with('botonesExtra', self::$botonesExtra)
             ->with('nuevasVars', self::getGetVars())
-            ->with('responsive', $this->responsive);
+            ->with('responsive', self::$responsive);
     }
 
     public static function create($aId)
