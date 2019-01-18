@@ -31,7 +31,7 @@
 					],
 				@endif
 				"ajax" : {
-					"url": "/{!!Request::path()!!}/data{{$nuevasVars}}",
+					"url": "/{!!Request::path()!!}/data{{$queryParameters}}",
 					"headers": {"X-CSRF-Token": "{{csrf_token()}}" },
 					"method": "POST",
 				},
@@ -46,30 +46,30 @@
 			    "render": function ( data, type, full, meta ) {
 			    	var id = data['DT_RowId'];
 			    	var html = '';
-			    	@foreach ($botonesExtra as $botonExtra)
+			    	@foreach ($extraButtons as $extraButton)
 			    		@php
-                            $url     = $botonExtra["url"];
+                            $url     = $extraButton["url"];
                             $urlarr  = explode('{id}', $url);
                             $urlVars = '';
                             $parte1  = $urlarr[0];
                             $parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
-                            if ($nuevasVars != '') {
-                                $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
+                            if ($queryParameters != '') {
+                                $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($queryParameters, 1);
                             }
-                            $target = $botonExtra["target"];
+                            $target = $extraButton["target"];
                             if ($target != '') {
                                 $target = 'target="' . $target . '"';
                             }
                         @endphp
-							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-outline-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
+							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-outline-{{$extraButton["class"]}}" title="{!! $extraButton["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $extraButton["confirm"] ? "onclick=\"return confirm(\'".$extraButton["confirmmessage"]."\');\"" : "" !!}><span class="{{$extraButton["icon"]}}"></span></a></div>';
 					@endforeach
 
 			    	@if($permisos['update'])
-							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-outline-primary btn-flat" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><i class="fa fa-pencil-alt"></i></a></div>';
+							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-outline-primary btn-flat" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$queryParameters!!}"><i class="fa fa-pencil-alt"></i></a></div>';
 					@endif;
 					@if($permisos['destroy'])
 						html += '<div class="btn-group btn-group-sm">\
-							<form action="/{!! Request::path() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
+							<form action="/{!! Request::path() !!}/' + id + '{!!$queryParameters!!}" class="btn-delete" method="POST">\
 							<input type="hidden" name="_method" value="DELETE">\
 							<input type="hidden" name="_token" value="{{csrf_token()}}">\
 							<button type="submit" class="btn btn-sm btn-outline-danger btn-flat" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
@@ -80,12 +80,12 @@
                     return html;
 			    }
 			  },
-			  	@foreach ($columnas as $columna) {
+			  	@foreach ($columns as $column) {
 			  		"targets" : {{ $loop->index }},
-			  		"class" : "{!!$columna["class"]!!}",
-			  		"searchable" : "{!!$columna["searchable"]!!}",
+			  		"class" : "{!!$column["class"]!!}",
+			  		"searchable" : "{!!$column["searchable"]!!}",
 
-					@if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime"))
+					@if(($column['type']=="date") || ($column['type']=="datetime"))
 				  		"data" : null,
 				  		"render" : function(data) {
 					  		var fecha = data[{{$loop->index}}];
@@ -94,29 +94,29 @@
 					  		var arrf  = arrhf[0].split("-");
 					  		var hora  = '';
 					  		if (arrhf.length==2) {hora = ' ' + arrhf[1].substring(0,5);}
-					  		@if($columna["tipo"] == "date")
+					  		@if($column['type'] == "date")
 					  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0];
 					  		@else
 					  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
 					  		@endif
 					  	}
 
-					@elseif ($columna["tipo"]=="image")
+					@elseif ($column['type']=="image")
 						"data" : null,
 				  		"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
-				  		return '<img width="{!!$columna["filewidth"]!!}" src="{!!$columna["filepath"]!!}' + val + '">';
+				  		return '<img width="{!!$column["filewidth"]!!}" src="{!!$column["filepath"]!!}' + val + '">';
 				  	}
 
-				  	@elseif ($columna["tipo"]=="file")
+				  	@elseif ($column['type']=="file")
 						"data" : null,
 				  		"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
-				  		return '<a href="{!!$columna["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
+				  		return '<a href="{!!$column["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
 				  	}
-				  	@elseif ($columna["tipo"]=="securefile")
+				  	@elseif ($column['type']=="securefile")
 						"data" : null,
 				  		"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
@@ -124,22 +124,22 @@
 				  		var valArray = val.split('.')
 				  		var extension = valArray[valArray.length - 1]
 				  		if(["jpg", "png", "gif"].indexOf(extension)) {
-				  			return '<img width="{!!$columna["filewidth"]!!}" src="' + val + '">';
+				  			return '<img width="{!!$column["filewidth"]!!}" src="' + val + '">';
 				  		}
-				  		return '<a href="{!!$columna["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
+				  		return '<a href="{!!$column["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
 				  	}
 
-					@elseif ($columna["tipo"]=="numeric")
+					@elseif ($column['type']=="numeric")
 						"data" : null,
 				  		"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
 
 				  		val = Number(val);
-				  		return val.formatMoney({!!$columna["decimales"]!!});
+				  		return val.formatMoney({!!$column["decimales"]!!});
 				  	}
 
-			  		@elseif($columna["tipo"]=="bool")
+			  		@elseif($column['type']=="bool")
 			  	 		"data" : null,
 				  		"render" : function(data) {
 				  			var val = data[{{$loop->index}}];
@@ -148,12 +148,12 @@
 							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">{{trans('csgtcrud::crud.si')}}</span>');
 				  			return text;
 					  	}
-					@elseif ($columna["tipo"]=="url")
+					@elseif ($column['type']=="url")
 						"data" : null,
 				  		"render" : function(data) {
 				  			var val = data[{{$loop->index}}];
 				  			if (val==null) return null;
-				  			return '<a href="' + val + '" target="{!!$columna["target"]!!}">' + val + '</a>';
+				  			return '<a href="' + val + '" target="{!!$column["target"]!!}">' + val + '</a>';
 				  		}
 				  	@else
 				  		"render" : $.fn.dataTable.render.text()
@@ -184,7 +184,7 @@
 	    @endif
 
 			});
-			@if((!$permisos['update'])&&(!$permisos['destroy'])&&(count($botonesExtra)==0))
+			@if((!$permisos['update'])&&(!$permisos['destroy'])&&(count($extraButtons)==0))
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 
@@ -193,7 +193,7 @@
 				$('.pagination').addClass('pagination-sm');
 				$('.dataTables_info').addClass('small text-muted');
 				@if($permisos['create'])
-					$('.btn-group-agregar').html('<a type="button" class="btn btn-outline-success" href="/{!! Request::path() . '/create/' . $nuevasVars !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
+					$('.btn-group-agregar').html('<a type="button" class="btn btn-outline-success" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
 				@endif
 				$('.dt-buttons').addClass('btn-group-sm');
 				$('div[id$=_filter] input').css('width','100%').attr('placeholder','{{trans('csgtcrud::crud.buscar')}}');
@@ -229,8 +229,8 @@
 			<table class="table table-bordered table-condensed table-hover tabla-catalogo display dt-responsive nowrap dt-responsive nowrap">
 				<thead>
                     <tr>
-                        @foreach ($columnas as $columna)
-                            <th>{!!$columna["nombre"]!!}</th>
+                        @foreach ($columns as $column)
+                            <th>{!!$column['name']!!}</th>
                             @if ($loop->last)
                                 <th>&nbsp;</th>
                             @endif

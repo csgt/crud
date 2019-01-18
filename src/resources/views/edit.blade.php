@@ -4,21 +4,21 @@
 @stop
 @section('content')
 @php
-	$includefechas = false;
-	$includeselect = false;
-	$includesummernote = false;
+	$includeDates = false;
+	$includeSelecize = false;
+	$includeSummernote = false;
 
-	foreach ($columnas as $columna) {
-		if (($columna['tipo'] == 'date') || ($columna['tipo'] == 'datetime' || $columna['tipo'] == 'time')) {
-			$includefechas = true;
+	foreach ($columns as $column) {
+		if (($column['type'] == 'date') || ($column['type'] == 'datetime' || $column['type'] == 'time')) {
+			$includeDates = true;
 		}
 
-		if (($columna['tipo'] == 'combobox') || ($columna['tipo'] == 'enum') || $columna['tipo'] == 'multi') {
-			$includeselect = true;
+		if (($column['type'] == 'combobox') || ($column['type'] == 'enum') || $column['type'] == 'multi') {
+			$includeSelecize = true;
 		}
 
-		if ($columna['tipo'] == 'summernote') {
-			$includesummernote = true;
+		if ($column['type'] == 'summernote') {
+			$includeSummernote = true;
 		}
 	}
 	function arrayToFields($arr) {
@@ -32,45 +32,45 @@
 @endphp
   	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/formValidation.min.css">
 
-  	@if($includefechas)
+  	@if($includeDates)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/bootstrap-datetimepicker.min.css">
 	@endif
 
- 	@if($includeselect)
+ 	@if($includeSelecize)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/selectize.css">
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/selectize.bootstrap3.css">
 	@endif
 
-	@if($includesummernote)
+	@if($includeSummernote)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/summernote.min.css">
 	@endif
-	<div class="box">
-		<div class="box-body">
-			<form method="POST" action="/{{$pathstore . $nuevasVars}}" class="form-horizontal" id="frmCrud" enctype="multipart/form-data">
+	<div class="card">
+		<div class="card-body">
+			<form method="POST" action="/{{$pathstore . $queryParameters}}" class="form-horizontal" id="frmCrud" enctype="multipart/form-data">
 				@if($data)
 					<input type="hidden" name="_method" value="PUT">
 				@endif
 				{{csrf_field()}}
-				@foreach($columnas as $columna)
+				@foreach($columns as $column)
 					@php
-						$valor = ($data ? $data->{$columna['campoReal']} : $columna['default']);
-						$label = '<label for="' . $columna['campoReal'] . '" class="col-sm-2 control-label">' . $columna['nombre'] . '</label>';
+						$valor = ($data ? $data->{$column['campoReal']} : $column['default']);
+						$label = '<label for="' . $column['campoReal'] . '" class="col-sm-2 control-label">' . $column['name'] . '</label>';
 						$arr = ['class' => 'form-control'];
-						//dd($columnas);
-						foreach ($columna['reglas'] as $regla) {
+						//dd($columns);
+						foreach ($column['validationRules'] as $regla) {
 							$arr['data-fv-' . $regla] = 'true';
-							$arr['data-fv-' . $regla . '-message'] = $columna['reglasmensaje'];
+							$arr['data-fv-' . $regla . '-message'] = $column['validationRulesMessage'];
 						}
 					@endphp
 					<div class="form-group">
 						<!---------------------------- PASSWORD ---------------------------------->
-			    		@if($columna['tipo'] == 'password')
+			    		@if($column['type'] == 'password')
 			    			{!!$label!!}
 			    			<div class="col-sm-5">
 								@php
 									$arr['placeholder'] = 'Password';
 									$arr['data-fv-identical'] = 'true';
-									$arr['data-fv-identical-field'] = $columna['campoReal'] . 'confirm';
+									$arr['data-fv-identical-field'] = $column['campoReal'] . 'confirm';
 									$arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
 
 									if (!$data) {
@@ -78,44 +78,44 @@
 										$arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
 									}
 								@endphp
-			    				<input type="password" name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>
+			    				<input type="password" name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
 							</div>
 							<div class="col-sm-5">
 								@php
-									$arr['data-fv-identical-field'] = $columna['campoReal'];
+									$arr['data-fv-identical-field'] = $column['campoReal'];
 								@endphp
-								<input type="password" name="{{ $columna['campoReal'] . 'confirm' }}" {!! arrayToFields($arr) !!}>
+								<input type="password" name="{{ $column['campoReal'] . 'confirm' }}" {!! arrayToFields($arr) !!}>
 								@if($data)
-									<p class="help-block">* Dejar en blanco para no cambiar {!! $columna['nombre'] !!}</p>
+									<p class="help-block">* Dejar en blanco para no cambiar {!! $column['name'] !!}</p>
 								@endif
 							</div>
 						<!---------------------------- TEXTAREA ---------------------------------->
-						@elseif($columna['tipo'] == 'textarea')
+						@elseif($column['type'] == 'textarea')
 							{!!$label!!}
 							<div class="col-sm-10">
-								<textarea name="{{$columna['campoReal']}}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
+								<textarea name="{{$column['campoReal']}}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
 							</div>
 						<!---------------------------- SUMMERNOTE ---------------------------------->
-						@elseif($columna['tipo'] == 'summernote')
+						@elseif($column['type'] == 'summernote')
 							{!!$label!!}
 							<div class="col-sm-10">
 								<?php $arr = ['class' => 'summernote'];?>
-								<textarea name="{{$columna['campoReal']}}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
+								<textarea name="{{$column['campoReal']}}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
 							</div>
 						<!---------------------------- BOOLEAN ---------------------------------->
-						@elseif($columna['tipo'] == 'bool')
+						@elseif($column['type'] == 'bool')
 							<div class="col-sm-2">&nbsp;</div>
 							<div class="col-sm-10">
 								<div class="checkbox">
 							    <label>
-							    	<input type="checkbox" name="{{$columna['campoReal']}}" value="1" {{$valor == 1? "checked":""}}>
-							    	{!! $columna['nombre'] !!}
+							    	<input type="checkbox" name="{{$column['campoReal']}}" value="1" {{$valor == 1? "checked":""}}>
+							    	{!! $column['name'] !!}
 							    </label>
-							    <input class="hiddencheckbox" type='hidden' value='0' name='{{$columna['campoReal']}}'>
+							    <input class="hiddencheckbox" type='hidden' value='0' name='{{$column['campoReal']}}'>
 						    </div>
 						  </div>
 						<!---------------------------- DATE ---------------------------------->
-						@elseif($columna['tipo'] == 'date')
+						@elseif($column['type'] == 'date')
 							@php
 								$datearray = explode('-', $valor);
 								if (count($datearray) == 3) {
@@ -132,13 +132,13 @@
 							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
-								<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
-									<input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}" {!! arrayToFields($arr) !!}>
+								<div id="div{!!$column['campoReal']!!}" class="input-group date catalogoFecha">
+									<input type="text" name="{{ $column['campoReal'] }}" value="{{ $laFecha }}" {!! arrayToFields($arr) !!}>
 								  	<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 								</div>
 							</div>
 						<!---------------------------- DATETIME ---------------------------------->
-						@elseif($columna['tipo'] == 'datetime')
+						@elseif($column['type'] == 'datetime')
 							@php
 								$datearray2 = explode(' ', $valor);
 								if (count($datearray2) == 2) {
@@ -156,13 +156,13 @@
 							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
-								<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
-									<input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}" {!! arrayToFields($arr) !!}>
+								<div id="div{!!$column['campoReal']!!}" class="input-group date catalogoFecha">
+									<input type="text" name="{{ $column['campoReal'] }}" value="{{ $laFecha }}" {!! arrayToFields($arr) !!}>
 								  	<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 								</div>
 							</div>
 						<!---------------------------- TIME ---------------------------------->
-						@elseif($columna['tipo'] == 'time')
+						@elseif($column['type'] == 'time')
 							@php
 								$arr['data-date-locale'] = 'es';
 								$arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
@@ -171,38 +171,38 @@
 							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
-								<div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
-									<input type="text" name="{{ $columna['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields($arr) !!}>
+								<div id="div{!!$column['campoReal']!!}" class="input-group date catalogoFecha">
+									<input type="text" name="{{ $column['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields($arr) !!}>
 								  	<span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
 								</div>
 							</div>
 						<!---------------------------- COMBOBOX ---------------------------------->
-						@elseif($columna['tipo'] == 'combobox')
+						@elseif($column['type'] == 'combobox')
 							@php
 								$arr['class'] = 'selectpicker form-control';
 								$arr['data-width'] = 'auto';
 							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
-								<?php $campo = ($data ? $data->{$columna['campo']} : '')?>
-								<select name="{{ $columna['campo'] }}" {!! arrayToFields($arr) !!}>
-									@foreach($combos[$columna['alias']] as $id => $opcion)
+								<?php $campo = ($data ? $data->{$column['field']} : '')?>
+								<select name="{{ $column['field'] }}" {!! arrayToFields($arr) !!}>
+									@foreach($combos[$column['alias']] as $id => $opcion)
 									<option value="{{ $id }}" {{ ($campo == $id ? "selected='selected'" : "") }}>{!! $opcion !!}</option>
 									@endforeach
 								</select>
 							</div>
 						<!---------------------------- MULTI ---------------------------------->
-						@elseif($columna['tipo'] == 'multi')
+						@elseif($column['type'] == 'multi')
 							@php
 								$arr['class'] = 'selectpicker form-control';
 								$arr['data-width'] = 'auto';
 							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
-								<?php $campo = ($data ? $data->{$columna['campo']} : '')?>
-								<select multiple="multiple" name="{{ $columna['campo'] }}[]" {!! arrayToFields($arr) !!}>
+								<?php $campo = ($data ? $data->{$column['field']} : '')?>
+								<select multiple="multiple" name="{{ $column['field'] }}[]" {!! arrayToFields($arr) !!}>
 
-									@foreach($combos[$columna['alias']] as $id => $opcion)
+									@foreach($combos[$column['alias']] as $id => $opcion)
 									<option
 										value="{{ $id }}"
 										@if($campo != "")
@@ -214,39 +214,39 @@
 								</select>
 							</div>
 						<!---------------------------- ENUM ---------------------------------->
-						@elseif($columna['tipo'] == 'enum')
+						@elseif($column['type'] == 'enum')
 							@php
 								$arr['class'] = 'selectpicker form-control';
 								$arr['data-width'] = 'auto';
 							@endphp
 							{!!$label!!}
 							<div class="col-sm-10">
-								<select name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>
-									@foreach($columna['enumarray'] as $id => $opcion)
+								<select name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
+									@foreach($column['enumarray'] as $id => $opcion)
 									<option value="{{ $id }}" {{ ($valor == $id ? "selected='selected'" : "") }}>{!! $opcion !!}</option>
 									@endforeach
 								</select>
 							</div>
 						<!---------------------------- FILE/IMAGE/SECUREFILE ---------------------------------->
-						@elseif(($columna['tipo'] == 'file')||($columna['tipo'] == 'image')||($columna['tipo'] == 'securefile'))
+						@elseif(($column['type'] == 'file')||($column['type'] == 'image')||($column['type'] == 'securefile'))
 							{!!$label!!}
 							<div class="col-sm-10">
-								<input type="file" name="{{ $columna['campoReal'] }}">
+								<input type="file" name="{{ $column['campoReal'] }}">
 								@if($data)
 									<p class="help-block">{!! $valor !!}</p>
 								@endif
 							</div>
 						<!---------------------------- NUMERIC ---------------------------------->
-						@elseif($columna['tipo'] == 'numeric')
+						@elseif($column['type'] == 'numeric')
 							{!!$label!!}
 							<div class="col-sm-3">
-			    				<input type="number" step="any" name="{{ $columna['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields    ($arr) !!}>
+			    				<input type="number" step="any" name="{{ $column['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields    ($arr) !!}>
 			    			</div>
 						<!---------------------------- DEFAULT ---------------------------------->
 				    	@else
 				    		{!!$label!!}
 							<div class="col-sm-10">
-								<input type="text" name="{{ $columna['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields($arr) !!}>
+								<input type="text" name="{{ $column['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields($arr) !!}>
 				    		</div>
 				    	@endif
 		  			</div>
@@ -266,29 +266,29 @@
   <script src="{!!config('csgtcrud.pathToAssets','/')!!}js/formValidation.min.js"></script>
 	<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/framework/bootstrap.min.js"></script>
 
-  @if($includefechas)
+  @if($includeDates)
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/moment-with-locales.min.js"></script>
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/bootstrap-datetimepicker.min.js"></script>
 	@endif
 
- 	@if($includeselect)
+ 	@if($includeSelecize)
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/selectize.min.js"></script>
 	@endif
 
-	@if($includesummernote)
+	@if($includeSummernote)
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote.min.js"></script>
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote-es-ES.js"></script>
 	@endif
 
 	<script type="text/javascript">
 		$(function() {
-			@if($includefechas)
+			@if($includeDates)
 				$('.catalogoFecha').datetimepicker();
 			@endif
-			@if($includeselect)
+			@if($includeSelecize)
 				$('.selectpicker').selectize();
 			@endif
-			@if($includesummernote)
+			@if($includeSummernote)
 				$('.summernote').summernote({
 					'lang'   : 'es-ES',
 				});
