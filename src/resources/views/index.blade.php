@@ -65,14 +65,14 @@
 					@endforeach
 
 			    	@if($permisos['update'])
-							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-outline-primary btn-flat" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$queryParameters!!}"><i class="fa fa-pencil-alt"></i></a></div>';
+							html += '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-block btn-info" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$queryParameters!!}"><i class="fa fa-pencil-alt"></i></a></div>';
 					@endif;
 					@if($permisos['destroy'])
 						html += '<div class="btn-group btn-group-sm">\
 							<form action="/{!! Request::path() !!}/' + id + '{!!$queryParameters!!}" class="btn-delete" method="POST">\
 							<input type="hidden" name="_method" value="DELETE">\
 							<input type="hidden" name="_token" value="{{csrf_token()}}">\
-							<button type="submit" class="btn btn-sm btn-outline-danger btn-flat" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
+							<button type="submit" class="btn btn-sm btn-block btn-danger ml-1" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
 							<i class="fa fa-trash"></i>\
 							</button>\
 							</form></div>';
