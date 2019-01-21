@@ -143,10 +143,9 @@
 			  	 		"data" : null,
 				  		"render" : function(data) {
 				  			var val = data[{{$loop->index}}];
-							if (val==null) return null;
+							if (val == null) return null;
 
-							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">{{trans('csgtcrud::crud.si')}}</span>');
-				  			return text;
+				  			return (val == 0?'<i class="text-danger fa fa-times"></i>':'<i class="text-success fa fa-check"></i>');
 					  	}
 					@elseif ($column['type']=="url")
 						"data" : null,
