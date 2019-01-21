@@ -11,7 +11,7 @@
 			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
 				console.log(JSON.stringify(message));
 			};
-			var oTable = $('.tabla-catalogo').dataTable({
+			var oTable = $('.dataTable').dataTable({
 				"processing" : true,
 				"serverSide" : true,
 				"searchDelay": 500,
@@ -143,9 +143,10 @@
 			  	 		"data" : null,
 				  		"render" : function(data) {
 				  			var val = data[{{$loop->index}}];
-							if (val == null) return null;
+							if (val==null) return null;
 
-				  			return (val == 0?'<i class="text-danger fa fa-times"></i>':'<i class="text-success fa fa-check"></i>');
+						var text = (val==0?'<i class="text-danger fa fa-times"></i>':'<i class="text-success fa fa-check"></i>');
+				  			return text;
 					  	}
 					@elseif ($column['type']=="url")
 						"data" : null,
@@ -187,19 +188,19 @@
 				oTable.fnSetColumnVis(-1,false);
 			@endif;
 
-			$('.tabla-catalogo').on('init.dt', function(){
+			$('.dataTable').on('init.dt', function(){
 				console.log('init');
 				$('.pagination').addClass('pagination-sm');
 				$('.dataTables_info').addClass('small text-muted');
 				@if($permisos['create'])
-					$('.btn-group-agregar').html('<a type="button" class="btn btn-outline-success" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
+					$('.btn-group-agregar').html('<a type="button" class="btn btn-block btn-info" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
 				@endif
 				$('.dt-buttons').addClass('btn-group-sm');
 				$('div[id$=_filter] input').css('width','100%').attr('placeholder','{{trans('csgtcrud::crud.buscar')}}');
 				$('.dataTables_filter label').css('width','100%');
 			});
 
-			$('.tabla-catalogo').on('processing.dt', function(e, settings, processing){
+			$('.dataTable').on('processing.dt', function(e, settings, processing){
 				console.log('processing');
 				console.log(processing);
 				if (processing==false)
@@ -225,7 +226,7 @@
 	<div class="clearfix"></div>
 	<div class="card">
 		<div class="card-body">
-			<table class="table table-bordered table-condensed table-hover tabla-catalogo display dt-responsive nowrap dt-responsive nowrap">
+			<table class="table table-sm table-striped table-hover dataTable display dt-responsive nowrap dt-responsive nowrap">
 				<thead>
                     <tr>
                         @foreach ($columns as $column)
