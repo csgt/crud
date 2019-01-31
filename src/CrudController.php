@@ -838,7 +838,7 @@ class CrudController extends BaseController
             dd('setExtraButton debe tener un valor para "url"');
         }
 
-        $icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star' : $aParams['icon']);
+        $icon           = (!array_key_exists('icon', $aParams) ? 'fa fa-star' : $aParams['icon']);
         $class          = (!array_key_exists('class', $aParams) ? 'default' : $aParams['class']);
         $title          = (!array_key_exists('title', $aParams) ? '' : $aParams['title']);
         $target         = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
@@ -873,7 +873,7 @@ class CrudController extends BaseController
 
     public function setHidden($aParams)
     {
-        $allowed = ['field', 'valor'];
+        $allowed = ['field', 'value'];
 
         foreach ($aParams as $key => $val) {
             //Validamos que todas las variables del array son permitidas.
@@ -882,7 +882,7 @@ class CrudController extends BaseController
             }
         }
 
-        $this->hiddenFields[$aParams['field']] = $aParams['valor'];
+        $this->hiddenFields[$aParams['field']] = $aParams['value'];
     }
 
     public function setPerPage($aCuantos)
