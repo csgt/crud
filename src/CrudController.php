@@ -314,9 +314,9 @@ class CrudController extends BaseController
         if ($orders) {
             foreach ($orders as $order) {
                 if ($order['dir'] == 'asc') {
-                    $data = $data->sortBy($fieldsOrder[$order['column']]);
+                    $data = $data->sortBy($ordenColumnas[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
                 } else {
-                    $data = $data->sortByDesc($fieldsOrder[$order['column']]);
+                    $data = $data->sortByDesc($ordenColumnas[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
                 }
             }
         }
