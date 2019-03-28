@@ -305,9 +305,9 @@ class CrudController extends BaseController {
 		if ($orders) {
 			foreach ($orders as $order) {
 				if ($order['dir'] == 'asc') {
-					$data = $data->sortBy($fieldsOrder[$order['column']]);
+					$data = $data->sortBy($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
 				} else {
-					$data = $data->sortByDesc($fieldsOrder[$order['column']]);
+					$data = $data->sortByDesc($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
 				}
 			}
 		}
@@ -391,8 +391,13 @@ class CrudController extends BaseController {
 							$methodName = 'fetch' . ucfirst($fullCampoFixed['field']) . 'Column';
 							$keyName = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
 
-							$extras = $this->model->{'fetch' . ucfirst($fullCampoFixed['field'])}();
-							$cols[] = implode(', ', $extras->pluck($keyName)->toArray());
+							$cols[] = implode(', ',
+								$this->model
+									->find($item[$this->uniqueid])
+									->{$fullCampoFixed['field']}
+									->pluck($keyName)
+									->toArray()
+							);
 						} else {
 							$cols[] = $item[$colName];
 						}
@@ -409,7 +414,7 @@ class CrudController extends BaseController {
 		return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
 	}
 
-	protected function downLevel($aPath) {
+	private function downLevel($aPath) {
 		$arr = explode('/', $aPath);
 		array_pop($arr);
 		$route = implode('/', $arr);
@@ -811,7 +816,7 @@ class CrudController extends BaseController {
 			dd('setExtraButton debe tener un valor para "url"');
 		}
 
-		$icon = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star' : $aParams['icon']);
+		$icon = (!array_key_exists('icon', $aParams) ? 'fa fa-star' : $aParams['icon']);
 		$class = (!array_key_exists('class', $aParams) ? 'default' : $aParams['class']);
 		$title = (!array_key_exists('title', $aParams) ? '' : $aParams['title']);
 		$target = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
@@ -844,7 +849,7 @@ class CrudController extends BaseController {
 	}
 
 	public function setHidden($aParams) {
-		$allowed = ['field', 'valor'];
+		$allowed = ['field', 'value'];
 
 		foreach ($aParams as $key => $val) {
 			//Validamos que todas las variables del array son permitidas.
@@ -853,7 +858,7 @@ class CrudController extends BaseController {
 			}
 		}
 
-		$this->hiddenFields[$aParams['field']] = $aParams['valor'];
+		$this->hiddenFields[$aParams['field']] = $aParams['value'];
 	}
 
 	public function setPerPage($aCuantos) {

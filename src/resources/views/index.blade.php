@@ -114,7 +114,7 @@
 				  		"render" : function(data) {
 				  		var val = data[{{$loop->index}}];
 				  		if (val==null) return null;
-				  		return '<a href="{!!$column["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
+				  		return '<a href="{!!$column["filepath"]!!}' + val + '" target="_blank"><span class="fa fa-cloud-download-alt"></span>';
 				  	}
 				  	@elseif ($column['type']=="securefile")
 						"data" : null,
@@ -126,7 +126,7 @@
 				  		if(["jpg", "png", "gif"].indexOf(extension)) {
 				  			return '<img width="{!!$column["filewidth"]!!}" src="' + val + '">';
 				  		}
-				  		return '<a href="{!!$column["filepath"]!!}' + val + '" target="_blank"><span class="glyphicon glyphicon-cloud-download"></span>';
+				  		return '<a href="{!!$column["filepath"]!!}' + val + '" target="_blank"><span class="fa fa-cloud-download-alt"></span>';
 				  	}
 
 					@elseif ($column['type']=="numeric")

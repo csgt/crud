@@ -12,7 +12,7 @@ class DummyClass extends CrudController
         // $this->setModel(new Model);
         // $this->setTitle('Title');
         // $this->setBreadcrumb([
-        //     ['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-archive'],
+        //     ['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-book'],
         //     ['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
         // ]);
         // $this->setField(['name' => 'Nombre', 'field' => 'name']);
@@ -44,6 +44,6 @@ class DummyClass extends CrudController
         //     'class'  => 'warning',
         // ]);
 
-        // $this->setPermissions("\Cancerbero::permissionsCrud", 'module');
+        // $this->setPermissions("\Cancerbero::crudPermissions", 'module');
     }
 }
