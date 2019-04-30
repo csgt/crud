@@ -316,9 +316,9 @@ class CrudController extends BaseController
         if ($orders) {
             foreach ($orders as $order) {
                 if ($order['dir'] == 'asc') {
-                    $data = $data->sortBy($ordenColumnas[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
+                    $data = $data->sortBy($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
                 } else {
-                    $data = $data->sortByDesc($ordenColumnas[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
+                    $data = $data->sortByDesc($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
                 }
             }
         }
@@ -398,6 +398,17 @@ class CrudController extends BaseController
                             } else {
                                 $cols[] = $item[$colName];
                             }
+                        } else if ($fullCampoFixed['type'] == 'multi') {
+                            $methodName = 'fetch' . ucfirst($fullCampoFixed['field']) . 'Column';
+                            $keyName    = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
+
+                            $cols[] = implode(', ',
+                                $this->model
+                                    ->find($item[$this->uniqueid])
+                                    ->{$fullCampoFixed['field']}
+                                    ->pluck($keyName)
+                                    ->toArray()
+                            );
                         } else {
                             $cols[] = $item[$colName];
                         }
@@ -435,10 +446,13 @@ class CrudController extends BaseController
 
                 $combos[$campo['alias']] = $arr;
             } else if ($campo['type'] == 'multi') {
+                $methodName = 'fetch' . ucfirst($campo['field']) . 'Column';
+                $keyName    = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
+
                 $options = $this->model
                     ->{'fetch' . ucfirst($campo['field'])}()
-                    ->mapWithKeys(function ($item) {
-                        return [$item->id => $item->name];
+                    ->mapWithKeys(function ($item) use ($keyName) {
+                        return [$item->id => $item->{$keyName}];
                     }
                     );
                 $combos[$campo['alias']] = $options;

@@ -11,6 +11,7 @@ class DummyClass extends CrudController
     {
         // $this->setModel(new Model);
         // $this->setTitle('Title');
+        // $this->setExtraAction(['url' => '/module/import', 'title' => 'Importar']);
         // $this->setBreadcrumb([
         //     ['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-book'],
         //     ['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
@@ -28,6 +29,13 @@ class DummyClass extends CrudController
 
         //     return $next($request);
         // });
+
+        //Campo Multi:
+        // $this->setField(['name' => 'Requisitos', 'type' => 'multi', 'field' => 'relationName']);
+        // requiere en el modelo, crear la relation belongsToMany relationName
+        // requiere en el modelo, crear el método fetchRelationName
+        // opcional, si la columna para mostrar en el show, no se llama 'name'
+            // crear el método fetchRelationNameColumn y retorne el campo deseado.
 
         // $this->setHidden(['field' => 'clienteid', 'value' => 1]);
         // $this->setExtraButton([
