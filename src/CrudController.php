@@ -26,6 +26,7 @@ class CrudController extends BaseController
     private $permissions  = ['create' => false, 'update' => false, 'destroy' => false];
     private $orders       = [];
     private $extraButtons = [];
+    private $extraActions = [];
     private $joins        = [];
     private $leftJoins    = [];
     private $wheres       = [];
@@ -54,6 +55,7 @@ class CrudController extends BaseController
             ->with('permisos', $this->permissions)
             ->with('orders', $this->orders)
             ->with('extraButtons', $this->extraButtons)
+            ->with('extraActions', $this->extraActions)
             ->with('queryParameters', $this->getQueryString($request));
     }
 
@@ -856,6 +858,32 @@ class CrudController extends BaseController
         ];
 
         $this->extraButtons[] = $arr;
+    }
+
+    public function setExtraAction($aParams)
+    {
+        $allowed = ['url', 'title', 'target'];
+
+        foreach ($aParams as $key => $val) {
+            //Validamos que todas las variables del array son permitidas.
+            if (!in_array($key, $allowed)) {
+                dd('setExtraAction no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+            }
+        }
+        if (!array_key_exists('url', $aParams)) {
+            dd('setExtraAction debe tener un valor para "url"');
+        }
+
+        $title  = (!array_key_exists('title', $aParams) ? '' : $aParams['title']);
+        $target = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
+
+        $arr = [
+            'url'    => $aParams['url'],
+            'title'  => $title,
+            'target' => $target,
+        ];
+
+        $this->extraActions[] = $arr;
     }
 
     public function setPermissions($aPermissionsCallback, $aModule = false)
