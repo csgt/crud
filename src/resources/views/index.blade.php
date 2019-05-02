@@ -204,7 +204,7 @@ if ($target != '') {
 				@if($permisos['add'])
 					$('.btn-group-agregar').html('<a type="button" class="btn btn-success" href="/{!! Request::path() . '/create/' . $nuevasVars !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
 				@endif
-                @foreach($extraActions as $action)
+                @foreach($accionesExtra as $action)
                     $('.btn-group-agregar').append('<a type="button" class="btn" href="{!! $action['url'] !!}">{{ $action['titulo'] }}</a>');
                 @endforeach
 				$('.dt-buttons').addClass('btn-group-sm');
