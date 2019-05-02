@@ -204,6 +204,9 @@ if ($target != '') {
 				@if($permisos['add'])
 					$('.btn-group-agregar').html('<a type="button" class="btn btn-success" href="/{!! Request::path() . '/create/' . $nuevasVars !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
 				@endif
+                @foreach($extraActions as $action)
+                    $('.btn-group-agregar').append('<a type="button" class="btn" href="{!! $action['url'] !!}">{{ $action['titulo'] }}</a>');
+                @endforeach
 				$('.dt-buttons').addClass('btn-group-sm');
 				$('div[id$=_filter] input').css('width','100%').attr('placeholder','{{trans('csgtcrud::crud.buscar')}}');
 				$('.dataTables_filter label').css('width','100%');
