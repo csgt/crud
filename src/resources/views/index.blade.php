@@ -53,7 +53,7 @@
 			    "sortable": false,
 			    "render": function ( data, type, full, meta ) {
 			    	var id = data['DT_RowId'];
-			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-right">';
+			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-left">';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php
 $url     = $botonExtra["url"];
