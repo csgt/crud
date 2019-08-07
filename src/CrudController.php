@@ -702,7 +702,7 @@ class CrudController extends BaseController
         $class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
         $default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
         $reglas        = (!array_key_exists('validationRules', $aParams) ? [] : $aParams['validationRules']);
-        $decimales     = (!array_key_exists('decimals', $aParams) ? 0 : $aParams['decimals']);
+        $decimals      = (!array_key_exists('decimals', $aParams) ? 0 : $aParams['decimals']);
         $collection    = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
         $reglasmensaje = (!array_key_exists('validationRulesMessage', $aParams) ? '' : $aParams['validationRulesMessage']);
         $filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
@@ -771,7 +771,7 @@ class CrudController extends BaseController
             'validationRules'        => $reglas,
             'validationRulesMessage' => $reglasmensaje,
             'class'                  => $class,
-            'decimals'               => $decimales,
+            'decimals'               => $decimals,
             'collection'             => $collection,
             'searchable'             => $searchable,
             'enumarray'              => $enumarray,

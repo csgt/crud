@@ -136,7 +136,7 @@
                         if (val==null) return null;
 
                         val = Number(val);
-                        return val.formatMoney({!!$column["decimales"]!!});
+                        return val.formatMoney({!!$column["decimals"]!!});
                     }
 
                     @elseif($column['type']=="bool")
