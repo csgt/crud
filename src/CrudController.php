@@ -248,7 +248,7 @@ class CrudController extends BaseController {
 			}]);
 
 			foreach ($fields as $field) {
-				$data->addSelect($foreignModel->getQualifiedParentKeyName());
+				$data->addSelect($foreignModel instanceof BelongsTo ? $foreignModel->getForeignKeyName() : $foreignModel->getQualifiedParentKeyName());
 			}
 		}
 
