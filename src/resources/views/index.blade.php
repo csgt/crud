@@ -193,7 +193,7 @@
                 $('.pagination').addClass('pagination-sm');
                 $('.dataTables_info').addClass('small text-muted');
                 @if($permisos['create'])
-                    $('.btn-group-agregar').html('<a type="button" class="btn" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
+                    $('.btn-group-agregar').html('<a type="button" class="btn btn-default" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
                 @endif
                 @foreach($extraActions as $action)
                     $('.btn-group-agregar').append('<a type="button" class="btn" href="{!! $action['url'] !!}">{{ $action['title'] }}</a>');
