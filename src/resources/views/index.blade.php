@@ -88,16 +88,17 @@
                     @if(($column['type']=="date") || ($column['type']=="datetime"))
                         "data" : null,
                         "render" : function(data) {
-                            var fecha = data[{{$loop->index}}];
-                            if (fecha==null) return null;
-                            var arrhf = fecha.split(" ");
-                            var arrf  = arrhf[0].split("-");
-                            var hora  = '';
-                            if (arrhf.length==2) {hora = ' ' + arrhf[1].substring(0,5);}
+                            var date = moment.utc(data[{{$loop->index}}]);
+                            if (!date.isValid()) return null
+
+                            @if($column['utc'] == true)
+                               date.local()
+                            @endif
+
                             @if($column['type'] == "date")
-                                return arrf[2] + '-' + arrf[1] + '-' + arrf[0];
+                                return date.format('DD-MM-YYYY')
                             @else
-                                return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
+                                return date.format('DD-MM-YYYY HH:mm')
                             @endif
                         }
 
