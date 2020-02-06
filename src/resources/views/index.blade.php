@@ -61,7 +61,7 @@
                                 $target = 'target="' . $target . '"';
                             }
                         @endphp
-                            html += '<div class="btn-group btn-group-sm"><a class="mr-1 btn btn-sm btn-outline-{{$extraButton["class"]}}" title="{!! $extraButton["title"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $extraButton["confirm"] ? "onclick=\"return confirm(\'".$extraButton["confirmmessage"]."\');\"" : "" !!}><span class="{{$extraButton["icon"]}}"></span></a></div>';
+                            html += '<div class="btn-group btn-group-sm"><a class="mr-1 btn btn-sm btn-block {{$extraButton["class"]}}" title="{!! $extraButton["title"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $extraButton["confirm"] ? "onclick=\"return confirm(\'".$extraButton["confirmmessage"]."\');\"" : "" !!}><i class="{{$extraButton["icon"]}}"></i></a></div>';
                     @endforeach
 
                     @if($permisos['update'])
