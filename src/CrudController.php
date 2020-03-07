@@ -7,6 +7,7 @@ use Storage;
 use Response;
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -112,7 +113,7 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
-        $fields = array_except($request->request->all(), $this->noGuardar);
+        $fields = Arr::except($request->request->all(), $this->noGuardar);
         $fields = array_merge($fields, $this->camposHidden);
 
         $newMulti = [];
