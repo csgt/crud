@@ -954,19 +954,18 @@ class CrudController extends BaseController
 
     public function setOrderBy($aParams)
     {
-        $allowed     = ['columna', 'direccion'];
-        $direcciones = ['asc', 'desc'];
+        $allowed    = ['column', 'direction'];
+        $directions = ['asc', 'desc'];
 
         foreach ($aParams as $key => $val) {
-            //Validamos que todas las variables del array son permitidas.
             if (!in_array($key, $allowed)) {
-                dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+                dd('setOrderBy does not accept parameter: ' . $key . '! only ' . implode(', ', $allowed) . ' are allowed.');
             }
         }
 
-        $columna   = (!array_key_exists('columna', $aParams) ? 0 : $aParams['columna']);
-        $direccion = (!array_key_exists('direccion', $aParams) ? 'asc' : $aParams['direccion']);
+        $column    = (!array_key_exists('column', $aParams) ? 0 : $aParams['column']);
+        $direction = (!array_key_exists('direction', $aParams) ? 'asc' : $aParams['direction']);
 
-        $this->orders[$columna] = $direccion;
+        $this->orders[$column] = $direction;
     }
 }
