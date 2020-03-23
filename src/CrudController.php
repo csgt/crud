@@ -78,6 +78,26 @@ class CrudController extends BaseController
         $breadcrumb      = $this->generateBreadcrumb('edit', $this->downLevel($path));
         $queryParameters = $this->getQueryString($request);
 
+        $uses = [
+            'dates'      => false,
+            'selectize'  => false,
+            'summernote' => false,
+        ];
+
+        foreach ($editFields as $column) {
+            if (($column['type'] == 'date') || ($column['type'] == 'datetime' || $column['type'] == 'time')) {
+                $uses['dates'] = true;
+            }
+
+            if (($column['type'] == 'combobox') || ($column['type'] == 'enum') || $column['type'] == 'multi') {
+                $uses['selectize'] = true;
+            }
+
+            if ($column['type'] == 'summernote') {
+                $uses['summernote'] = true;
+            }
+        }
+
         return view('csgtcrud::edit')
             ->with('pathstore', $path)
             ->with('template', $this->layout)
@@ -85,7 +105,8 @@ class CrudController extends BaseController
             ->with('columns', $editFields)
             ->with('data', $data)
             ->with('combos', $combos)
-            ->with('queryParameters', $queryParameters);
+            ->with('queryParameters', $queryParameters)
+            ->with('uses', $uses);
     }
 
     public function create(Request $request)
@@ -683,7 +704,7 @@ class CrudController extends BaseController
     {
         $allowed = ['field', 'name', 'editable', 'show', 'type', 'class',
             'default', 'validationRules', 'validationRulesMessage', 'decimals', 'collection',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc'];
+            'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'time', 'bool', 'combobox', 'password',
             'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
@@ -716,6 +737,7 @@ class CrudController extends BaseController
         $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
         $filedisk      = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
         $utc           = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
+        $editClass     = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable    = true;
 
         if (!in_array($tipo, $tipos)) {
@@ -786,6 +808,7 @@ class CrudController extends BaseController
             'target'                 => $target,
             'isforeign'              => $isforeign,
             'utc'                    => $utc,
+            'editClass'              => $editClass,
         ];
         $this->fields[] = $arr;
     }
