@@ -36,29 +36,31 @@
                             <div class="form-group">
                                 @if($column['type'] == 'password')
                                     <!---------------------------- PASSWORD ---------------------------------->
-                                    {!!$label!!}
-                                    <div class="col-sm-6">
-                                        @php
-                                            $arr['placeholder'] = 'Password';
-                                            $arr['data-fv-identical'] = 'true';
-                                            $arr['data-fv-identical-field'] = $column['campoReal'] . 'confirm';
-                                            $arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
+                                    <div class="row">
+                                        {!!$label!!}
+                                        <div class="col-sm-6">
+                                            @php
+                                                $arr['placeholder'] = 'Password';
+                                                $arr['data-fv-identical'] = 'true';
+                                                $arr['data-fv-identical-field'] = $column['campoReal'] . 'confirm';
+                                                $arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
 
-                                            if (!$data) {
-                                                $arr['data-fv-notempty'] = 'true';
-                                                $arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
-                                            }
-                                        @endphp
-                                        <input type="password" name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        @php
-                                            $arr['data-fv-identical-field'] = $column['campoReal'];
-                                        @endphp
-                                        <input type="password" name="{{ $column['campoReal'] . 'confirm' }}" {!! arrayToFields($arr) !!}>
-                                        @if($data)
-                                            <p class="help-block">* Dejar en blanco para no cambiar {!! $column['name'] !!}</p>
-                                        @endif
+                                                if (!$data) {
+                                                    $arr['data-fv-notempty'] = 'true';
+                                                    $arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
+                                                }
+                                            @endphp
+                                            <input type="password" name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            @php
+                                                $arr['data-fv-identical-field'] = $column['campoReal'];
+                                            @endphp
+                                            <input type="password" name="{{ $column['campoReal'] . 'confirm' }}" {!! arrayToFields($arr) !!}>
+                                            @if($data)
+                                                <p class="help-block">* Dejar en blanco para no cambiar {!! $column['name'] !!}</p>
+                                            @endif
+                                        </div>
                                     </div>
                                 @elseif($column['type'] == 'textarea')
                                     <!---------------------------- TEXTAREA ---------------------------------->
@@ -100,7 +102,7 @@
                                         $arr['data-fv-date'] = 'true';
                                     @endphp
                                     {!!$label!!}
-                                    <div class="col-sm-4">
+                                    <div>
                                         <input id="div{!!$column['campoReal']!!}"
                                             type="text"
                                             class="form-control catalogoFecha"
@@ -127,7 +129,7 @@
                                     @endphp
                                     {!!$label!!}
 
-                                    <div class="col-sm-4">
+                                    <div>
                                         <input id="div{!!$column['campoReal']!!}"
                                             type="text"
                                             class="form-control catalogoFecha"
@@ -144,7 +146,7 @@
                                         $arr['data-fv-date-format'] = 'HH:mm';
                                     @endphp
                                     {!!$label!!}
-                                    <div class="col-sm-4">
+                                    <div>
                                         <input id="div{!!$column['campoReal']!!}"
                                             type="text"
                                             class="form-control catalogoFecha"
