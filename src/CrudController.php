@@ -53,7 +53,7 @@ class CrudController extends BaseController
             ->with('responsive', $this->responsive)
             ->with('perPage', $this->perPage)
             ->with('title', $this->title)
-            ->with('columns', $this->getCamposShow())
+            ->with('columns', $this->getShowFields())
             ->with('permisos', $this->permissions)
             ->with('orders', $this->orders)
             ->with('extraButtons', $this->extraButtons)
@@ -71,11 +71,17 @@ class CrudController extends BaseController
 
     public function edit(Request $request, $aId)
     {
-        $data            = $this->model->find(Crypt::decrypt($aId));
-        $path            = $this->downLevel($request->path()) . '/';
+        $path = $this->downLevel($request->path()) . '/';
+        if ($aId) {
+            $data       = $this->model->find(Crypt::decrypt($aId));
+            $breadcrumb = $this->generateBreadcrumb('edit', $this->downLevel($path));
+        } else {
+            $data       = null;
+            $breadcrumb = $this->generateBreadcrumb('create', $path);
+        }
+
         $editFields      = $this->getLocalEditFields();
         $combos          = $this->fillCombos($editFields);
-        $breadcrumb      = $this->generateBreadcrumb('edit', $this->downLevel($path));
         $queryParameters = $this->getQueryString($request);
 
         $uses = [
@@ -111,21 +117,7 @@ class CrudController extends BaseController
 
     public function create(Request $request)
     {
-        $data            = null;
-        $path            = $this->downLevel($request->path());
-        $editFields      = $this->getLocalEditFields();
-        $combos          = $this->fillCombos($editFields);
-        $breadcrumb      = $this->generateBreadcrumb('create', $path);
-        $queryParameters = $this->getQueryString($request);
-
-        return view('csgtcrud::edit')
-            ->with('pathstore', $path)
-            ->with('template', $this->layout)
-            ->with('breadcrumb', $breadcrumb)
-            ->with('columns', $editFields)
-            ->with('data', $data)
-            ->with('combos', $combos)
-            ->with('queryParameters', $queryParameters);
+        return $this->edit($request, null);
     }
 
     public function store(Request $request)
@@ -608,7 +600,7 @@ class CrudController extends BaseController
         return array_values($tempArray);
     }
 
-    private function getCamposShow()
+    private function getShowFields()
     {
         return array_values(array_filter($this->fields, function ($c) {
             return ($c['show'] == true);
@@ -777,11 +769,11 @@ class CrudController extends BaseController
             $alias = str_replace('.', '__', $aParams['field']);
         } else {
             $campoReal = $aParams['field'];
-            $alias     = 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
+            $alias     = 'a' . date('U') . count($this->getShowFields()); //Nos inventamos un alias para los subqueries
         }
 
         if ($aParams['field'] == $this->model->getKeyName()) {
-            $alias = 'idsinenc' . count($this->getCamposShow());
+            $alias = 'idsinenc' . count($this->getShowFields());
             $edit  = false;
         }
 
