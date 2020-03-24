@@ -236,7 +236,7 @@
     <div class="clearfix"></div>
     <div class="card">
         <div class="card-body">
-            <table class="table table-sm table-striped table-hover dataTable display dt-responsive nowrap dt-responsive nowrap">
+            <table class="table table-sm table-striped table-hover dataTable display {{ $responsive ? 'dt-responsive nowrap' : '' }}">
                 <thead>
                     <tr>
                         @foreach ($columns as $column)
