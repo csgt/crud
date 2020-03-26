@@ -285,7 +285,7 @@ class Crud
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'query', 'combokey',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'target'];
+            'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'editClass'];
         $tipos = ['string', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) {
@@ -315,6 +315,7 @@ class Crud
         $fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
         $target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
+        $editClass     = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable    = true;
 
         if (!in_array($tipo, $tipos)) {
@@ -382,6 +383,7 @@ class Crud
             'filewidth'     => $filewidth,
             'fileheight'    => $fileheight,
             'target'        => $target,
+            'editClass'     => $editClass,
         ];
         if ($show) {
             self::$camposShow[] = $arr;
