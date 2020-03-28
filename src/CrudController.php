@@ -182,7 +182,7 @@ class CrudController extends BaseController
                     $newMulti[$campo['campo']] = [];
                 }
 
-                $fields = array_except($fields, $campo['campo']);
+                $fields = Arr::except($fields, $campo['campo']);
             }
         }
 
