@@ -40,6 +40,10 @@ class Crud
 
     public static function getData($showEdit)
     {
+        if (!self::$tabla) {
+            return;
+        }
+
         $response = [];
         $dataarr  = [];
 
