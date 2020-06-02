@@ -221,6 +221,7 @@ if ($target != '') {
 					$('#modal-procesando').modal('show');
 			});
 
+			$(oTable.parent()).removeClass('form-inline' );
 		});
 
 		Number.prototype.formatMoney = function(aDec) {
