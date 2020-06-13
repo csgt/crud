@@ -708,7 +708,7 @@ class CrudController extends BaseController
         }
 
         if (!array_key_exists('field', $aParams)) {
-            dd('setField debe tener un valor para "campo"');
+            dd('setField must have a value for "campo"');
         }
 
         $nombre        = (!array_key_exists('name', $aParams) ? str_replace('_', ' ', ucfirst($aParams['field'])) : $aParams['name']);

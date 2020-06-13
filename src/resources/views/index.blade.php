@@ -113,7 +113,7 @@
                         data : null,
                         render : function(data) {
                         var val = data[{{$loop->index}}];
-                        if (val==null) return null;
+                        if (val==null || val=='') return null;
                         return '<img width="{!!$column["filewidth"]!!}" src="{!!$column["filepath"]!!}' + val + '">';
                     }
 
@@ -121,14 +121,14 @@
                         data : null,
                         render : function(data) {
                         var val = data[{{$loop->index}}];
-                        if (val==null) return null;
+                        if (val==null || val=='') return null;
                         return '<a href="{!!$column["filepath"]!!}' + val + '" target="_blank"><span class="fa fa-cloud-download-alt"></span>';
                     }
                     @elseif ($column['type']=="securefile")
                         data : null,
                         render : function(data) {
                         var val = data[{{$loop->index}}];
-                        if (val==null) return null;
+                        if (val==null || val=='') return null;
                         var valArray = val.split('.')
                         var extension = valArray[valArray.length - 1]
                         if(["jpg", "png", "gif"].indexOf(extension)) {
