@@ -41,7 +41,7 @@
                 },
             },
             bLengthChange : false,
-            sDom : '<"row" @if($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"pull-left"i><"pull-right"p>',
+            sDom : '<"row" @if($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-add">>>>     t<"pull-left"i><"pull-right"p>',
             iDisplayLength : {!!$perPage!!},
             columnDefs : [
                 {
@@ -200,10 +200,10 @@
             $('.pagination').addClass('pagination-sm');
             $('.dataTables_info').addClass('small text-muted');
             @if($permisos['create'])
-                $('.btn-group-agregar').html('<a type="button" class="btn btn-default" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
+                $('.btn-group-add').html('<a type="button" class="btn btn-default" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
             @endif
             @foreach($extraActions as $action)
-                $('.btn-group-agregar').append('<a type="button" class="btn" href="{!! $action['url'] !!}">{{ $action['title'] }}</a>');
+                $('.btn-group-add').append('<a type="button" class="btn btn-default" href="{!! $action['url'] !!}">{{ $action['title'] }}</a>');
             @endforeach
             $('.dt-buttons').addClass('btn-group-sm');
             $('div[id$=_filter] input').css('width','100%').attr('placeholder','{{trans('csgtcrud::crud.buscar')}}');
