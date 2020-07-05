@@ -217,9 +217,7 @@
                                 @elseif($column['type'] == 'numeric')
                                     <!---------------------------- NUMERIC ---------------------------------->
                                     {!!$label!!}
-                                    <div class="col-sm-3">
-                                        <input type="number" step="any" name="{{ $column['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields    ($arr) !!}>
-                                    </div>
+                                    <input type="number" step="any" name="{{ $column['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields    ($arr) !!}>
                                 @else
                                     <!---------------------------- DEFAULT ---------------------------------->
                                     {!!$label!!}
