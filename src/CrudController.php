@@ -39,11 +39,54 @@ class CrudController extends BaseController
     public function index(Request $request)
     {
         if ($this->modelo === null) {
-            dd('setModelo es requerido.');
+            abort(500, 'setModelo es requerido.');
         }
         $breadcrumb = $this->generarBreadcrumb('index');
+        $nuevasVars = $this->getQueryString($request);
+        $columnas   = $this->getCamposShow();
+        $path       = $request->path();
+
+        $options = [
+            "processing"     => true,
+            "serverSide"     => true,
+            "searchDelay"    => 500,
+            "ajax"           => [
+                "url"     => "/" . $path . "/data" . $nuevasVars,
+                "headers" => [
+                    "X-CSRF-Token" => csrf_token(),
+                ],
+                "method"  => "POST",
+            ],
+            "bLengthChange"  => false,
+            "sDom"           => '<"row"' . ($this->showSearch ? '<"col-sm-8 float-left"f>' : '') . '<"col-sm-4"<"btn-toolbar float-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"float-left"i><"float-right"p>',
+            "iDisplayLength" => $this->perPage,
+            "oLanguage"      => [
+                "sLengthMenu"   => trans('csgtcrud::crud.sLengthMenu'),
+                "sZeroRecords"  => trans('csgtcrud::crud.sZeroRecords'),
+                "sInfo"         => trans('csgtcrud::crud.sInfo'),
+                "sInfoEmpty"    => trans('csgtcrud::crud.sInfoEmpty'),
+                "sInfoFiltered" => trans('csgtcrud::crud.sInfoFiltered'),
+                "sSearch"       => "",
+                "sProcessing"   => trans('csgtcrud::crud.sProcessing'),
+                "oPaginate"     => [
+                    "sPrevious" => trans('csgtcrud::crud.sPrevious'),
+                    "sNext"     => trans('csgtcrud::crud.sNext'),
+                    "sFirst"    => trans('csgtcrud::crud.sFirst'),
+                    "sLast"     => trans('csgtcrud::crud.sLast'),
+                ],
+            ],
+        ];
+
+        foreach ($this->orders as $col => $order) {
+            $options['order'][] = [$col, $order];
+        }
+
+        if ($this->showExport) {
+            $options['buttons'] = ['copy', 'excel', 'pdf'];
+        }
 
         return view('csgtcrud::index')
+            ->with('options', $options)
             ->with('layout', $this->layout)
             ->with('breadcrumb', $breadcrumb)
             ->with('stateSave', $this->stateSave)
@@ -52,12 +95,12 @@ class CrudController extends BaseController
             ->with('responsive', $this->responsive)
             ->with('perPage', $this->perPage)
             ->with('titulo', $this->titulo)
-            ->with('columnas', $this->getCamposShow())
+            ->with('columnas', $columnas)
             ->with('permisos', $this->permisos)
             ->with('orders', $this->orders)
             ->with('botonesExtra', $this->botonesExtra)
             ->with('accionesExtra', $this->accionesExtra)
-            ->with('nuevasVars', $this->getQueryString($request));
+            ->with('nuevasVars', $nuevasVars);
     }
 
     public function show(Request $request, $aId)
@@ -113,6 +156,19 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        $rules = [];
+        foreach ($this->getCamposEditMine() as $columna) {
+            foreach ($columna['reglas'] as $regla) {
+                $rules[$columna['campoReal']] = $regla;
+            }
+        }
+
+        \Log::warning($rules);
+        \Log::info($request->all());
+        if (!empty($rules)) {
+            $request->validate($rules);
+        }
+
         $fields = Arr::except($request->request->all(), $this->noGuardar);
         $fields = array_merge($fields, $this->camposHidden);
 
@@ -193,10 +249,13 @@ class CrudController extends BaseController
                 $item->{$relationship}()->attach($values);
             }
             if ($request->expectsJson()) {
-                return response()->json($item);
+                return response()->json([
+                    'data'     => $item,
+                    'redirect' => "/" . $request->path() . $nuevasVars,
+                ]);
             }
 
-            return redirect()->to($request->path() . $nuevasVars);
+            return redirect()->to("/" . $request->path() . $nuevasVars);
         } else {
             $m = $this->modelo->find(Crypt::decrypt($aId));
             $m->update($fields);
@@ -205,10 +264,13 @@ class CrudController extends BaseController
                 $m->{$relationship}()->attach($values);
             }
             if ($request->expectsJson()) {
-                return response()->json($m);
+                return response()->json([
+                    'data'     => $m,
+                    'redirect' => "/" . $this->downLevel($request->path()) . $nuevasVars,
+                ]);
             }
 
-            return redirect()->to($this->downLevel($request->path()) . $nuevasVars);
+            return redirect()->to("/" . $this->downLevel($request->path()) . $nuevasVars);
         }
     }
 
@@ -219,6 +281,7 @@ class CrudController extends BaseController
             $request->session()->flash('message', trans('csgtcrud::crud.registroeliminado'));
             $request->session()->flash('type', 'warning');
         } catch (Exception $e) {
+            \Log::error($e);
             $request->session()->flash('message', trans('csgtcrud::crud.registroelimiandoe'));
             $request->session()->flash('type', 'danger');
         }
@@ -458,17 +521,17 @@ class CrudController extends BaseController
     {
         $html = '';
         if ($this->breadcrumb['mostrar']) {
-            $html .= '<ol class="breadcrumb">';
+            $html .= '<ol class="breadcrumb float-sm-right">';
             if (empty($this->breadcrumb['breadcrumb'])) {
                 switch ($aTipo) {
                     case 'edit':
-                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $html .= '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
                         break;
                     case 'create':
-                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $html .= '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
                         break;
                     default:
-                        $html .= '<li class="active">' . $this->titulo . '</li>';
+                        $html .= '<li class="breadcrumb-item active">' . $this->titulo . '</li>';
                         break;
                 }
             } else {
@@ -479,35 +542,35 @@ class CrudController extends BaseController
                     case 'edit':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
 
-                        $htmlArray[] = '<li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $htmlArray[] = '<li class="breadcrumb-item active"><i class="fa fa-pencil"></i> Editar</li>';
                         break;
                     case 'create':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
 
-                        $htmlArray[] = '<li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $htmlArray[] = '<li class="breadcrumb-item active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
                         break;
                     default:
                         $htmlArray = array_map(function ($item) use ($aUrl) {
                             if ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
                         break;

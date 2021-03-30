@@ -5,25 +5,16 @@
 @section('breadcrumb')
 	{!! $breadcrumb !!}
 @stop
-@section('css')
-  <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
-@stop
 @section('javascript')
-  <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
-  @if($responsive)
-  <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
-  @endif
  	<script>
 		$(document).ready(function(){
 			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
 				console.log(JSON.stringify(message));
 			};
 			var oTable = $('.tabla-catalogo').dataTable({
-				"processing" : true,
-				"serverSide" : true,
-				"searchDelay": 500,
-				@if($stateSave)
+                ...{!! json_encode($options, JSON_PRETTY_PRINT) !!},
+				...{
+                    @if($stateSave)
 				"stateSave"  : true,
 				"stateSaveParams": function(settings, data) {
 					data.columns.forEach(function(column) {
@@ -31,30 +22,15 @@
 					});
 				},
 				@endif
-				@if($orders)
-					"order": [
-						@foreach ($orders as $col=>$orden)
-						[ "{!!$col!!}", "{!!$orden!!}" ],
-						@endforeach
-					],
-				@endif
-				"ajax" : {
-					"url": "/{!!Request::path()!!}/data{{$nuevasVars}}",
-					"headers": {"X-CSRF-Token": "{{csrf_token()}}" },
-					"method": "POST",
-				},
-				"bLengthChange": false,
-				"sDom": '<"row" @if($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"pull-left"i><"pull-right"p>',
-				"iDisplayLength": {!!$perPage!!},
 				"columnDefs": [{
-			    "targets": -1,
-			    "class": "text-right",
-			    "data": null,
-			    "sortable": false,
-			    "render": function ( data, type, full, meta ) {
-			    	var id = data['DT_RowId'];
-			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-left">';
-			    	@foreach ($botonesExtra as $botonExtra)
+                    "targets": -1,
+                    "class": "text-right",
+                    "data": null,
+                    "sortable": false,
+                    "render": function ( data, type, full, meta ) {
+                        var id = data['DT_RowId'];
+                        var html = '<div class="btn-group float-left">';
+                        @foreach ($botonesExtra as $botonExtra)
 			    		<?php
 $url     = $botonExtra["url"];
 $urlarr  = explode('{id}', $url);
@@ -64,25 +40,25 @@ $parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
 if ($nuevasVars != '') {
     $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
 }
-$target = $botonExtra["target"];
 if ($target != '') {
+    $target = $botonExtra["target"];
     $target = 'target="' . $target . '"';
 }
 ?>
-							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
+							html += '<a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><i class="{{$botonExtra["icon"]}} fa-fw"></i></a>';
 						@endforeach
 
 			    	@if($permisos['edit'])
-							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><span class="fa fa-pencil"></span></a></div>';
+							html += '<a class="btn btn-xs btn-primary" title="{{trans('csgtcrud::crud.editar')}}" href="/{!! Request::path() !!}/' + id + '/edit/{!!$nuevasVars!!}"><i class="fas fa-pencil-alt fa-fw"></i></a>';
 						@endif;
 						@if($permisos['delete'])
-							html += '<div class="btn-group btn-group-xs">\
-								<form action="/{!! Request::path() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST">\
+							html += '<div class="btn btn-xs btn-danger">\
+								<form action="/{!! Request::path() !!}/' + id + '{!!$nuevasVars!!}" class="btn-delete" method="POST" onsubmit="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
 								<input type="hidden" name="_method" value="DELETE">\
 								<input type="hidden" name="_token" value="{{csrf_token()}}">\
-								<button type="submit" class="btn btn-xs btn-danger" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="return confirm(\'{{trans('csgtcrud::crud.seguro')}}\')">\
-								<i class="fa fa-trash"></i>\
-								</button>\
+								<a type="submit" title="{{trans('csgtcrud::crud.eliminar')}}" onclick="$(this).closest(\'form\').submit();">\
+								    <i class="fa fa-trash fa-fw"></i>\
+								</a>\
 								</form></div>';
 						@endif;
 						html += '</div>';
@@ -154,7 +130,7 @@ if ($target != '') {
 				  			var val = data[{{$loop->index}}];
 							if (val==null) return null;
 
-							var text = (val==0?'<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>':'<span class="label label-success" style="display:block; width: 40px; margin:auto;">{{trans('csgtcrud::crud.si')}}</span>');
+							var text = (val==0?'<span class="badge badge-danger w-50">No</span>':'<span class="badge bg-success w-50">{{trans('csgtcrud::crud.si')}}</span>');
 				  			return text;
 					  	}
 					@elseif ($columna["tipo"]=="url")
@@ -171,31 +147,12 @@ if ($target != '') {
 			  	@endforeach
 			  ],
 
-				"oLanguage": {
-					"sLengthMenu": "{{trans('csgtcrud::crud.sLengthMenu')}}",
-					"sZeroRecords": "{{trans('csgtcrud::crud.sZeroRecords')}}",
-					"sInfo": "{{trans('csgtcrud::crud.sInfo')}}",
-					"sInfoEmpty": "{{trans('csgtcrud::crud.sInfoEmpty')}}",
-					"sInfoFiltered": "{{trans('csgtcrud::crud.sInfoFiltered')}}",
-					"sSearch":"",
-					"sProcessing":"{{trans('csgtcrud::crud.sProcessing')}}",
-					"oPaginate": {
-						"sPrevious":"{{trans('csgtcrud::crud.sPrevious')}}",
-						"sNext":"{{trans('csgtcrud::crud.sNext')}}",
-						"sFirst":"{{trans('csgtcrud::crud.sFirst')}}",
-						"sLast":"{{trans('csgtcrud::crud.sLast')}}"
-					}
-				},
-				@if($showExport)
-      		buttons: [
-        		'copy', 'excel', 'pdf'
-    			]
-	    @endif
+			}});
 
-			});
+
 			@if((!$permisos['edit'])&&(!$permisos['delete'])&&(count($botonesExtra)==0))
 				oTable.fnSetColumnVis(-1,false);
-			@endif;
+			@endif
 
 			$('.tabla-catalogo').on('init.dt', function(){
 				console.log('init');
@@ -212,14 +169,14 @@ if ($target != '') {
 				$('.dataTables_filter label').css('width','100%');
 			});
 
-			$('.tabla-catalogo').on('processing.dt', function(e, settings, processing){
-				console.log('processing');
-				console.log(processing);
-				if (processing==false)
-					$('#modal-procesando').modal('hide');
-				else
-					$('#modal-procesando').modal('show');
-			});
+			// $('.tabla-catalogo').on('processing.dt', function(e, settings, processing){
+			// 	console.log('processing');
+			// 	console.log(processing);
+			// 	if (processing==false)
+			// 		$('#modal-procesando').modal('hide');
+			// 	else
+			// 		$('#modal-procesando').modal('show');
+			// });
 
 			$(oTable.parent()).removeClass('form-inline' );
 		});
@@ -236,56 +193,38 @@ if ($target != '') {
 @stop
 
 @section('content')
-  <?php
-$fontawesome = false;
-foreach ($botonesExtra as $botonExtra) {
-    if (strpos($botonExtra['icon'], 'fa-')) {
-        $fontawesome = true;
-    }
-}
-?>
-  <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
-  @if($fontawesome)
-  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.font-awesome','/css/font-awesome.min.css')!!}">
-  @endif
-  <style>
-  	.btn-toolbar-flex {
-		  display: flex;
-		}
-		.btn-toolbar-flex .btn-group {
-			margin-left: 2px;
-		}
-  </style>
-
-	<div class="clearfix"></div>
-	<div class="box">
-		<div class="box-body">
-			<table class="table table-bordered table-condensed table-hover tabla-catalogo display dt-responsive nowrap dt-responsive nowrap">
+	<div class="w-100"></div>
+	<div class="card">
+		<div class="card-body">
+			<table class="table table-striped table-sm table-hover tabla-catalogo display dt-responsive nowrap dt-responsive nowrap">
 				<thead>
-		      <tr>
-		      	@foreach ($columnas as $columna)
-		        	<th>{!!$columna["nombre"]!!}</th>
-		        	@if ($loop->last)
-					    	<th>&nbsp;</th>
-					    @endif
-		        @endforeach
-
-		      </tr>
-		    </thead>
+                    <tr>
+                        @foreach ($columnas as $columna)
+                            <th>{!! $columna["nombre"] !!}</th>
+                            @if ($loop->last)
+                                <th>&nbsp;</th>
+                            @endif
+                        @endforeach
+                    </tr>
+                </thead>
 			</table>
 		</div>
 	</div>
-	<div class="modal" id="modal-procesando">
-	  <div class="modal-dialog modal-sm">
-	    <div class="modal-content">
-	      <div class="modal-body text-center">
-	        <h4>{{trans('csgtcrud::crud.sProcessing')}}...</h4>
-	      </div>
-	    </div><!-- /.modal-content -->
-	  </div><!-- /.modal-dialog -->
-	</div><!-- /.modal -->
 
 	@if(isset($extraView))
 		@include($extraView)
 	@endif
+@stop
+@section('css')
+<style>
+    div.dataTables_processing {
+        z-index: 1;
+    }
+  	.btn-toolbar-flex {
+        display: flex;
+    }
+    .btn-toolbar-flex .btn-group {
+        margin-left: 2px;
+    }
+</style>
 @stop
