@@ -58,7 +58,7 @@ class CrudController extends BaseController
                 "method"  => "POST",
             ],
             "bLengthChange"  => false,
-            "sDom"           => '<"row"' . ($this->showSearch ? '<"col-sm-8 float-left"f>' : '') . '<"col-sm-4"<"btn-toolbar float-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"float-left"i><"float-right"p>',
+            "sDom"           => '<"row"' . ($this->showSearch ? '<"col-sm-8 float-left"f>' : '') . '<"col-sm-4"<"btn-toolbar float-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     rt<"float-left"i><"float-right"p>',
             "iDisplayLength" => $this->perPage,
             "oLanguage"      => [
                 "sLengthMenu"   => trans('csgtcrud::crud.sLengthMenu'),
