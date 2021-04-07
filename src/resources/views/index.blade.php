@@ -40,8 +40,9 @@ $parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
 if ($nuevasVars != '') {
     $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
 }
+
+$target = $botonExtra["target"];
 if ($target != '') {
-    $target = $botonExtra["target"];
     $target = 'target="' . $target . '"';
 }
 ?>
