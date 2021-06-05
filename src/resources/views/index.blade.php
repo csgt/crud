@@ -99,14 +99,19 @@ if ($target != '') {
 				  		"render" : function(data) {
 					  		var fecha = data[{{$loop->index}}];
 					  		if (fecha==null) return null;
-					  		var arrhf = fecha.split(" ");
-					  		var arrf  = arrhf[0].split("-");
-					  		var hora  = '';
-					  		if (arrhf.length==2) {hora = ' ' + arrhf[1].substring(0,5);}
-					  		@if($columna["tipo"] == "date")
-					  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0];
+
+                            var d = new Date(fecha);
+                            console.log(d);
+                            var minute = String(d.getMinutes()).padStart(2, '0');
+                            var hour   = String(d.getHours()).padStart(2, '0');
+                            var month  = String(d.getMonth()+1).padStart(2, '0');
+                            var day    = String(d.getDate()).padStart(2, '0');
+                            var year   = d.getFullYear();
+
+                            @if($columna["tipo"] == "date")
+                                return day + '-' + month + '-' + year;
 					  		@else
-					  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
+					  			return day + '-' + month + '-' + year + ' ' + hour + ':' + minute;
 					  		@endif
 					  	}
 
