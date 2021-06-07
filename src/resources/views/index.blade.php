@@ -6,14 +6,21 @@
 	{!! $breadcrumb !!}
 @stop
 @section('css')
-  <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
+    @if(config('csgtcrud.datatables.js','/js/datatables.min.js') != '')
+        <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
+    @endif
 @stop
 @section('javascript')
-  <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
-  @if($responsive)
-  <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
-  @endif
+    @if(config('csgtcrud.datatables.js','/js/datatables.min.js') != '')
+        <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
+        @if($responsive)
+            <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
+            <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
+        @endif
+    @endif
+    @if(config('csgtcrud.moment','/js/moment.min.js') != '')
+        <script src="{!!config('csgtcrud.moment.js','/js/moment.min.js') !!}"></script>
+    @endif
  	<script>
 		$(document).ready(function(){
 			$.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
@@ -97,22 +104,18 @@ if ($target != '') {
 					@if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime"))
 				  		"data" : null,
 				  		"render" : function(data) {
-					  		var fecha = data[{{$loop->index}}];
-					  		if (fecha==null) return null;
+                            var date = moment.utc(data[{{$loop->index}}]);
+                            if (!date.isValid()) return null
 
-                            var d = new Date(fecha);
-                            console.log(d);
-                            var minute = String(d.getMinutes()).padStart(2, '0');
-                            var hour   = String(d.getHours()).padStart(2, '0');
-                            var month  = String(d.getMonth()+1).padStart(2, '0');
-                            var day    = String(d.getDate()).padStart(2, '0');
-                            var year   = d.getFullYear();
+                            @if($column['utc'] == true)
+                               date.local()
+                            @endif
 
-                            @if($columna["tipo"] == "date")
-                                return day + '-' + month + '-' + year;
-					  		@else
-					  			return day + '-' + month + '-' + year + ' ' + hour + ':' + minute;
-					  		@endif
+                            @if($column['type'] == "date")
+                                return date.format('DD-MM-YYYY')
+                            @else
+                                return date.format('DD-MM-YYYY HH:mm')
+                            @endif
 					  	}
 
 					@elseif ($columna["tipo"]=="image")
