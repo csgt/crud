@@ -6,5 +6,5 @@ return [
         'css' => '/css/datatables.min.css',
     ],
     'font-awesome' => '/css/font-awesome.min.css',
-    'moment'       => '/js/moment.min.js',
+    'moment'       => '/js/moment-with-locales.min.js',
 ];

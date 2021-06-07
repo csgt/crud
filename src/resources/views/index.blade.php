@@ -18,8 +18,8 @@
             <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
         @endif
     @endif
-    @if(config('csgtcrud.moment','/js/moment.min.js') != '')
-        <script src="{!!config('csgtcrud.moment.js','/js/moment.min.js') !!}"></script>
+    @if(config('csgtcrud.moment','/js/moment-with-locales.min.js') != '')
+        <script src="{!!config('csgtcrud.moment','/js/moment-with-locales.min.js') !!}"></script>
     @endif
  	<script>
 		$(document).ready(function(){
@@ -106,10 +106,6 @@ if ($target != '') {
 				  		"render" : function(data) {
                             var date = moment.utc(data[{{$loop->index}}]);
                             if (!date.isValid()) return null
-
-                            @if($columna['utc'] == true)
-                               date.local()
-                            @endif
 
                             @if($columna['tipo'] == "date")
                                 return date.format('DD-MM-YYYY')
