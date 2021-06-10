@@ -74,22 +74,14 @@ if ($target != '') {
 					@if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime"))
 				  		"data" : null,
 				  		"render" : function(data) {
-					  		var fecha = data[{{$loop->index}}];
-					  		if (fecha==null) return null;
+                            var date = moment.utc(data[{{$loop->index}}]);
+                            if (!date.isValid()) return null
 
-                            var d = new Date(fecha);
-                            console.log(d);
-                            var minute = String(d.getMinutes()).padStart(2, '0');
-                            var hour   = String(d.getHours()).padStart(2, '0');
-                            var month  = String(d.getMonth()+1).padStart(2, '0');
-                            var day    = String(d.getDate()).padStart(2, '0');
-                            var year   = d.getFullYear();
-
-                            @if($columna["tipo"] == "date")
-                                return day + '-' + month + '-' + year;
-					  		@else
-					  			return day + '-' + month + '-' + year + ' ' + hour + ':' + minute;
-					  		@endif
+                            @if($columna['tipo'] == "date")
+                                return date.format('DD-MM-YYYY')
+                            @else
+                                return date.format('DD-MM-YYYY HH:mm')
+                            @endif
 					  	}
 
 					@elseif ($columna["tipo"]=="image")
