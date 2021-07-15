@@ -99,7 +99,7 @@
                             var day    = String(d.getDate()).padStart(2, '0');
                             var year   = d.getFullYear();
 
-                            @if($columna["tipo"] == "date")
+                            @if($column["type"] == "date")
                                 return day + '-' + month + '-' + year;
 					  		@else
 					  			return day + '-' + month + '-' + year + ' ' + hour + ':' + minute;
