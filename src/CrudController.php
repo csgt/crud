@@ -226,7 +226,7 @@ class CrudController extends BaseController
             return response()->json('ok');
         }
 
-        return redirect($this->downLevel($request->path()));
+        return redirect()->to($this->downLevel($request->path()) . $this->getQueryString($request));
     }
 
     public function data(Request $request)
