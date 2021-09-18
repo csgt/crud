@@ -448,7 +448,7 @@ class CrudController extends BaseController
                 $options = $this->modelo
                     ->{'fetch' . ucfirst($campo['campo'])}()
                     ->mapWithKeys(function ($item) {
-                        return [$item->id => $item->nombre];
+                        return [$item->{$item->getKeyName()} => $item->nombre];
                     }
                     );
                 $combos[$campo['alias']] = $options;
