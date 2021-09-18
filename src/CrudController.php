@@ -399,11 +399,20 @@ class CrudController extends BaseController
                             } else {
                                 $cols[] = $item[$colName];
                             }
+                        } else if ($fullCampoFixed['tipo'] == 'multi') {
+                            $methodName = 'fetch' . ucfirst($fullCampoFixed['campo']) . 'Column';
+                            $keyName    = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+
+                            $cols[] = implode(', ',
+                                $this->modelo
+                                    ->find($item[$this->uniqueid])
+                                    ->{$fullCampoFixed['campo']}
+                                    ->pluck($keyName)
+                                    ->toArray()
+                            );
                         } else {
                             $cols[] = $item[$colName];
                         }
-                    } else {
-                        $cols[] = $item[$colName];
                     }
                 }
             }
@@ -439,7 +448,7 @@ class CrudController extends BaseController
                 $options = $this->modelo
                     ->{'fetch' . ucfirst($campo['campo'])}()
                     ->mapWithKeys(function ($item) {
-                        return [$item->id => $item->name];
+                        return [$item->id => $item->nombre];
                     }
                     );
                 $combos[$campo['alias']] = $options;
