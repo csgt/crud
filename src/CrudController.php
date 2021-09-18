@@ -445,10 +445,13 @@ class CrudController extends BaseController
 
                 $combos[$campo['alias']] = $arr;
             } else if ($campo['tipo'] == 'multi') {
+                $methodName = 'fetch' . ucfirst($campo['campo']) . 'Column';
+                $keyName    = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+
                 $options = $this->modelo
                     ->{'fetch' . ucfirst($campo['campo'])}()
-                    ->mapWithKeys(function ($item) {
-                        return [$item->{$item->getKeyName()} => $item->nombre];
+                    ->mapWithKeys(function ($item) use ($keyName) {
+                        return [$item->{$item->getKeyName()} => $item->{$keyName}];
                     }
                     );
                 $combos[$campo['alias']] = $options;
