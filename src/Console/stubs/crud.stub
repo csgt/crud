@@ -37,6 +37,20 @@ class DummyClass extends CrudController
         //     'class'  => 'warning',
         // ]);
 
+        //Campo Multi
+        // $this->setCampo(['nombre' => 'Paises', 'tipo' => 'multi', 'campo' => 'paises']);
+        //En el modelo Modelo, agregar esto
+        //public function paises()
+        //{
+        //    return $this->belongsToMany(Pais::class, 'plantillas_paises', 'plantilla_id', 'pais_id', 'id', 'id');
+        //}
+        //
+        //public function fetchPaises()
+        //{
+        //    return Pais::select('id', 'nombre')->get();
+        //}
+        //Y opcionalmente, function fetchPaisesColumna() si el nombre no es "nombre"
+
         // $this->setPermisos("\Cancerbero::tienePermisosCrud", 'ruta');
     }
 }
