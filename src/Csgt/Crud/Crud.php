@@ -196,7 +196,7 @@ class Crud
         self::$perPage = $aCuantos;
     }
 
-    public function setResponsive($aResponsive)
+    public static function setResponsive($aResponsive)
     {
         self::$responsive = $aResponsive;
     }
@@ -266,7 +266,7 @@ class Crud
         self::$camposHidden[] = $arr;
     }
 
-    public function setOrderBy($aParams)
+    public static function setOrderBy($aParams)
     {
         $allowed     = ['columna', 'direccion'];
         $direcciones = ['asc', 'desc'];
@@ -283,12 +283,12 @@ class Crud
         self::$orders[$columna] = $direccion;
     }
 
-    public function setGroupBy($aCampo)
+    public static function setGroupBy($aCampo)
     {
         self::$groups[] = $aCampo;
     }
 
-    public function setCampo($aParams)
+    public static function setCampo($aParams)
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'query', 'combokey', 'enumarray', 'filepath', 'filewidth', 'fileheight'];
@@ -392,7 +392,7 @@ class Crud
 
     }
 
-    public function setWhere($aColumna, $aOperador, $aValor = null)
+    public static function setWhere($aColumna, $aOperador, $aValor = null)
     {
         if ($aValor == null) {
             $aValor    = $aOperador;
@@ -402,32 +402,32 @@ class Crud
         self::$wheres[] = ['columna' => $aColumna, 'operador' => $aOperador, 'valor' => $aValor];
     }
 
-    public function setWhereIn($aColumna, $aArray)
+    public static function setWhereIn($aColumna, $aArray)
     {
         self::$wheresIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
     }
 
-    public function setWhereRaw($aStatement)
+    public static function setWhereRaw($aStatement)
     {
         self::$wheresRaw[] = $aStatement;
     }
 
-    public function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2)
+    public static function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2)
     {
         self::$leftJoins[] = ['tabla' => $aTabla, 'col1' => $aCol1, 'operador' => $aOperador, 'col2' => $aCol2];
     }
 
-    public function setPermisos($aPermisos)
+    public static function setPermisos($aPermisos)
     {
         self::$permisos = $aPermisos;
     }
 
-    public function setTemplate($aTemplate)
+    public static function setTemplate($aTemplate)
     {
         self::$template = $aTemplate;
     }
 
-    public function getUrl($aPath, $aEdit = false)
+    public static function getUrl($aPath, $aEdit = false)
     {
         $arr = explode('/', $aPath);
         array_pop($arr);
@@ -440,7 +440,7 @@ class Crud
         return $route;
     }
 
-    public function getGetVars()
+    public static function getGetVars()
     {
         $getVars    = Request::server('QUERY_STRING');
         $nuevasVars = '';
@@ -451,7 +451,7 @@ class Crud
         return $nuevasVars;
     }
 
-    public function index()
+    public static function index()
     {
         if (self::$tabla == '') {
             dd('setTabla es obligatorio.');
@@ -476,7 +476,7 @@ class Crud
             ->with('responsive', self::$responsive);
     }
 
-    public function create($aId)
+    public static function create($aId)
     {
         $data = null;
         $hijo = 'Nuevo';
@@ -526,7 +526,7 @@ class Crud
             ->with('nuevasVars', self::getGetVars());
     }
 
-    public function store($id = null)
+    public static function store($id = null)
     {
         $data          = [];
         $slug          = '';
@@ -669,7 +669,7 @@ class Crud
         }
     }
 
-    public function destroy($aId)
+    public static function destroy($aId)
     {
         try {
             if (self::$softDelete) {
