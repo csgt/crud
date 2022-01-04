@@ -30,6 +30,7 @@ class Crud
     private static $camposEdit    = [];
     private static $camposHidden  = [];
     private static $wheres        = [];
+    private static $wheresIn      = [];
     private static $wheresRaw     = [];
     private static $leftJoins     = [];
     private static $botonesExtra  = [];
@@ -69,6 +70,11 @@ class Crud
 
         foreach (self::$wheres as $where) {
             $query->where($where['columna'], $where['operador'], $where['valor']);
+        }
+
+        //Filtramos a partir del whereIn
+        foreach (self::wheresIn as $whereIn) {
+            $query->whereIn($whereIn['columna'], $whereIn['arreglo']);
         }
 
         foreach (self::$wheresRaw as $whereRaw) {
@@ -396,6 +402,11 @@ class Crud
         }
 
         self::$wheres[] = ['columna' => $aColumna, 'operador' => $aOperador, 'valor' => $aValor];
+    }
+
+    public static function setWhereIn($aColumna, $aArray)
+    {
+        self::wheresIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
     }
 
     public static function setWhereRaw($aStatement)
