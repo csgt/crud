@@ -73,7 +73,7 @@ class Crud
         }
 
         //Filtramos a partir del whereIn
-        foreach (self::wheresIn as $whereIn) {
+        foreach (self::$wheresIn as $whereIn) {
             $query->whereIn($whereIn['columna'], $whereIn['arreglo']);
         }
 
@@ -253,45 +253,43 @@ class Crud
     {
         $allowed = ['campo', 'valor'];
 
-        foreach ($aParams as $key => $val) //Validamos que todas las variables del array son permitidas.
-        {
-            if (!in_array($key, $allowed)) {
-                dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
-            }
+        foreach ($aParams as $key => $val) //Validamos que todas las variables del array son permitidas. {
+        if (!in_array($key, $allowed)) {
+            dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
         }
-
-        $arr = [
-            'campo' => $aParams['campo'],
-            'valor' => $aParams['valor'],
-        ];
-        self::$camposHidden[] = $arr;
     }
 
-    public static function setOrderBy($aParams)
-    {
-        $allowed     = ['columna', 'direccion'];
-        $direcciones = ['asc', 'desc'];
+    $arr = [
+        'campo' => $aParams['campo'],
+        'valor' => $aParams['valor'],
+    ];
+    self::$camposHidden[] = $arr;
+}
 
-        foreach ($aParams as $key => $val) //Validamos que todas las variables del array son permitidas.
-        {
-            if (!in_array($key, $allowed)) {
-                dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
-            }
-        }
+function setOrderBy($aParams)
+{
+    $allowed     = ['columna', 'direccion'];
+    $direcciones = ['asc', 'desc'];
 
-        $columna   = (!array_key_exists('columna', $aParams) ? 0 : $aParams['columna']);
-        $direccion = (!array_key_exists('direccion', $aParams) ? 'asc' : $aParams['direccion']);
-
-        self::$orders[$columna] = $direccion;
+    foreach ($aParams as $key => $val) //Validamos que todas las variables del array son permitidas. {
+    if (!in_array($key, $allowed)) {
+        dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
     }
+}
 
-    public static function setGroupBy($aCampo)
-    {
+$columna   = (!array_key_exists('columna', $aParams) ? 0 : $aParams['columna']);
+$direccion = (!array_key_exists('direccion', $aParams) ? 'asc' : $aParams['direccion']);
+
+self::$orders[$columna] = $direccion;
+}
+
+    function setGroupBy($aCampo)
+{
         self::$groups[] = $aCampo;
     }
 
-    public static function setCampo($aParams)
-    {
+    function setCampo($aParams)
+{
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'query', 'combokey', 'enumarray', 'filepath', 'filewidth', 'fileheight'];
         $tipos = ['string', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'securefile', 'image', 'textarea'];
@@ -394,8 +392,8 @@ class Crud
 
     }
 
-    public static function setWhere($aColumna, $aOperador, $aValor = null)
-    {
+    function setWhere($aColumna, $aOperador, $aValor = null)
+{
         if ($aValor == null) {
             $aValor    = $aOperador;
             $aOperador = '=';
@@ -404,33 +402,33 @@ class Crud
         self::$wheres[] = ['columna' => $aColumna, 'operador' => $aOperador, 'valor' => $aValor];
     }
 
-    public static function setWhereIn($aColumna, $aArray)
-    {
-        self::wheresIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
+    function setWhereIn($aColumna, $aArray)
+{
+        self::$wheresIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
     }
 
-    public static function setWhereRaw($aStatement)
-    {
+    function setWhereRaw($aStatement)
+{
         self::$wheresRaw[] = $aStatement;
     }
 
-    public static function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2)
-    {
+    function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2)
+{
         self::$leftJoins[] = ['tabla' => $aTabla, 'col1' => $aCol1, 'operador' => $aOperador, 'col2' => $aCol2];
     }
 
-    public static function setPermisos($aPermisos)
-    {
+    function setPermisos($aPermisos)
+{
         self::$permisos = $aPermisos;
     }
 
-    public static function setTemplate($aTemplate)
-    {
+    function setTemplate($aTemplate)
+{
         self::$template = $aTemplate;
     }
 
-    private static function getUrl($aPath, $aEdit = false)
-    {
+    function getUrl($aPath, $aEdit = false)
+{
         $arr = explode('/', $aPath);
         array_pop($arr);
         if ($aEdit) {
@@ -442,8 +440,8 @@ class Crud
         return $route;
     }
 
-    private static function getGetVars()
-    {
+    function getGetVars()
+{
         $getVars    = Request::server('QUERY_STRING');
         $nuevasVars = '';
         if ($getVars != '') {
@@ -453,8 +451,8 @@ class Crud
         return $nuevasVars;
     }
 
-    public static function index()
-    {
+    function index()
+{
         if (self::$tabla == '') {
             dd('setTabla es obligatorio.');
         }
@@ -478,8 +476,8 @@ class Crud
             ->with('responsive', self::$responsive);
     }
 
-    public static function create($aId)
-    {
+    function create($aId)
+{
         $data = null;
         $hijo = 'Nuevo';
 
@@ -528,8 +526,8 @@ class Crud
             ->with('nuevasVars', self::getGetVars());
     }
 
-    public static function store($id = null)
-    {
+    function store($id = null)
+{
         $data          = [];
         $slug          = '';
         $no_permitidas = ["á", "é", "í", "ó", "ú", "Á", "É", "Í", "Ó", "Ú", "ñ", "À", "Ã", "Ì", "Ò", "Ù", "Ã™", "Ã ", "Ã¨", "Ã¬", "Ã²", "Ã¹", "ç", "Ç", "Ã¢", "ê", "Ã®", "Ã´", "Ã»", "Ã‚", "ÃŠ", "ÃŽ", "Ã”", "Ã›", "ü", "Ã¶", "Ã–", "Ã¯", "Ã¤", "«", "Ò", "Ã", "Ã„", "Ã‹"];
@@ -648,7 +646,7 @@ class Crud
                     ->insert($data);
                 Session::flash('message', 'Registro creado exitosamente');
                 Session::flash('type', 'success');
-            } catch (\Exception $e) {
+            } catch (\Exception$e) {
                 Session::flash('message', 'Error actualizando registro: ' . $e->getMessage());
                 Session::flash('type', 'danger');
             }
@@ -662,7 +660,7 @@ class Crud
 
                 Session::flash('message', 'Registro actualizado exitosamente');
                 Session::flash('type', 'success');
-            } catch (\Exception $e) {
+            } catch (\Exception$e) {
                 Session::flash('message', 'Error actualizando registro: ' . $e->getMessage());
                 Session::flash('type', 'danger');
             }
@@ -671,8 +669,8 @@ class Crud
         }
     }
 
-    public static function destroy($aId)
-    {
+    function destroy($aId)
+{
         try {
             if (self::$softDelete) {
                 $query = DB::table(self::$tabla)
@@ -687,7 +685,7 @@ class Crud
             Session::flash('message', 'Registro borrado exitosamente');
             Session::flash('type', 'warning');
 
-        } catch (\Exception $e) {
+        } catch (\Exception$e) {
             Session::flash('message', 'Error al borrar campo. Revisar datos relacionados.');
             Session::flash('type', 'danger');
         }
