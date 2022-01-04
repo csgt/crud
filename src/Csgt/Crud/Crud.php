@@ -253,43 +253,43 @@ class Crud
     {
         $allowed = ['campo', 'valor'];
 
-        foreach ($aParams as $key => $val) //Validamos que todas las variables del array son permitidas. {
-        if (!in_array($key, $allowed)) {
-            dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+        foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
+            if (!in_array($key, $allowed)) {
+                dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+            }
         }
+
+        $arr = [
+            'campo' => $aParams['campo'],
+            'valor' => $aParams['valor'],
+        ];
+        self::$camposHidden[] = $arr;
     }
 
-    $arr = [
-        'campo' => $aParams['campo'],
-        'valor' => $aParams['valor'],
-    ];
-    self::$camposHidden[] = $arr;
-}
+    public function setOrderBy($aParams)
+    {
+        $allowed     = ['columna', 'direccion'];
+        $direcciones = ['asc', 'desc'];
 
-function setOrderBy($aParams)
-{
-    $allowed     = ['columna', 'direccion'];
-    $direcciones = ['asc', 'desc'];
+        foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
+            if (!in_array($key, $allowed)) {
+                dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+            }
+        }
 
-    foreach ($aParams as $key => $val) //Validamos que todas las variables del array son permitidas. {
-    if (!in_array($key, $allowed)) {
-        dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+        $columna   = (!array_key_exists('columna', $aParams) ? 0 : $aParams['columna']);
+        $direccion = (!array_key_exists('direccion', $aParams) ? 'asc' : $aParams['direccion']);
+
+        self::$orders[$columna] = $direccion;
     }
-}
 
-$columna   = (!array_key_exists('columna', $aParams) ? 0 : $aParams['columna']);
-$direccion = (!array_key_exists('direccion', $aParams) ? 'asc' : $aParams['direccion']);
-
-self::$orders[$columna] = $direccion;
-}
-
-    function setGroupBy($aCampo)
-{
+    public function setGroupBy($aCampo)
+    {
         self::$groups[] = $aCampo;
     }
 
-    function setCampo($aParams)
-{
+    public function setCampo($aParams)
+    {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'query', 'combokey', 'enumarray', 'filepath', 'filewidth', 'fileheight'];
         $tipos = ['string', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'securefile', 'image', 'textarea'];
@@ -392,8 +392,8 @@ self::$orders[$columna] = $direccion;
 
     }
 
-    function setWhere($aColumna, $aOperador, $aValor = null)
-{
+    public function setWhere($aColumna, $aOperador, $aValor = null)
+    {
         if ($aValor == null) {
             $aValor    = $aOperador;
             $aOperador = '=';
@@ -402,33 +402,33 @@ self::$orders[$columna] = $direccion;
         self::$wheres[] = ['columna' => $aColumna, 'operador' => $aOperador, 'valor' => $aValor];
     }
 
-    function setWhereIn($aColumna, $aArray)
-{
+    public function setWhereIn($aColumna, $aArray)
+    {
         self::$wheresIn[] = ['columna' => $aColumna, 'arreglo' => $aArray];
     }
 
-    function setWhereRaw($aStatement)
-{
+    public function setWhereRaw($aStatement)
+    {
         self::$wheresRaw[] = $aStatement;
     }
 
-    function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2)
-{
+    public function setLeftJoin($aTabla, $aCol1, $aOperador, $aCol2)
+    {
         self::$leftJoins[] = ['tabla' => $aTabla, 'col1' => $aCol1, 'operador' => $aOperador, 'col2' => $aCol2];
     }
 
-    function setPermisos($aPermisos)
-{
+    public function setPermisos($aPermisos)
+    {
         self::$permisos = $aPermisos;
     }
 
-    function setTemplate($aTemplate)
-{
+    public function setTemplate($aTemplate)
+    {
         self::$template = $aTemplate;
     }
 
-    function getUrl($aPath, $aEdit = false)
-{
+    public function getUrl($aPath, $aEdit = false)
+    {
         $arr = explode('/', $aPath);
         array_pop($arr);
         if ($aEdit) {
@@ -440,8 +440,8 @@ self::$orders[$columna] = $direccion;
         return $route;
     }
 
-    function getGetVars()
-{
+    public function getGetVars()
+    {
         $getVars    = Request::server('QUERY_STRING');
         $nuevasVars = '';
         if ($getVars != '') {
@@ -451,8 +451,8 @@ self::$orders[$columna] = $direccion;
         return $nuevasVars;
     }
 
-    function index()
-{
+    public function index()
+    {
         if (self::$tabla == '') {
             dd('setTabla es obligatorio.');
         }
@@ -476,8 +476,8 @@ self::$orders[$columna] = $direccion;
             ->with('responsive', self::$responsive);
     }
 
-    function create($aId)
-{
+    public function create($aId)
+    {
         $data = null;
         $hijo = 'Nuevo';
 
@@ -526,8 +526,8 @@ self::$orders[$columna] = $direccion;
             ->with('nuevasVars', self::getGetVars());
     }
 
-    function store($id = null)
-{
+    public function store($id = null)
+    {
         $data          = [];
         $slug          = '';
         $no_permitidas = ["á", "é", "í", "ó", "ú", "Á", "É", "Í", "Ó", "Ú", "ñ", "À", "Ã", "Ì", "Ò", "Ù", "Ã™", "Ã ", "Ã¨", "Ã¬", "Ã²", "Ã¹", "ç", "Ç", "Ã¢", "ê", "Ã®", "Ã´", "Ã»", "Ã‚", "ÃŠ", "ÃŽ", "Ã”", "Ã›", "ü", "Ã¶", "Ã–", "Ã¯", "Ã¤", "«", "Ò", "Ã", "Ã„", "Ã‹"];
@@ -669,8 +669,8 @@ self::$orders[$columna] = $direccion;
         }
     }
 
-    function destroy($aId)
-{
+    public function destroy($aId)
+    {
         try {
             if (self::$softDelete) {
                 $query = DB::table(self::$tabla)
