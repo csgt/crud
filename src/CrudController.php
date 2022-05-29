@@ -486,7 +486,7 @@ class CrudController extends BaseController
     {
         $html = '';
         if ($this->breadcrumb['mostrar']) {
-            $html .= '<ol class="breadcrumb float-sm-right">';
+            $html .= '<ol class="breadcrumb float-sm-right float-sm-end">';
             if (empty($this->breadcrumb['breadcrumb'])) {
                 switch ($aTipo) {
                     case 'edit':

@@ -46,7 +46,7 @@
             columnDefs : [
                 {
                     targets : -1,
-                    class : "text-right",
+                    class : "text-right text-end",
                     data : null,
                     sortable : false,
                     render : function ( data, type, full, meta ) {
