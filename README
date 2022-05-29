@@ -1,0 +1,22 @@
+Dependencies
+
+Add @prejavascript section to template
+
+==Update from version 6==
+Change all validations to $this->setValidation()
+
+enum is deprecated, use combo instead with manual collection
+
+isforeign is now required for relations
+toastr is required
+
+= Known issues =
+
+-   translations
+-   INDEX
+    order by en relation
+    search by relation, date
+-   EDIT
+    validation
+    mostrar correcto todo
+    fechas!

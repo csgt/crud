@@ -2,13 +2,12 @@
 namespace Csgt\Crud;
 
 use DB;
-use Crypt;
 use Storage;
-use Response;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -23,7 +22,7 @@ class CrudController extends BaseController
     private $layout       = 'layouts.app';
     private $perPage      = 50;
     private $title        = '';
-    private $fields       = [];
+    private $fields       = null;
     private $hiddenFields = [];
     private $permissions  = ['create' => false, 'update' => false, 'destroy' => false];
     private $orders       = [];
@@ -40,30 +39,38 @@ class CrudController extends BaseController
     public function index(Request $request)
     {
         if (!$this->model) {
-            dd('setModel is required.');
+            abort(400, 'setModel is required.');
         }
         $breadcrumb = $this->generateBreadcrumb('index');
+        $props      = [
+            'columns'      => $this->getShowFields(),
+            'urldata'      => $request->url() . '/data' . $this->getQueryString($request),
+            'urledit'      => $request->url() . '/{id}/edit' . $this->getQueryString($request),
+            'urldestroy'   => $request->url() . '/{id}' . $this->getQueryString($request),
+            'urlcreate'    => $request->url() . '/create' . $this->getQueryString($request),
+            'extrabuttons' => $this->extraButtons,
+            'extraactions' => $this->extraActions,
+            // 'stateSave'       => $this->stateSave,
+            // 'showExport'      => $this->showExport,
+            // 'showSearch'      => $this->showSearch,
+            // 'responsive'      => $this->responsive,
+            // 'perPage'         => $this->perPage,
+            // 'permisos'        => $this->permissions,
+            // 'orders'          => $this->orders,
+            // 'queryParameters' => $this->getQueryString($request),
+        ];
 
         return view('csgtcrud::index')
+            ->with('title', $this->title)
+            ->with('component', 'csgtcrud-index')
             ->with('layout', $this->layout)
             ->with('breadcrumb', $breadcrumb)
-            ->with('stateSave', $this->stateSave)
-            ->with('showExport', $this->showExport)
-            ->with('showSearch', $this->showSearch)
-            ->with('responsive', $this->responsive)
-            ->with('perPage', $this->perPage)
-            ->with('title', $this->title)
-            ->with('columns', $this->getShowFields())
-            ->with('permisos', $this->permissions)
-            ->with('orders', $this->orders)
-            ->with('extraButtons', $this->extraButtons)
-            ->with('extraActions', $this->extraActions)
-            ->with('queryParameters', $this->getQueryString($request));
+            ->with('props', $props);
     }
 
     public function show(Request $request, $aId)
     {
-        $data = $this->model->find(Crypt::decrypt($aId));
+        $data = $this->model->find($aId);
         if ($request->expectsJson()) {
             return response()->json($data);
         }
@@ -71,48 +78,52 @@ class CrudController extends BaseController
 
     public function edit(Request $request, $aId)
     {
-        $path = $this->downLevel($request->path()) . '/';
+        $urlUpdate = '/' . $this->downLevel($request->path());
+        $urlIndex  = $this->downLevel($urlUpdate);
         if ($aId) {
-            $data       = $this->model->find(Crypt::decrypt($aId));
-            $breadcrumb = $this->generateBreadcrumb('edit', $this->downLevel($path));
+            $state = $this->model->find($aId);
+            $this->getMultiFields()->each(function ($multi) use ($state) {
+                $state->load($multi);
+            });
+            $breadcrumb = $this->generateBreadcrumb('edit', $urlIndex);
         } else {
-            $data       = null;
-            $breadcrumb = $this->generateBreadcrumb('create', $path);
+            $state      = $this->emptyState();
+            $breadcrumb = $this->generateBreadcrumb('create', $urlUpdate);
+        }
+        $state = $state->jsonSerialize();
+
+        $editFields = $this->getLocalEditFields();
+        foreach ($editFields as $editField) {
+            switch ($editField['type']) {
+                case 'datetime':
+                    $state[$editField['field']] = Carbon::parse($state[$editField['field']])->format('Y-m-d\TH:i:s');
+                    break;
+                case 'date':
+                    $state[$editField['field']] = Carbon::parse($state[$editField['field']])->format('Y-m-d');
+                    break;
+                case 'time':
+                    $state[$editField['field']] = Carbon::parse($state[$editField['field']])->format('H:i:s');
+                    break;
+                default:
+                    break;
+            }
         }
 
-        $editFields      = $this->getLocalEditFields();
-        $combos          = $this->fillCombos($editFields);
         $queryParameters = $this->getQueryString($request);
 
-        $uses = [
-            'dates'      => false,
-            'selectize'  => false,
-            'summernote' => false,
+        $props = [
+            'urlupdate'       => $urlUpdate,
+            'urlindex'        => $urlIndex,
+            'columns'         => $editFields,
+            'queryParameters' => $queryParameters,
         ];
 
-        foreach ($editFields as $column) {
-            if (($column['type'] == 'date') || ($column['type'] == 'datetime' || $column['type'] == 'time')) {
-                $uses['dates'] = true;
-            }
-
-            if (($column['type'] == 'combobox') || ($column['type'] == 'enum') || $column['type'] == 'multi') {
-                $uses['selectize'] = true;
-            }
-
-            if ($column['type'] == 'summernote') {
-                $uses['summernote'] = true;
-            }
-        }
-
         return view('csgtcrud::edit')
-            ->with('pathstore', $path)
-            ->with('template', $this->layout)
+            ->with('component', 'csgtcrud-edit')
+            ->with('state', $state)
+            ->with('layout', $this->layout)
             ->with('breadcrumb', $breadcrumb)
-            ->with('columns', $editFields)
-            ->with('data', $data)
-            ->with('combos', $combos)
-            ->with('queryParameters', $queryParameters)
-            ->with('uses', $uses);
+            ->with('props', $props);
     }
 
     public function create(Request $request)
@@ -127,15 +138,21 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
-        $fields = Arr::except($request->request->all(), $this->ignoreFields);
+        $rules = [
+            'email'  => 'email|unique:usuarios',
+            'nombre' => 'numeric',
+            'roles'  => 'required|min:1',
+        ];
+        $request->validate($rules);
+        $fields = $request->except($this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
         $newMulti = [];
-        foreach ($this->fields as $campo) {
-            if (array_key_exists($campo['field'], $fields)) {
-                if ($campo['type'] == 'date' || $campo['type'] == 'datetime') {
-                    $aFecha    = $fields[$campo['field']];
-                    $fechahora = explode(' ', $fields[$campo['field']]);
+        foreach ($this->fields as $field) {
+            if (array_key_exists($field['field'], $fields)) {
+                if ($field['type'] == 'date' || $field['type'] == 'datetime') {
+                    $aFecha    = $fields[$field['field']];
+                    $fechahora = explode(' ', $fields[$field['field']]);
 
                     if (sizeof($fechahora) == 2) {
                         $formato    = 'd/m/Y H:i';
@@ -148,55 +165,55 @@ class CrudController extends BaseController
 
                     try {
                         $fecha                   = Carbon::createFromFormat($formato, $aFecha);
-                        $fields[$campo['field']] = $fecha;
+                        $fields[$field['field']] = $fecha;
                     } catch (Exception $e) {
-                        $fields[$campo['field']] = null;
+                        $fields[$field['field']] = null;
                     }
                 }
             }
 
-            if (($campo['type'] == 'file') || ($campo['type'] == 'image')) {
-                if ($request->hasFile($campo['field'])) {
-                    $file = $request->file($campo['field']);
+            if (($field['type'] == 'file') || ($field['type'] == 'image')) {
+                if ($request->hasFile($field['field'])) {
+                    $file = $request->file($field['field']);
 
                     $filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
-                    $path     = public_path() . $campo['filepath'];
+                    $path     = public_path() . $field['filepath'];
 
                     if (!file_exists($path)) {
                         mkdir($path, 0777, true);
                     }
 
                     $file->move($path, $filename);
-                    $fields[$campo['field']] = $filename;
-                    $fields[$campo['field']] = $filename;
+                    $fields[$field['field']] = $filename;
+                    $fields[$field['field']] = $filename;
                 }
             }
 
-            if ($campo['type'] == 'securefile') {
-                if ($request->hasFile($campo['field'])) {
+            if ($field['type'] == 'securefile') {
+                if ($request->hasFile($field['field'])) {
                     if ($aId !== 0) {
-                        $existing = $this->model->find(Crypt::decrypt($aId));
+                        $existing = $this->model->find($aId);
                         if ($existing) {
-                            if ($existing->{$campo['field']} != '') {
-                                Storage::disk($campo['filedisk'])->delete($existing->{$campo['field']});
+                            if ($existing->{$field['field']} != '') {
+                                Storage::disk($field['filedisk'])->delete($existing->{$field['field']});
                             }
                         }
                     }
 
-                    $filename                = Storage::disk($campo['filedisk'])->putFile($campo['filepath'], $request->file($campo['field']));
-                    $fields[$campo['field']] = $filename;
-                    $fields[$campo['field']] = $filename;
+                    $filename                = Storage::disk($field['filedisk'])->putFile($field['filepath'], $request->file($field['field']));
+                    $fields[$field['field']] = $filename;
+                    $fields[$field['field']] = $filename;
                 }
             }
 
-            if ($campo['type'] == 'multi') {
-                if (array_key_exists($campo['field'], $fields)) {
-                    $newMulti[$campo['field']] = $fields[$campo['field']];
+            if ($field['type'] == 'multi') {
+                if (array_key_exists($field['field'], $fields)) {
+                    $newMulti[$field['field']] = $fields[$field['field']];
                 } else {
-                    $newMulti[$campo['field']] = [];
+                    $newMulti[$field['field']] = [];
                 }
 
-                $fields = Arr::except($fields, $campo['field']);
+                $fields = Arr::except($fields, $field['field']);
             }
         }
 
@@ -212,7 +229,7 @@ class CrudController extends BaseController
 
             return redirect()->to($request->path() . $queryParameters);
         } else {
-            $m = $this->model->find(Crypt::decrypt($aId));
+            $m = $this->model->find($aId);
             $m->update($fields);
             foreach ($newMulti as $relationship => $values) {
                 $m->{$relationship}()->detach();
@@ -228,40 +245,26 @@ class CrudController extends BaseController
 
     public function destroy(Request $request, $aId)
     {
-        try {
-            $this->model->destroy(Crypt::decrypt($aId));
-            $request->session()->flash('message', trans('csgtcrud::crud.registroeliminado'));
-            $request->session()->flash('type', 'warning');
-        } catch (Exception $e) {
-            $request->session()->flash('message', trans('csgtcrud::crud.registroelimiandoe'));
-            $request->session()->flash('type', 'danger');
-        }
-        if ($request->expectsJson()) {
-            return response()->json('ok');
-        }
+        $this->model->destroy($aId);
 
-        return redirect($this->downLevel($request->path()));
+        return response()->json('ok');
     }
 
     public function data(Request $request)
     {
-        //Definimos las variables que nos ayudar'an en el proceso de devolver la data
-        $search          = $request->search;
-        $orders          = $request->order;
-        $multiColumns    = $this->getShowMultipleFields();
-        $columns         = $this->getLocalShowFields();
-        $fields          = $this->getSelect($columns);
-        $recordsFiltered = 0;
-        $recordsTotal    = 0;
+        $data = $this->model->query()
+            ->select($this->model->getTable() . '.' . $this->model->getKeyName() . ' AS ' . $this->uniqueid);
 
-        //Se obtienen los campos a mostrar desde el modelo
-        $data = $this->model->select($fields);
+        $fields = $this->getLocalShowFields();
+        $fields->each(function ($field) use ($data) {
+            $data->addSelect($field['field']);
+        });
 
         $foreigns = $this->getForeignShowFields();
         foreach ($foreigns as $relation => $fields) {
-            $foreignModel = $this->model->{$relation}();
+            $foreignModel = $data->{$relation}();
 
-            $data->with([$relation => function ($query) use ($fields, $foreignModel) {
+            $data = $data->with([$relation => function ($query) use ($fields, $foreignModel) {
                 $query->addSelect($foreignModel instanceof BelongsTo ? $foreignModel->getOwnerKeyName() : $foreignModel->getForeignKeyName());
                 foreach ($fields as $field) {
                     foreach ($field as $fiel) {
@@ -275,11 +278,6 @@ class CrudController extends BaseController
             }
         }
 
-        // foreach ($multiColumns as $multiColumn) {
-        //  $data->with($multiColumn['campoReal']);
-        // }
-
-        $data->addSelect($this->model->getTable() . '.' . $this->model->getKeyName() . ' AS ' . $this->uniqueid);
         foreach ($this->leftJoins as $leftJoin) {
             $data->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
         }
@@ -290,154 +288,38 @@ class CrudController extends BaseController
         }
         //Filtramos a partir del whereIn
         foreach ($this->wheresIn as $whereIn) {
-            $data->whereIn($whereIn['columna'], $whereIn['arreglo']);
+            $data = $data->whereIn($whereIn['columna'], $whereIn['arreglo']);
         }
         //Filtramos a partir de WhereRaw
         foreach ($this->wheresRaw as $whereRaw) {
             $data->whereRaw($whereRaw);
         }
 
-        $data = $data->get();
-        //Obtenemos la cantidad de registros antes de filtrar
-        $recordsTotal = $data->count();
+        if ($request->sort['field']) {
+            $data->orderBy($request->sort['field'], $request->sort['direction']);
+        }
 
-        //Filtramos con el campo de la vista
-        if ($search['value'] != '') {
-            if ($recordsTotal > 0) {
-                $data = $data->filter(function ($item) use ($search) {
-                    $result = false;
-                    foreach ($item->getAttributes() as $column) {
-                        $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                    }
-                    $relations = $item->getRelations();
-                    foreach ($relations as $relation) {
-                        if ($relation && method_exists($relation, 'getAttributes')) {
-                            foreach ($relation->getAttributes() as $column) {
-                                $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                            }
-                        }
-                    }
-
-                    return $result;
-                });
+        foreach ($request->searches as $search) {
+            if (empty($search['field']) || empty($search['value'])) {
+                continue;
+            }
+            if ($search['conjunction'] == 'or') {
+                $data->orWhere($search['field'],
+                    $search['operator'],
+                    ($search['operator'] == 'LIKE' ? "%" : "") . $search['value'] . ($search['operator'] == 'LIKE' ? "%" : "")
+                );
+            } else {
+                $data->where(
+                    $search['field'],
+                    $search['operator'],
+                    ($search['operator'] == 'LIKE' ? "%" : "") . $search['value'] . ($search['operator'] == 'LIKE' ? "%" : "")
+                );
             }
         }
 
-        //Obtenemos la cantidad de registros luego de haber filtrado
-        $recordsFiltered = $data->count();
+        $data = $data->paginate($this->perPage)->withQueryString();
 
-        //Ahora order by
-        $fieldsOrder = $this->getFieldOrder();
-        if ($orders) {
-            foreach ($orders as $order) {
-                if ($order['dir'] == 'asc') {
-                    $data = $data->sortBy($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
-                } else {
-                    $data = $data->sortByDesc($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
-                }
-            }
-        }
-
-        //Filtramos los registros y obtenemos el arreglo con la data
-        $items = $data
-            ->splice($request->start)
-            ->take($request->length)
-            ->toArray();
-
-        $arr = [];
-        foreach ($items as $item) {
-            $cols     = [];
-            $lastItem = '';
-
-            for ($i = 0; $i < sizeof($fieldsOrder); $i++) {
-                $colName            = '';
-                $relationName       = '';
-                $actualOrdencolumns = $fieldsOrder[$i];
-                $tienePunto         = (strpos($fieldsOrder[$i], '.') !== false) && (strpos($fieldsOrder[$i], '"') === false);
-
-                $column = collect($this->fields)->first(function ($item, $key) use ($actualOrdencolumns) {
-                    return $item['field'] == $actualOrdencolumns;
-                });
-
-                $esRelacion = false;
-
-                if ($column) {
-                    if (array_key_exists('isforeign', $column)) {
-                        $esRelacion = ($tienePunto) && ($column['isforeign'] == true);
-                    }
-                }
-
-                if ($tienePunto) {
-                    $helperString = explode('.', $fieldsOrder[$i]);
-                    $colName      = $helperString[1];
-                    $relationName = $helperString[0];
-                    if (strpos($colName, ' AS ')) {
-                        $colName = explode('AS ', $colName)[1];
-                    }
-                } else {
-                    if (strpos($fieldsOrder[$i], ' AS ')) {
-                        $colName = explode('AS ', $fieldsOrder[$i])[1];
-                    } else {
-                        $colName = $fieldsOrder[$i];
-                    }
-                }
-
-                if ($colName == $this->uniqueid) {
-                    $lastItem = Crypt::encrypt($item[$colName]);
-                } elseif ($esRelacion) {
-                    //Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
-                    if ($item[$relationName]) {
-                        if (array_key_exists(0, $item[$relationName])) {
-                            $cols[] = $item[$relationName][0][$colName];
-                        } else {
-                            if (array_key_exists($colName, $item[$relationName])) {
-                                $cols[] = $item[$relationName][$colName];
-                            } else {
-                                $cols[] = null;
-                            }
-                        }
-                    } else {
-                        $cols[] = null;
-                    }
-                } else {
-                    $fullCampo = array_filter($this->fields, function ($campo) use ($colName) {
-                        return $campo['field'] == $colName;
-                    });
-                    if (count($fullCampo) > 0) {
-                        $fullCampoFixed = array_values($fullCampo)[0];
-                        if ($fullCampoFixed['type'] == 'securefile') {
-                            if ($item[$colName] != null) {
-                                $cols[] = Storage::disk($fullCampoFixed['filedisk'])->temporaryUrl(
-                                    $item[$colName], now()->addMinutes(5)
-                                );
-                            } else {
-                                $cols[] = $item[$colName];
-                            }
-                        } else if ($fullCampoFixed['type'] == 'multi') {
-                            $methodName = 'fetch' . ucfirst($fullCampoFixed['field']) . 'Column';
-                            $keyName    = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
-
-                            $cols[] = implode(', ',
-                                $this->model
-                                    ->find($item[$this->uniqueid])
-                                    ->{$fullCampoFixed['field']}
-                                    ->pluck($keyName)
-                                    ->toArray()
-                            );
-                        } else {
-                            $cols[] = $item[$colName];
-                        }
-                    } else {
-                        $cols[] = $item[$colName];
-                    }
-                }
-            }
-
-            $cols['DT_RowId'] = $lastItem;
-            $arr[]            = $cols;
-        }
-
-        return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
+        return response()->json($data);
     }
 
     private function downLevel($aPath)
@@ -449,32 +331,21 @@ class CrudController extends BaseController
         return $route;
     }
 
-    private function fillCombos($aCampos)
+    private function emptyState()
     {
-        $combos = [];
-        foreach ($aCampos as $campo) {
-            if ($campo['type'] == 'combobox') {
-                $arr = [];
-                foreach ($campo['collection']->toArray() as $item) {
-                    $arr[current($item)] = next($item);
-                }
+        $ret = [
+            $this->model->getKeyName() => 0,
+        ];
 
-                $combos[$campo['alias']] = $arr;
-            } else if ($campo['type'] == 'multi') {
-                $methodName = 'fetch' . ucfirst($campo['field']) . 'Column';
-                $keyName    = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
-
-                $options = $this->model
-                    ->{'fetch' . ucfirst($campo['field'])}()
-                    ->mapWithKeys(function ($item) use ($keyName) {
-                        return [$item->id => $item->{$keyName}];
-                    }
-                    );
-                $combos[$campo['alias']] = $options;
-            }
+        foreach ($this->getLocalEditFields() as $item) {
+            $ret[$item['field']] = $item['default'];
         }
 
-        return $combos;
+        $this->getMultiFields()->each(function ($multi) use ($ret) {
+            $ret[$multi] = [];
+        });
+
+        return $ret;
     }
 
     public function getTemplate()
@@ -589,82 +460,83 @@ class CrudController extends BaseController
     /*==================== GETTERS =====================================*/
     private function getFieldOrder()
     {
-        $tempArray = array_filter($this->fields, function ($c) {
-            return $c['show'] === true;
+        $orders = $this->fields->where('show', true)->map(function ($field) {
+            return $field['field'];
         });
-        $tempArray = array_map(function ($campo) {
-            return $campo['field'];
-        }, $tempArray);
-        $tempArray[] = $this->uniqueid;
 
-        return array_values($tempArray);
+        $orders->push($this->uniqueid);
+
+        return $orders;
     }
 
     private function getShowFields()
     {
-        return array_values(array_filter($this->fields, function ($c) {
-            return ($c['show'] == true);
-        }));
+        return $this->fields->where('show', true);
     }
 
     private function getShowMultipleFields()
     {
-        return array_values(array_filter($this->fields, function ($campo) {
-            return $campo['type'] == 'multi';
+        return array_values(array_filter($this->fields, function ($field) {
+            return $field['type'] == 'multi';
         }));
     }
 
     private function getLocalShowFields()
     {
-        return array_values(array_filter(
-            $this->fields,
-            function ($c) {
-                return (
-                    $c['show'] == true &&
-                    $c['type'] != 'multi' &&
-                    (strpos($c['field'], '.') === false ||
-                        strpos($c['field'], '"') !== false || !$c['isforeign'])
-                );
-            }
-        ));
+        return $this->fields->filter(function ($field) {
+            return (
+                $field['show'] == true &&
+                $field['type'] != 'multi' &&
+                !$field['isforeign']
+            );
+        });
     }
 
     private function getLocalEditFields()
     {
-        return array_values(array_filter($this->fields, function ($c) {
-            return ($c['editable'] == true && strpos($c['field'], '.') === false);
-        }));
+        return $this->fields->filter(function ($field) {
+            return strpos($field['field'], '.') === false && $field['editable'] == true;
+        });
+    }
+
+    private function getMultiFields()
+    {
+        return $this->fields->where('type', 'multi')->pluck('field');
     }
 
     private function getForeignShowFields()
     {
-        $arr      = [];
-        $foreigns =
-            array_filter(
-            $this->fields,
-            function ($c) {
-                return ($c['show'] == true && strpos($c['field'], '.') != 0 && strpos($c['field'], '"') === false);
+        $foreigns = $this->fields->where('isforeign', true)->map(function ($field) {
+            $parts = explode('.', $field['field']);
+            $key   = $parts[0];
+            array_shift($parts);
+            if (is_array($parts)) {
+                $value = implode('.', $parts);
+            } else {
+                $value = $parts;
             }
-        );
-        $i = 0;
-        //dd($foreigns);
-        foreach ($foreigns as $foreign) {
-            if ($foreign['isforeign']) {
-                $partes = explode('.', $foreign['field']);
-                $key    = $partes[0];
-                array_shift($partes);
-                if (is_array($partes)) {
-                    $valor = implode('.', $partes);
-                } else {
-                    $valor = $partes;
-                }
 
-                $arr[$key][$i][] = $valor;
-                $i++;
-            }
-        }
+            return [$key => $value];
+        });
 
-        return $arr;
+        return $foreigns;
+
+        // $foreigns =
+        //     array_filter(
+        //     $this->fields,
+        //     function ($c) {
+        //         return ($c['show'] == true && strpos($c['field'], '.') != 0 && strpos($c['field'], '"') === false);
+        //     }
+        // );
+        // $i = 0;
+        // //dd($foreigns);
+        // foreach ($foreigns as $foreign) {
+        //     if ($foreign['isforeign']) {
+
+        //     }
+        // }
+
+        // return $arr;
     }
 
     private function getCamposEdit()
@@ -674,15 +546,15 @@ class CrudController extends BaseController
         }));
     }
 
-    private function getSelect($aCampos)
+    private function getSelect($aFields)
     {
-        return array_map(function ($c) {
-            return DB::raw($c['field']);
-        }, $aCampos);
+        return $aFields->map(function ($field) {
+            return DB::raw($field->field);
+        });
     }
 
     /*==================== SETTERS =====================================*/
-    public function setModel($aModelo)
+    public function setModel(Model $aModelo)
     {
         $this->model = $aModelo;
     }
@@ -695,10 +567,10 @@ class CrudController extends BaseController
     public function setField($aParams)
     {
         $allowed = ['field', 'name', 'editable', 'show', 'type', 'class',
-            'default', 'validationRules', 'validationRulesMessage', 'decimals', 'collection',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
+            'default', 'decimals', 'collection',
+            'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'time', 'bool', 'combobox', 'password',
-            'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
+            'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) {
             //Validamos que todas las variables del array son permitidas.
@@ -708,29 +580,26 @@ class CrudController extends BaseController
         }
 
         if (!array_key_exists('field', $aParams)) {
-            dd('setField must have a value for "campo"');
+            dd('setField must have a value for "field"');
         }
 
-        $nombre        = (!array_key_exists('name', $aParams) ? str_replace('_', ' ', ucfirst($aParams['field'])) : $aParams['name']);
-        $edit          = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
-        $show          = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
-        $tipo          = (!array_key_exists('type', $aParams) ? 'string' : $aParams['type']);
-        $class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
-        $default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
-        $reglas        = (!array_key_exists('validationRules', $aParams) ? [] : $aParams['validationRules']);
-        $decimals      = (!array_key_exists('decimals', $aParams) ? 0 : $aParams['decimals']);
-        $collection    = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
-        $reglasmensaje = (!array_key_exists('validationRulesMessage', $aParams) ? '' : $aParams['validationRulesMessage']);
-        $filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
-        $filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
-        $fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
-        $target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
-        $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
-        $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
-        $filedisk      = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
-        $utc           = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
-        $editClass     = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
-        $searchable    = true;
+        $nombre     = (!array_key_exists('name', $aParams) ? str_replace('_', ' ', ucfirst($aParams['field'])) : $aParams['name']);
+        $edit       = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
+        $show       = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
+        $tipo       = (!array_key_exists('type', $aParams) ? 'string' : $aParams['type']);
+        $class      = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
+        $default    = (!array_key_exists('default', $aParams) ? null : $aParams['default']);
+        $decimals   = (!array_key_exists('decimals', $aParams) ? 0 : $aParams['decimals']);
+        $collection = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
+        $filepath   = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
+        $filewidth  = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
+        $fileheight = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
+        $target     = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
+        $isforeign  = (!array_key_exists('isforeign', $aParams) ? false : $aParams['isforeign']);
+        $filedisk   = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
+        $utc        = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
+        $editClass  = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
+        $searchable = true;
 
         if (!in_array($tipo, $tipos)) {
             dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
@@ -742,6 +611,17 @@ class CrudController extends BaseController
         if ($tipo == 'combobox') {
             $show = false;
         }
+
+        if ($tipo == 'multi') {
+            $methodName = 'fetch' . ucfirst($aParams['field']) . 'Column';
+            $keyName    = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
+
+            $options = $this->model
+                ->{'fetch' . ucfirst($aParams['field'])}();
+
+            $collection = $options;
+        }
+
         if ($tipo == 'file' && $filepath == '') {
             dd('Para el tipo file hay que especifiarle el filepath');
         }
@@ -755,20 +635,16 @@ class CrudController extends BaseController
             dd('Para el tipo securefile hay que especifiarle el filedisk');
         }
 
-        if ($tipo == 'emum' && count($enumarray) == 0) {
-            dd('Para el tipo enum el enumarray es requerido');
-        }
-
         if (!strpos($aParams['field'], ')')) {
             $arr = explode('.', $aParams['field']);
             if (count($arr) >= 2) {
-                $campoReal = $arr[count($arr) - 1];
+                $fieldReal = $arr[count($arr) - 1];
             } else {
-                $campoReal = $aParams['field'];
+                $fieldReal = $aParams['field'];
             }
             $alias = str_replace('.', '__', $aParams['field']);
         } else {
-            $campoReal = $aParams['field'];
+            $fieldReal = $aParams['field'];
             $alias     = 'a' . date('U') . count($this->getShowFields()); //Nos inventamos un alias para los subqueries
         }
 
@@ -778,31 +654,33 @@ class CrudController extends BaseController
         }
 
         $arr = [
-            'name'                   => $nombre,
-            'field'                  => $aParams['field'],
-            'alias'                  => $alias,
-            'campoReal'              => $campoReal,
-            'type'                   => $tipo,
-            'show'                   => $show,
-            'editable'               => $edit,
-            'default'                => $default,
-            'validationRules'        => $reglas,
-            'validationRulesMessage' => $reglasmensaje,
-            'class'                  => $class,
-            'decimals'               => $decimals,
-            'collection'             => $collection,
-            'searchable'             => $searchable,
-            'enumarray'              => $enumarray,
-            'filepath'               => $filepath,
-            'filewidth'              => $filewidth,
-            'fileheight'             => $fileheight,
-            'filedisk'               => $filedisk,
-            'target'                 => $target,
-            'isforeign'              => $isforeign,
-            'utc'                    => $utc,
-            'editClass'              => $editClass,
+            'name'       => $nombre,
+            'field'      => $aParams['field'],
+            'alias'      => $alias,
+            'campoReal'  => $fieldReal,
+            'type'       => $tipo,
+            'show'       => $show,
+            'editable'   => $edit,
+            'default'    => $default,
+            'class'      => $class,
+            'decimals'   => $decimals,
+            'collection' => $collection,
+            'searchable' => $searchable,
+            'filepath'   => $filepath,
+            'filewidth'  => $filewidth,
+            'fileheight' => $fileheight,
+            'filedisk'   => $filedisk,
+            'target'     => $target,
+            'isforeign'  => $isforeign,
+            'utc'        => $utc,
+            'editClass'  => $editClass,
         ];
-        $this->fields[] = $arr;
+
+        if (!$this->fields) {
+            $this->fields = collect();
+        }
+
+        $this->fields->push(collect($arr));
     }
 
     public function setJoin($aRelation)
@@ -850,9 +728,9 @@ class CrudController extends BaseController
         return $this->layout;
     }
 
-    public function setignoreFields($aCampo)
+    public function setignoreFields($aField)
     {
-        $this->ignoreFields[] = $aCampo;
+        $this->ignoreFields[] = $aField;
     }
 
     public function setBreadcrumb($aArray)
@@ -896,25 +774,29 @@ class CrudController extends BaseController
 
     public function setExtraAction($aParams)
     {
-        $allowed = ['url', 'title', 'target'];
+        $allowed = ['url', 'title', 'target', 'class', 'icon'];
 
         foreach ($aParams as $key => $val) {
             //Validamos que todas las variables del array son permitidas.
             if (!in_array($key, $allowed)) {
-                dd('setExtraAction no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+                dd('setExtraAction does not allow parameter ' . $key . '! allowed parameters: ' . implode(', ', $allowed));
             }
         }
         if (!array_key_exists('url', $aParams)) {
-            dd('setExtraAction debe tener un valor para "url"');
+            dd('setExtraAction must have a "url" value');
         }
 
         $title  = (!array_key_exists('title', $aParams) ? '' : $aParams['title']);
         $target = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
+        $icon   = (!array_key_exists('icon', $aParams) ? '' : $aParams['icon']);
+        $class  = (!array_key_exists('class', $aParams) ? 'btn btn-default' : $aParams['class']);
 
         $arr = [
             'url'    => $aParams['url'],
             'title'  => $title,
             'target' => $target,
+            'class'  => $class,
+            'icon'   => $icon,
         ];
 
         $this->extraActions[] = $arr;
