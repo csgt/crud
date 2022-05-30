@@ -232,7 +232,7 @@
             </div>
             <div class="card-footer">
                 <input type="submit" value="{{trans('csgtcrud::crud.guardar')}}" class="btn btn-primary">&nbsp;
-                <a href="javascript:window.history.back();" class="btn btn-default">{{trans('csgtcrud::crud.cancelar')}}</a>
+                <a href="javascript:window.history.back();" class="btn btn-default btn-light">{{trans('csgtcrud::crud.cancelar')}}</a>
             </div>
         </div>
     </form>

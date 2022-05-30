@@ -200,10 +200,10 @@
             $('.pagination').addClass('pagination-sm');
             $('.dataTables_info').addClass('small text-muted');
             @if($permisos['create'])
-                $('.btn-group-add').html('<a type="button" class="btn btn-default" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
+                $('.btn-group-add').html('<a type="button" class="btn btn-default btn-light" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{trans('csgtcrud::crud.agregar')}}</a>');
             @endif
             @foreach($extraActions as $action)
-                $('.btn-group-add').append('<a type="button" class="btn btn-default" href="{!! $action['url'] !!}">{{ $action['title'] }}</a>');
+                $('.btn-group-add').append('<a type="button" class="btn btn-default btn-light" href="{!! $action['url'] !!}">{{ $action['title'] }}</a>');
             @endforeach
             $('.dt-buttons').addClass('btn-group-sm');
             $('div[id$=_filter] input').css('width','100%').attr('placeholder','{{trans('csgtcrud::crud.buscar')}}');
