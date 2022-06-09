@@ -236,18 +236,20 @@
     <div class="clearfix"></div>
     <div class="card">
         <div class="card-body">
-            <table class="table table-sm table-striped table-hover dataTable display {{ $responsive ? 'dt-responsive nowrap' : '' }}">
-                <thead>
-                    <tr>
-                        @foreach ($columns as $column)
-                            <th>{!!$column['name']!!}</th>
-                            @if ($loop->last)
-                                <th>&nbsp;</th>
-                            @endif
-                        @endforeach
-                    </tr>
-                </thead>
-            </table>
+            <div class="{{ $responsive ? 'table-responsive' : '' }}">
+                <table class="table table-sm table-striped table-hover dataTable display">
+                    <thead>
+                        <tr>
+                            @foreach ($columns as $column)
+                                <th>{!!$column['name']!!}</th>
+                                @if ($loop->last)
+                                    <th>&nbsp;</th>
+                                @endif
+                            @endforeach
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
     <div class="modal" id="modal-procesando">
