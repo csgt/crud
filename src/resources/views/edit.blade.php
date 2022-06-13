@@ -151,7 +151,7 @@
                                             type="text"
                                             class="form-control catalogoFecha"
                                             name="{{ $column['campoReal'] }}"
-                                            value="{{ $laFecha }}"
+                                            value="{{ $valor }}"
                                             {!! arrayToFields($arr) !!}>
                                     </div>
                                 @elseif($column['type'] == 'combobox')
