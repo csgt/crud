@@ -76,8 +76,10 @@ if ($target != '') {
 				  		"render" : function(data) {
                             var date = moment.utc(data[{{$loop->index}}]);
                             if (!date.isValid()) return null
-
-                            @if($columna['tipo'] == "date")
+                            @if($column['utc'] == true)
+                               date.local()
+                            @endif
+                            @if($column['type'] == "date")
                                 return date.format('DD-MM-YYYY')
                             @else
                                 return date.format('DD-MM-YYYY HH:mm')

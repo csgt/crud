@@ -700,7 +700,7 @@ class CrudController extends BaseController
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'collection',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign'];
+            'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'time', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) {
@@ -731,6 +731,7 @@ class CrudController extends BaseController
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
         $filedisk      = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
+        $utc           = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
         $searchable    = true;
 
         if (!in_array($tipo, $tipos)) {
@@ -800,6 +801,7 @@ class CrudController extends BaseController
             'filedisk'      => $filedisk,
             'target'        => $target,
             'isforeign'     => $isforeign,
+            'utc'           => $utc,
         ];
         $this->campos[] = $arr;
     }
