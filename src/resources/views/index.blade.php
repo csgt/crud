@@ -48,19 +48,19 @@
 			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-right">';
 			    	@foreach ($botonesExtra as $botonExtra)
 			    		<?php
-                                $url     = $botonExtra["url"];
-                                $urlarr  = explode('{id}', $url);
-                                $urlVars = '';
-                                $parte1  = $urlarr[0];
-                                $parte2  = (count($urlarr) == 1?'':$urlarr[1]);
-                            if ($nuevasVars!='') {
-                                $urlVars = (!strpos($url, '?')?'?':'&') . substr($nuevasVars, 1);
-                            }
-                            $target = $botonExtra["target"];
-                            if ($target<>'') {
-                                $target='target="' . $target . '"';
-                            }
-                        ?>
+$url     = $botonExtra["url"];
+$urlarr  = explode('{id}', $url);
+$urlVars = '';
+$parte1  = $urlarr[0];
+$parte2  = (count($urlarr) == 1 ? '' : $urlarr[1]);
+if ($nuevasVars != '') {
+    $urlVars = (!strpos($url, '?') ? '?' : '&') . substr($nuevasVars, 1);
+}
+$target = $botonExtra["target"];
+if ($target != '') {
+    $target = 'target="' . $target . '"';
+}
+?>
 							html += '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-{{$botonExtra["class"]}}" title="{!! $botonExtra["titulo"] !!}" href="{{$parte1}}' + id + '{{$parte2 . $urlVars}}" {{$target}} {!! $botonExtra["confirm"] ? "onclick=\"return confirm(\'".$botonExtra["confirmmessage"]."\');\"" : "" !!}><span class="{{$botonExtra["icon"]}}"></span></a></div>';
 						@endforeach
 
@@ -89,17 +89,16 @@
 					@if(($columna["tipo"]=="date") || ($columna["tipo"]=="datetime"))
 				  		"data" : null,
 				  		"render" : function(data) {
-					  		var fecha = data[{{$loop->index}}];
-					  		if (fecha==null) return null;
-					  		var arrhf = fecha.split(" ");
-					  		var arrf  = arrhf[0].split("-");
-					  		var hora  = '';
-					  		if (arrhf.length==2) {hora = ' ' + arrhf[1].substring(0,5);}
-					  		@if($columna["tipo"] == "date")
-					  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0];
-					  		@else
-					  			return arrf[2] + '-' + arrf[1] + '-' + arrf[0] + hora;
-					  		@endif
+                            var date = moment.utc(data[{{$loop->index}}]);
+                            if (!date.isValid()) return null
+                            @if($columna['utc'] == true)
+                               date.local()
+                            @endif
+                            @if($columna['tipo'] == "date")
+                                return date.format('DD-MM-YYYY')
+                            @else
+                                return date.format('DD-MM-YYYY HH:mm')
+                            @endif
 					  	}
 
 					@elseif ($columna["tipo"]=="image")
@@ -213,13 +212,13 @@
 
 @section('content')
   <?php
-    $fontawesome = false;
-    foreach ($botonesExtra as $botonExtra) {
-        if (strpos($botonExtra['icon'], 'fa-')) {
-            $fontawesome = true;
-        }
+$fontawesome = false;
+foreach ($botonesExtra as $botonExtra) {
+    if (strpos($botonExtra['icon'], 'fa-')) {
+        $fontawesome = true;
     }
-  ?>
+}
+?>
   <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
   @if($fontawesome)
   	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.font-awesome','/css/font-awesome.min.css')!!}">
