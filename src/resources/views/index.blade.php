@@ -5,18 +5,10 @@
 @section('breadcrumb')
 	{!! $breadcrumb !!}
 @stop
-@section('css')
-    @if(config('csgtcrud.datatables.js','/js/datatables.min.js') != '')
-        <link type="text/css" rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
-    @endif
-@stop
+
 @section('javascript')
     @if(config('csgtcrud.datatables.js','/js/datatables.min.js') != '')
         <script src="{!!config('csgtcrud.datatables.js','/js/datatables.min.js') !!}"></script>
-        @if($responsive)
-            <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
-            <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
-        @endif
     @endif
     @if(config('csgtcrud.moment','/js/moment-with-locales.min.js') != '')
         <script src="{!!config('csgtcrud.moment','/js/moment-with-locales.min.js') !!}"></script>
@@ -248,46 +240,52 @@ foreach ($botonesExtra as $botonExtra) {
     }
 }
 ?>
-  <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
-  @if($fontawesome)
-  	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.font-awesome','/css/font-awesome.min.css')!!}">
-  @endif
-  <style>
-  	.btn-toolbar-flex {
-		  display: flex;
+    <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.datatables.css','/css/datatables.min.css')!!}">
+    @if($fontawesome)
+        <link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.font-awesome','/css/font-awesome.min.css')!!}">
+    @endif
+    <style>
+  	    .btn-toolbar-flex {
+		    display: flex;
 		}
 		.btn-toolbar-flex .btn-group {
-			margin-left: 2px;
+		    margin-left: 2px;
 		}
   </style>
 
-	<div class="clearfix"></div>
+    <div class="clearfix"></div>
 	<div class="box">
 		<div class="box-body">
-			<table class="table table-bordered table-condensed table-hover tabla-catalogo display dt-responsive nowrap dt-responsive nowrap">
-				<thead>
-		      <tr>
-		      	@foreach ($columnas as $columna)
-		        	<th>{!!$columna["nombre"]!!}</th>
-		        	@if ($loop->last)
-					    	<th>&nbsp;</th>
-					    @endif
-		        @endforeach
+            @if($responsive)
+            <div class="table-responsive">
+            @endif
+			    <table class="table table-bordered table-condensed table-hover tabla-catalogo display">
+                    <thead>
+                        <tr>
+                            @foreach ($columnas as $columna)
+                                <th>{!! $columna["nombre"] !!}</th>
+                                @if ($loop->last)
+                                    <th>&nbsp;</th>
+                                @endif
+                            @endforeach
 
-		      </tr>
-		    </thead>
-			</table>
+                        </tr>
+                    </thead>
+                </table>
+            @if($responsive)
+            </div>
+            @endif
 		</div>
 	</div>
-	<div class="modal" id="modal-procesando">
-	  <div class="modal-dialog modal-sm">
-	    <div class="modal-content">
-	      <div class="modal-body text-center">
-	        <h4>{{trans('csgtcrud::crud.sProcessing')}}...</h4>
-	      </div>
-	    </div><!-- /.modal-content -->
-	  </div><!-- /.modal-dialog -->
-	</div><!-- /.modal -->
+    <div class="modal" id="modal-procesando">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <h4>{{trans('csgtcrud::crud.sProcessing')}}...</h4>
+                </div>
+            </div>
+        </div>
+    </div>
 
 	@if(isset($extraView))
 		@include($extraView)
