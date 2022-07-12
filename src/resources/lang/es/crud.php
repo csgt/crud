@@ -1,0 +1,30 @@
+<?php
+
+return [
+    'agregar'            => 'Agregar',
+    'editar'             => 'Editar',
+    'eliminar'           => 'Eliminar',
+    'si'                 => 'Si',
+    'seguro'             => '¿Está seguro que desea eliminar este registro?',
+    'sLengthMenu'        => 'Mostrar _MENU_ resultados por p&aacute;gina',
+    'sZeroRecords'       => 'No se encontraron registros',
+    'sInfo'              => 'Mostrando _START_ a _END_ de _TOTAL_ resultados',
+    'sInfoEmpty'         => 'Mostrando 0 a 0 de 0 resultados',
+    'sInfoFiltered'      => '(filtrado de _MAX_ resultados totales)',
+    'sProcessing'        => 'Procesando',
+    'sPrevious'          => 'Anterior',
+    'sNext'              => 'Siguiente',
+    'sFirst'             => 'Primera',
+    'sLast'              => 'Ultima',
+    'guardar'            => 'Guardar',
+    'cancelar'           => 'Cancelar',
+    'buscar'             => 'Buscar',
+    'revisarcampo'       => 'Revisar campo',
+    'passrequerida'      => 'La password es requerida',
+    'passnocoinciden'    => 'Las passwords no coinciden',
+    'registrook'         => 'Registro creado exitosamente',
+    'registroerror'      => 'Error actualizando registro: ',
+    'registroeliminado'  => 'Registro eliminado exitosamente',
+    'registroelimiandoe' => 'Error al borrar campo. Revisar datos relacionados.',
+
+];
