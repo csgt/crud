@@ -116,7 +116,11 @@
                         <div class="col-sm-10">
                             <div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
                                 <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}" {!! arrayToFields($arr) !!}>
-                                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                <span class="input-group-addon input-group-append">
+                                    <span class="input-group-text">
+                                        <i class="fa fa-calendar"></i>
+                                    </span>
+                                </span>
                             </div>
                         </div>
                     <!---------------------------- DATETIME ---------------------------------->
@@ -140,7 +144,11 @@
                         <div class="col-sm-10">
                             <div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
                                 <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}" {!! arrayToFields($arr) !!}>
-                                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                <span class="input-group-addon input-group-append">
+                                    <span class="input-group-text">
+                                        <i class="fa fa-calendar"></i>
+                                    </span>
+                                </span>
                             </div>
                         </div>
                     <!---------------------------- TIME ---------------------------------->
@@ -155,7 +163,11 @@
                         <div class="col-sm-10">
                             <div id="div{!!$columna['campoReal']!!}" class="input-group date catalogoFecha">
                                 <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $valor }}" {!! arrayToFields($arr) !!}>
-                                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                                <span class="input-group-addon input-group-append">
+                                    <span class="input-group-text">
+                                        <i class="fa fa-clock"></i>
+                                    </span>
+                                </span>
                             </div>
                         </div>
                     <!---------------------------- COMBOBOX ---------------------------------->
