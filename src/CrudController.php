@@ -817,7 +817,7 @@ class CrudController extends BaseController
 
     public function setWhere($aColumna, $aOperador, $aValor = null)
     {
-        if ($aValor == null) {
+        if ($aValor === null) {
             $aValor    = $aOperador;
             $aOperador = '=';
         }
