@@ -99,6 +99,10 @@ if ($target != '') {
                             var date = moment.utc(data[{{$loop->index}}]);
                             if (!date.isValid()) return null
 
+                            @if($column['utc'] == true)
+                               date.local()
+                            @endif
+
                             @if($columna['tipo'] == "date")
                                 return date.format('DD-MM-YYYY')
                             @else
