@@ -959,12 +959,7 @@ class CrudController extends BaseController
 
     private function getQueryString($request)
     {
-        $query = '?' . $request->getQueryString();
-        if ($query == '?') {
-            $query = '';
-        }
-
-        return $query;
+        return '?rand=' . floor(microtime(true) * 1000) . ($request->getQueryString() ? '&' . $request->getQueryString() : '');
     }
 
     public function setOrderBy($aParams)
