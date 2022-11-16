@@ -959,7 +959,16 @@ class CrudController extends BaseController
 
     private function getQueryString($request)
     {
-        return '?rand=' . floor(microtime(true) * 1000) . ($request->getQueryString() ? '&' . $request->getQueryString() : '');
+        $query_string = $request->getQueryString();
+        if ($query_string) {
+            if (strpos($query_string, 'rand') === false) {
+                return '?rand=' . floor(microtime(true) * 1000) . '&' . $query_string;
+            } else {
+                return $query_string;
+            }
+        }
+
+        return '?rand=' . floor(microtime(true) * 1000);
     }
 
     public function setOrderBy($aParams)
