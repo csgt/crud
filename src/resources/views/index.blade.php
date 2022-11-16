@@ -31,7 +31,7 @@
                 ],
             @endif
             ajax : {
-                url: "/{!!Request::path()!!}/data{{$queryParameters}}",
+                url: "/{!!Request::path()!!}/data{{!! $queryParameters !!}}",
                 headers: {
                     'X-CSRF-Token': "{{csrf_token()}}"
                 },
