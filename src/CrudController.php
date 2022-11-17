@@ -959,15 +959,6 @@ class CrudController extends BaseController
 
     private function getQueryString($request)
     {
-        // $query_string = $request->getQueryString();
-        // if ($query_string) {
-        //     if (strpos($query_string, 'rand') !== false) {
-        //         return '?' . $query_string;
-        //     } else {
-        //         return '?rand=' . floor(microtime(true) * 1000) . '&' . $query_string;
-        //     }
-        // }
-
         return '?rand=' . floor(microtime(true) * 1000) . ($request->getQueryString() ? '&' . $request->getQueryString() : '');
     }
 
