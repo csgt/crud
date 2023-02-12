@@ -26,6 +26,9 @@ foreach ($botonesExtra as $botonExtra) {
 			var oTable = $('.tabla-catalogo').dataTable({
 				"processing" : true,
 				"serverSide" : true,
+                search: {
+                    return: true,
+                },
 				@if($responsive)
 				"responsive" : true,
 				@endif
