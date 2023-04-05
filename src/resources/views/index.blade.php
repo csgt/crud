@@ -50,6 +50,9 @@
 			    "class": "text-right",
 			    "data": null,
 			    "sortable": false,
+                search: {
+                    return: true,
+                },
 			    "render": function ( data, type, full, meta ) {
 			    	var id = data['DT_RowId'];
 			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-left">';
