@@ -14,7 +14,9 @@
             var oTable = $('.dataTable').dataTable({
                 "processing" : true,
                 "serverSide" : true,
-                "searchDelay": 500,
+                search: {
+                    return: true,
+                },
                 @if($stateSave)
                 "stateSave"  : true,
                 "stateSaveParams": function(settings, data) {
