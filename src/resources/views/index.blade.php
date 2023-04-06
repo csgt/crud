@@ -21,7 +21,9 @@
 			var oTable = $('.tabla-catalogo').dataTable({
 				"processing" : true,
 				"serverSide" : true,
-				"searchDelay": 500,
+				search: {
+                    return: true,
+                },
 				@if($stateSave)
 				"stateSave"  : true,
 				"stateSaveParams": function(settings, data) {
@@ -50,9 +52,6 @@
 			    "class": "text-right",
 			    "data": null,
 			    "sortable": false,
-                search: {
-                    return: true,
-                },
 			    "render": function ( data, type, full, meta ) {
 			    	var id = data['DT_RowId'];
 			    	var html = '<div class="btn-toolbar btn-toolbar-flex pull-left">';
