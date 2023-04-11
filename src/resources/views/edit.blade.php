@@ -30,6 +30,7 @@
 		return $fields;
 	}
 @endphp
+@if(config('csgtcrud.pathToAssets','/') != '')
   	<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/formValidation.min.css">
 
   	@if($includefechas)
@@ -44,6 +45,7 @@
 	@if($includesummernote)
 		<link type="text/css" rel="stylesheet" href="{!!config('csgtcrud.pathToAssets','/')!!}css/summernote.min.css">
 	@endif
+@endif
 	<div class="box">
 		<div class="box-body">
 			<form method="POST" action="/{{$pathstore . $nuevasVars}}" class="form-horizontal" id="frmCrud" enctype="multipart/form-data">
@@ -263,10 +265,11 @@
 @endsection
 
 @section ('javascript')
-  <script src="{!!config('csgtcrud.pathToAssets','/')!!}js/formValidation.min.js"></script>
-	<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/framework/bootstrap.min.js"></script>
+@if(config('csgtcrud.pathToAssets','/') != '')
+    <script src="{!!config('csgtcrud.pathToAssets','/')!!}js/formValidation.min.js"></script>
+    <script src="{!!config('csgtcrud.pathToAssets','/')!!}js/framework/bootstrap.min.js"></script>
 
-  @if($includefechas)
+    @if($includefechas)
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/moment-with-locales.min.js"></script>
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/bootstrap-datetimepicker.min.js"></script>
 	@endif
@@ -279,6 +282,7 @@
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote.min.js"></script>
 		<script src="{!!config('csgtcrud.pathToAssets','/')!!}js/summernote-es-ES.js"></script>
 	@endif
+@endif
 
 	<script type="text/javascript">
 		$(function() {
