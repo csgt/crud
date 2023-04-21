@@ -6,7 +6,7 @@
     {!! $breadcrumb !!}
 @stop
 @section('javascript')
-<script>
+<script type="module">
     $(document).ready(function() {
         $.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
             console.log(JSON.stringify(message));
