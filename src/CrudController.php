@@ -66,12 +66,38 @@ class CrudController extends BaseController
 
     public function edit(Request $request, $aId)
     {
-        $data       = $this->modelo->find(Crypt::decrypt($aId));
-        $path       = $this->downLevel($request->path()) . '/';
+        $path = $this->downLevel($request->path()) . '/';
+        if ($aId) {
+            $data       = $this->modelo->find(Crypt::decrypt($aId));
+            $breadcrumb = $this->generarBreadcrumb('edit', $this->downLevel($path));
+        } else {
+            $data       = null;
+            $breadcrumb = $this->generarBreadcrumb('create', $path);
+        }
+
         $camposEdit = $this->getCamposEditMine();
         $combos     = $this->fillCombos($camposEdit);
-        $breadcrumb = $this->generarBreadcrumb('edit', $this->downLevel($path));
         $nuevasVars = $this->getQueryString($request);
+
+        $uses = [
+            'dates'      => false,
+            'selectize'  => false,
+            'summernote' => false,
+        ];
+
+        foreach ($camposEdit as $column) {
+            if (($column['tipo'] == 'date') || ($column['tipo'] == 'datetime' || $column['tipo'] == 'time')) {
+                $uses['dates'] = true;
+            }
+
+            if (($column['tipo'] == 'combobox') || ($column['tipo'] == 'enum') || $column['tipo'] == 'multi') {
+                $uses['selectize'] = true;
+            }
+
+            if ($column['tipo'] == 'summernote') {
+                $uses['summernote'] = true;
+            }
+        }
 
         return view('csgtcrud::edit')
             ->with('pathstore', $path)
@@ -80,26 +106,13 @@ class CrudController extends BaseController
             ->with('columnas', $camposEdit)
             ->with('data', $data)
             ->with('combos', $combos)
-            ->with('nuevasVars', $nuevasVars);
+            ->with('nuevasVars', $nuevasVars)
+            ->with('uses', $uses);
     }
 
     public function create(Request $request)
     {
-        $data       = null;
-        $path       = $this->downLevel($request->path());
-        $camposEdit = $this->getCamposEditMine();
-        $combos     = $this->fillCombos($camposEdit);
-        $breadcrumb = $this->generarBreadcrumb('create', $path);
-        $nuevasVars = $this->getQueryString($request);
-
-        return view('csgtcrud::edit')
-            ->with('pathstore', $path)
-            ->with('template', $this->layout)
-            ->with('breadcrumb', $breadcrumb)
-            ->with('columnas', $camposEdit)
-            ->with('data', $data)
-            ->with('combos', $combos)
-            ->with('nuevasVars', $nuevasVars);
+        return $this->edit($request, null);
     }
 
     public function store(Request $request)
@@ -109,7 +122,7 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
-        $fields = array_except($request->request->all(), $this->noGuardar);
+        $fields = $request->except($this->noGuardar);
         $fields = array_merge($fields, $this->camposHidden);
         foreach ($this->campos as $campo) {
             if (array_key_exists($campo['campo'], $fields)) {
@@ -384,17 +397,17 @@ class CrudController extends BaseController
     {
         $html = '';
         if ($this->breadcrumb['mostrar']) {
-            $html .= '<ol class="breadcrumb">';
+            $html .= '<ol class="breadcrumb float-sm-right float-sm-end">';
             if (empty($this->breadcrumb['breadcrumb'])) {
                 switch ($aTipo) {
                     case 'edit':
-                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $html .= '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="breadcrumb-item active"><i class="fa fa-pencil"></i> Editar</li>';
                         break;
                     case 'create':
-                        $html .= '<li><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $html .= '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="breadcrumb-item active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
                         break;
                     default:
-                        $html .= '<li class="active">' . $this->titulo . '</li>';
+                        $html .= '<li class="breadcrumb-item active">' . $this->titulo . '</li>';
                         break;
                 }
             } else {
@@ -405,35 +418,35 @@ class CrudController extends BaseController
                     case 'edit':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
 
-                        $htmlArray[] = '<li class="active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $htmlArray[] = '<li class="breadcrumb-item active"><i class="fa fa-pencil"></i> Editar</li>';
                         break;
                     case 'create':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
 
-                        $htmlArray[] = '<li class="active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $htmlArray[] = '<li class="breadcrumb-item active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
                         break;
                     default:
                         $htmlArray = array_map(function ($item) use ($aUrl) {
                             if ($item['url'] == '') {
-                                return '<li class="active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
                             } else {
-                                return '<li><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
                             }
                         }, $array);
                         break;
