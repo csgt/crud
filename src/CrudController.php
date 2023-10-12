@@ -16,6 +16,7 @@ class CrudController extends BaseController
     private $showExport   = true;
     private $showSearch   = true;
     private $stateSave    = true;
+    private $responsive   = true;
     private $layout       = 'layouts.app';
     private $perPage      = 50;
     private $titulo       = '';
@@ -45,6 +46,7 @@ class CrudController extends BaseController
             ->with('stateSave', $this->stateSave)
             ->with('showExport', $this->showExport)
             ->with('showSearch', $this->showSearch)
+            ->with('responsive', $this->responsive)
             ->with('perPage', $this->perPage)
             ->with('titulo', $this->titulo)
             ->with('columnas', $this->getCamposShow())
@@ -765,6 +767,11 @@ class CrudController extends BaseController
     public function setPerPage($aCuantos)
     {
         $this->perPage = $aCuantos;
+    }
+
+    public function setResponsive($aResponsive)
+    {
+        $this->responsive = $aResponsive;
     }
 
     private function getQueryString($request)
