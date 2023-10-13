@@ -78,48 +78,17 @@
                             </div>
                             <!---------------------------- DATE ---------------------------------->
                         @elseif($columna['tipo'] == 'date')
-                            @php
-                                $datearray = explode('-', $valor);
-                                if (count($datearray) == 3) {
-                                    $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
-                                } else {
-                                    $laFecha = null;
-                                }
-                                $arr['data-date-locale'] = 'es';
-                                $arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
-                                $arr['data-date-pickTime'] = 'false'; //Backwards compatible con datepicker 2
-                                $arr['data-date-format'] = 'DD/MM/YYYY';
-                                $arr['data-fv-date-format'] = 'DD/MM/YYYY';
-                                $arr['data-fv-date'] = 'true';
-                            @endphp
                             {!! $label !!}
-                            <div id="div{!! $columna['campoReal'] !!}" class="input-group date catalogoFecha">
-                                <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}"
+                            <div id="div{!! $columna['campoReal'] !!}" class="input-group">
+                                <input type="date" name="{{ $columna['campoReal'] }}" value="{{ $valor }}"
                                     {!! arrayToFields($arr) !!}>
-                                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
                             </div>
                             <!---------------------------- DATETIME ---------------------------------->
                         @elseif($columna['tipo'] == 'datetime')
-                            @php
-                                $datearray2 = explode(' ', $valor);
-                                if (count($datearray2) == 2) {
-                                    $hora = explode(':', $datearray2[1]);
-                                    $datearray = explode('-', $datearray2[0]);
-                                    $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $hora[0] . ':' . $hora[1];
-                                } else {
-                                    $laFecha = null;
-                                }
-                                $arr['data-date-locale'] = 'es';
-                                $arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
-                                $arr['data-date-format'] = 'DD/MM/YYYY HH:mm';
-                                $arr['data-fv-date-format'] = 'DD/MM/YYYY HH:mm';
-                                $arr['data-fv-date'] = 'true';
-                            @endphp
                             {!! $label !!}
-                            <div id="div{!! $columna['campoReal'] !!}" class="input-group date catalogoFecha">
-                                <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}"
-                                    {!! arrayToFields($arr) !!}>
-                                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                            <div id="div{!! $columna['campoReal'] !!}" class="input-group">
+                                <input type="datetime-local" name="{{ $columna['campoReal'] }}"
+                                    value="{{ $valor }}" {!! arrayToFields($arr) !!}>
                             </div>
                             <!---------------------------- COMBOBOX ---------------------------------->
                         @elseif($columna['tipo'] == 'combobox')
@@ -183,9 +152,6 @@
 @section('javascript')
     <script type="text/javascript">
         $(function() {
-            @if ($uses['dates'])
-                $('.catalogoFecha').datetimepicker();
-            @endif
             @if ($uses['selectize'])
                 $('.selectpicker').selectize();
             @endif

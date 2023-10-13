@@ -3,7 +3,6 @@ namespace Csgt\Crud;
 
 use DB;
 use Crypt;
-use Response;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -80,16 +79,11 @@ class CrudController extends BaseController
         $nuevasVars = $this->getQueryString($request);
 
         $uses = [
-            'dates'      => false,
             'selectize'  => false,
             'summernote' => false,
         ];
 
         foreach ($camposEdit as $column) {
-            if (($column['tipo'] == 'date') || ($column['tipo'] == 'datetime' || $column['tipo'] == 'time')) {
-                $uses['dates'] = true;
-            }
-
             if (($column['tipo'] == 'combobox') || ($column['tipo'] == 'enum') || $column['tipo'] == 'multi') {
                 $uses['selectize'] = true;
             }
@@ -127,20 +121,8 @@ class CrudController extends BaseController
         foreach ($this->campos as $campo) {
             if (array_key_exists($campo['campo'], $fields)) {
                 if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
-                    $aFecha    = $fields[$campo['campo']];
-                    $fechahora = explode(' ', $fields[$campo['campo']]);
-
-                    if (sizeof($fechahora) == 2) {
-                        $formato    = 'd/m/Y H:i';
-                        $formatoOut = 'Y-m-d H:i';
-                        $aFecha     = substr($aFecha, 0, 16);
-                    } else {
-                        $formato    = 'd/m/Y';
-                        $formatoOut = 'Y-m-d';
-                    }
-
                     try {
-                        $fecha                   = Carbon::createFromFormat($formato, $aFecha);
+                        $fecha                   = Carbon::parse($fields[$campo['campo']]);
                         $fields[$campo['campo']] = $fecha;
                     } catch (Exception $e) {
                         $fields[$campo['campo']] = null;
