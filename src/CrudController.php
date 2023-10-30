@@ -232,7 +232,7 @@ class CrudController extends BaseController
     public function data(Request $request)
     {
         //Definimos las variables que nos ayudar'an en el proceso de devolver la data
-        $search          = $request->search;
+        $search          = $request->input('search', '');
         $orders          = $request->order;
         $multiColumns    = $this->getCamposShowMulti();
         $columns         = $this->getCamposShowMine();
