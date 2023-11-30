@@ -2,6 +2,7 @@
 namespace DummyNamespace;
 
 use Csgt\Crud\CrudController;
+use Csgt\Cancerbero\Facades\Cancerbero;
 use Illuminate\Http\Request;
 //use App\Models\Model;
 
@@ -42,6 +43,6 @@ class DummyClass extends CrudController
         //     'class'  => 'warning',
         // ]);
 
-        // $this->setPermissions("\Cancerbero::crudPermissions", 'module');
+        // $this->setPermissions(Cancerbero::crudPermissions('module'));
     }
 }
