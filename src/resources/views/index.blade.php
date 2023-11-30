@@ -6,7 +6,7 @@
     {!! $breadcrumb !!}
 @stop
 @section('javascript')
-<script>
+<script type="module">
     $(document).ready(function() {
         $.fn.dataTable.ext.errMode = function ( settings, helpPage, message ) {
             console.log(JSON.stringify(message));
@@ -92,7 +92,7 @@
                     class : "{!!$column["class"]!!}",
                     searchable : "{!!$column["searchable"]!!}",
 
-                    @if(($column['type']=="date") || ($column['type']=="datetime"))
+                    @if(($column['type']=="date") || ($column['type']=="datetime") || ($column['type']=="time"))
                         data : null,
                         render : function(data) {
                             var date = moment.utc(data[{{$loop->index}}]);

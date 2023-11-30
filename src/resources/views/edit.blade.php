@@ -14,6 +14,7 @@
     }
 @endphp
     <form method="POST" action="/{{$pathstore . $queryParameters}}" class="form-horizontal" id="frmCrud" enctype="multipart/form-data">
+        <input type="hidden" name="__tz__" id="__tz__" >
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -89,69 +90,24 @@
                                   </div>
                                 @elseif($column['type'] == 'date')
                                     <!---------------------------- DATE ---------------------------------->
-                                    @php
-                                        $datearray = explode('-', $valor);
-                                        if (count($datearray) == 3) {
-                                            $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
-                                        } else {
-                                            $laFecha = null;
-                                        }
-                                        $arr['data-date-locale'] = 'es';
-                                        $arr['data-date-format'] = 'DD/MM/YYYY';
-                                        $arr['data-fv-date-format'] = 'DD/MM/YYYY';
-                                        $arr['data-fv-date'] = 'true';
-                                    @endphp
                                     {!!$label!!}
                                     <div>
                                         <input id="div{!!$column['campoReal']!!}"
-                                            type="text"
-                                            class="form-control catalogoFecha"
+                                            type="date"
+                                            class="form-control {{ $column['utc'] ? 'dputc' : 'dp' }}"
                                             name="{{ $column['campoReal'] }}"
-                                            value="{{ $laFecha }}"
+                                            data-value="{{ $valor }}"
                                             {!! arrayToFields($arr) !!}>
                                     </div>
                                 @elseif($column['type'] == 'datetime')
                                     <!---------------------------- DATETIME ---------------------------------->
-                                    @php
-                                        $datearray2 = explode(' ', $valor);
-                                        if (count($datearray2) == 2) {
-                                            $hora = explode(':', $datearray2[1]);
-                                            $datearray = explode('-', $datearray2[0]);
-                                            $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $hora[0] . ':' . $hora[1];
-                                        } else {
-                                            $laFecha = null;
-                                        }
-                                        $arr['data-date-locale'] = 'es';
-                                        $arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
-                                        $arr['data-date-format'] = 'DD/MM/YYYY HH:mm';
-                                        $arr['data-fv-date-format'] = 'DD/MM/YYYY HH:mm';
-                                        $arr['data-fv-date'] = 'true';
-                                    @endphp
-                                    {!!$label!!}
-
-                                    <div>
-                                        <input id="div{!!$column['campoReal']!!}"
-                                            type="text"
-                                            class="form-control catalogoFecha"
-                                            name="{{ $column['campoReal'] }}"
-                                            value="{{ $laFecha }}"
-                                            {!! arrayToFields($arr) !!}>
-                                    </div>
-                                @elseif($column['type'] == 'time')
-                                    <!---------------------------- TIME ---------------------------------->
-                                    @php
-                                        $arr['data-date-locale'] = 'es';
-                                        $arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
-                                        $arr['data-date-format'] = 'HH:mm';
-                                        $arr['data-fv-date-format'] = 'HH:mm';
-                                    @endphp
                                     {!!$label!!}
                                     <div>
                                         <input id="div{!!$column['campoReal']!!}"
-                                            type="text"
-                                            class="form-control catalogoFecha"
+                                            type="datetime-local"
+                                            class="form-control {{ $column['utc'] ? 'dtputc' : 'dtp' }}"
                                             name="{{ $column['campoReal'] }}"
-                                            value="{{ $valor }}"
+                                            data-value="{{ $valor }}"
                                             {!! arrayToFields($arr) !!}>
                                     </div>
                                 @elseif($column['type'] == 'combobox')
@@ -239,11 +195,34 @@
 @endsection
 
 @section ('javascript')
-    <script type="text/javascript">
+    <script type="module">
         $(function() {
-            @if($uses['dates'])
-                $('.catalogoFecha').datetimepicker();
-            @endif
+            document.querySelectorAll(".dtputc").forEach((item) => {
+                item.value = new moment.utc(item.dataset.value).local().format('YYYY-MM-DD\THH:mm');
+            });
+
+            document.querySelectorAll(".dtp").forEach((item) => {
+                item.value = new moment(item.dataset.value).format('YYYY-MM-DD\THH:mm');
+            });
+
+            document.querySelectorAll(".dputc").forEach((item) => {
+                item.value = new moment.utc(item.dataset.value).local().format('YYYY-MM-DD');
+            });
+
+            document.querySelectorAll(".dp").forEach((item) => {
+                item.value = new moment(item.dataset.value).format('YYYY-MM-DD');
+            });
+
+            document.querySelectorAll(".tp").forEach((item) => {
+                item.value = new moment(item.dataset.value).format('HH:mm');
+            });
+
+            document.querySelectorAll(".tputc").forEach((item) => {
+                item.value = new moment.utc(item.dataset.value).local().format('HH:mm');
+            });
+
+            document.getElementById('__tz__').value = new Date().getTimezoneOffset() / -60;
+
             @if($uses['selectize'])
                 $('.selectpicker').selectize();
             @endif

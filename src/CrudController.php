@@ -94,16 +94,11 @@ class CrudController extends BaseController
         $queryParameters = $this->getQueryString($request);
 
         $uses = [
-            'dates'      => false,
             'selectize'  => false,
             'summernote' => false,
         ];
 
         foreach ($editFields as $column) {
-            if (($column['type'] == 'date') || ($column['type'] == 'datetime' || $column['type'] == 'time')) {
-                $uses['dates'] = true;
-            }
-
             if (($column['type'] == 'combobox') || ($column['type'] == 'enum') || $column['type'] == 'multi') {
                 $uses['selectize'] = true;
             }
@@ -136,33 +131,18 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        // abort(400, json_encode($request->all()));
+
         $this->setup($request);
         $fields = Arr::except($request->request->all(), $this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
         $newMulti = [];
         foreach ($this->fields as $campo) {
-            if (array_key_exists($campo['field'], $fields)) {
-                if ($campo['type'] == 'date' || $campo['type'] == 'datetime') {
-                    $aFecha    = $fields[$campo['field']];
-                    $fechahora = explode(' ', $fields[$campo['field']]);
-
-                    if (sizeof($fechahora) == 2) {
-                        $formato    = 'd/m/Y H:i';
-                        $formatoOut = 'Y-m-d H:i';
-                        $aFecha     = substr($aFecha, 0, 16);
-                    } else {
-                        $formato    = 'd/m/Y';
-                        $formatoOut = 'Y-m-d';
-                    }
-
-                    try {
-                        $fecha                   = Carbon::createFromFormat($formato, $aFecha);
-                        $fields[$campo['field']] = $fecha;
-                    } catch (Exception $e) {
-                        $fields[$campo['field']] = null;
-                    }
-                }
+            if ((($campo['type'] == 'date') || ($campo['type'] == 'datetime')) && $campo['utc']) {
+                $fields[$campo['field']] = Carbon::parse($fields[$campo['field']])
+                    ->shiftTimezone($request->__tz__)
+                    ->setTimezone('UTC');
             }
 
             if (($campo['type'] == 'file') || ($campo['type'] == 'image')) {
@@ -709,7 +689,7 @@ class CrudController extends BaseController
         $allowed = ['field', 'name', 'editable', 'show', 'type', 'class',
             'default', 'validationRules', 'validationRulesMessage', 'decimals', 'collection',
             'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
-        $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'time', 'bool', 'combobox', 'password',
+        $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password',
             'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) {
@@ -740,7 +720,7 @@ class CrudController extends BaseController
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
         $filedisk      = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
-        $utc           = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
+        $utc           = (!array_key_exists('utc', $aParams) ? true : $aParams['utc']);
         $editClass     = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable    = true;
 
@@ -932,17 +912,9 @@ class CrudController extends BaseController
         $this->extraActions[] = $arr;
     }
 
-    public function setPermissions($aPermissionsCallback, $aModule = false)
+    public function setPermissions($permissions)
     {
-        if (!$aModule) {
-            $this->permissions = $aPermissionsCallback;
-        } else {
-            $this->middleware(function ($request, $next) use ($aPermissionsCallback, $aModule) {
-                $this->permissions = call_user_func($aPermissionsCallback, $aModule);
-
-                return $next($request);
-            });
-        }
+        $this->permissions = $permissions;
     }
 
     public function setHidden($aParams)
