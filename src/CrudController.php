@@ -2,7 +2,6 @@
 namespace Csgt\Crud;
 
 use DB;
-use Crypt;
 use Storage;
 use Response;
 use Exception;
@@ -37,10 +36,18 @@ class CrudController extends BaseController
     private $ignoreFields = ['_token'];
     private $breadcrumb   = ['mostrar' => true, 'breadcrumb' => []];
 
+    public function setup()
+    {
+        abort(400, "This method must be overriden in parent");
+        //Has to be overridden in parent
+    }
+
     public function index(Request $request)
     {
+        $this->setup();
+
         if (!$this->model) {
-            dd('setModel is required.');
+            abort(400, 'setModel is required.');
         }
         $breadcrumb = $this->generateBreadcrumb('index');
 
@@ -63,7 +70,8 @@ class CrudController extends BaseController
 
     public function show(Request $request, $aId)
     {
-        $data = $this->model->find(Crypt::decrypt($aId));
+        $this->setup();
+        $data = $this->model->find($aId);
         if ($request->expectsJson()) {
             return response()->json($data);
         }
@@ -71,9 +79,10 @@ class CrudController extends BaseController
 
     public function edit(Request $request, $aId)
     {
+        $this->setup();
         $path = $this->downLevel($request->path()) . '/';
         if ($aId) {
-            $data       = $this->model->find(Crypt::decrypt($aId));
+            $data       = $this->model->find($aId);
             $breadcrumb = $this->generateBreadcrumb('edit', $this->downLevel($path));
         } else {
             $data       = null;
@@ -127,6 +136,7 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        $this->setup();
         $fields = Arr::except($request->request->all(), $this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
@@ -175,7 +185,7 @@ class CrudController extends BaseController
             if ($campo['type'] == 'securefile') {
                 if ($request->hasFile($campo['field'])) {
                     if ($aId !== 0) {
-                        $existing = $this->model->find(Crypt::decrypt($aId));
+                        $existing = $this->model->find($aId);
                         if ($existing) {
                             if ($existing->{$campo['field']} != '') {
                                 Storage::disk($campo['filedisk'])->delete($existing->{$campo['field']});
@@ -212,7 +222,7 @@ class CrudController extends BaseController
 
             return redirect()->to($request->path() . $queryParameters);
         } else {
-            $m = $this->model->find(Crypt::decrypt($aId));
+            $m = $this->model->find($aId);
             $m->update($fields);
             foreach ($newMulti as $relationship => $values) {
                 $m->{$relationship}()->detach();
@@ -228,8 +238,9 @@ class CrudController extends BaseController
 
     public function destroy(Request $request, $aId)
     {
+        $this->setup();
         try {
-            $this->model->destroy(Crypt::decrypt($aId));
+            $this->model->destroy($aId);
             $request->session()->flash('message', trans('csgtcrud::crud.registroeliminado'));
             $request->session()->flash('type', 'warning');
         } catch (Exception $e) {
@@ -245,6 +256,7 @@ class CrudController extends BaseController
 
     public function data(Request $request)
     {
+        $this->setup();
         //Definimos las variables que nos ayudar'an en el proceso de devolver la data
         $search          = $request->search;
         $orders          = $request->order;
@@ -383,7 +395,7 @@ class CrudController extends BaseController
                 }
 
                 if ($colName == $this->uniqueid) {
-                    $lastItem = Crypt::encrypt($item[$colName]);
+                    $lastItem = $item[$colName];
                 } elseif ($esRelacion) {
                     //Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
                     if ($item[$relationName]) {

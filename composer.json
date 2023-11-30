@@ -1,24 +1,23 @@
 {
-  "name": "csgt/crud",
-  "description": "",
-  "authors": [
-    {
-      "name": "Softlogic",
-      "email": "software@softlogic.com.gt"
-    }
-  ],
-  "require": {
-    "php" : ">=7.2"
-  },
-  "autoload": {
-    "classmap": [
+    "name": "csgt/crud",
+    "description": "CRUD implementation",
+    "authors": [
+        {
+            "name": "Softlogic",
+            "email": "software@softlogic.com.gt"
+        }
     ],
-    "psr-4": {
-      "Csgt\\Crud\\": "src"
-    }
-  },
-  "minimum-stability" : "stable",
-   "extra": {
+    "require": {
+        "php": ">=7.2"
+    },
+    "autoload": {
+        "classmap": [],
+        "psr-4": {
+            "Csgt\\Crud\\": "src"
+        }
+    },
+    "minimum-stability": "stable",
+    "extra": {
         "laravel": {
             "providers": [
                 "Csgt\\Crud\\CrudServiceProvider"
