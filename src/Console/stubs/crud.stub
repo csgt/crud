@@ -2,12 +2,12 @@
 namespace DummyNamespace;
 
 use Csgt\Crud\CrudController;
-
+use Illuminate\Http\Request;
 //use App\Models\Model;
 
 class DummyClass extends CrudController
 {
-    public function __construct()
+    public function setup($request)
     {
         // $this->setModel(new Model);
         // $this->setTitle('Title');
@@ -19,17 +19,14 @@ class DummyClass extends CrudController
         // $this->setField(['name' => 'Nombre', 'field' => 'name']);
         // $this->setField(['name' => 'Descripción', 'field' => 'descripcion']);
 
-        // $this->middleware(function ($request, $next) {
-        //     $this->setField([
-        //         'name'     => 'Protocolo',
-        //         'field'      => 'protocoloid',
-        //         'type'       => 'combobox',
-        //         'collection' => Protocolo::select('protocoloid', 'name')->get(),
-        //     ]);
+        // $this->setField([
+        //     'name'     => 'Protocolo',
+        //     'field'      => 'protocoloid',
+        //     'type'       => 'combobox',
+        //     'collection' => Protocolo::select('protocoloid', 'name')->get(),
+        // ]);
 
-        //     return $next($request);
-        // });
-
+ 
         //Campo Multi:
         // $this->setField(['name' => 'Requisitos', 'type' => 'multi', 'field' => 'relationName']);
         // requiere en el modelo, crear la relation belongsToMany relationName

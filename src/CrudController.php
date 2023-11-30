@@ -36,7 +36,7 @@ class CrudController extends BaseController
     private $ignoreFields = ['_token'];
     private $breadcrumb   = ['mostrar' => true, 'breadcrumb' => []];
 
-    public function setup()
+    public function setup(Request $request)
     {
         abort(400, "This method must be overriden in parent");
         //Has to be overridden in parent
@@ -44,7 +44,7 @@ class CrudController extends BaseController
 
     public function index(Request $request)
     {
-        $this->setup();
+        $this->setup($request);
 
         if (!$this->model) {
             abort(400, 'setModel is required.');
@@ -70,7 +70,7 @@ class CrudController extends BaseController
 
     public function show(Request $request, $aId)
     {
-        $this->setup();
+        $this->setup($request);
         $data = $this->model->find($aId);
         if ($request->expectsJson()) {
             return response()->json($data);
@@ -79,7 +79,7 @@ class CrudController extends BaseController
 
     public function edit(Request $request, $aId)
     {
-        $this->setup();
+        $this->setup($request);
         $path = $this->downLevel($request->path()) . '/';
         if ($aId) {
             $data       = $this->model->find($aId);
@@ -136,7 +136,7 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
-        $this->setup();
+        $this->setup($request);
         $fields = Arr::except($request->request->all(), $this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
@@ -238,7 +238,7 @@ class CrudController extends BaseController
 
     public function destroy(Request $request, $aId)
     {
-        $this->setup();
+        $this->setup($request);
         try {
             $this->model->destroy($aId);
             $request->session()->flash('message', trans('csgtcrud::crud.registroeliminado'));
@@ -256,7 +256,7 @@ class CrudController extends BaseController
 
     public function data(Request $request)
     {
-        $this->setup();
+        $this->setup($request);
         //Definimos las variables que nos ayudar'an en el proceso de devolver la data
         $search          = $request->search;
         $orders          = $request->order;
