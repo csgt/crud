@@ -53,7 +53,7 @@
                         sortable: false,
                         render: function(data, type, full, meta) {
                             var id = data['DT_RowId'];
-                            var html = '<div class="btn-group btn-group-sm">';
+                            var html = '<div class="btn-group btn-group-sm" role="group">';
                             @foreach ($extraButtons as $extraButton)
                                 @php
                                     $url = $extraButton['url'];
@@ -70,25 +70,25 @@
                                     }
                                 @endphp
                                 html +=
-                                    '<a class="mr-1 btn btn-sm btn-block {{ $extraButton['class'] }}" title="{!! $extraButton['title'] !!}" href="{{ $parte1 }}' +
+                                    '<a class="btn btn-sm {{ $extraButton['class'] }}" title="{!! $extraButton['title'] !!}" href="{{ $parte1 }}' +
                                     id +
                                     '{{ $parte2 . $urlVars }}" {{ $target }} {!! $extraButton['confirm'] ? "onclick=\"return confirm(\'" . $extraButton['confirmmessage'] . "\');\"" : '' !!}><i class="{{ $extraButton['icon'] }}"></i></a>';
                             @endforeach
 
                             @if ($permisos['update'])
                                 html +=
-                                    '<a class="btn btn-sm btn-block btn-info" title="{{ trans('csgtcrud::crud.editar') }}" href="/{!! Request::path() !!}/' +
+                                    '<a class="btn btn-sm btn-info" title="{{ trans('csgtcrud::crud.editar') }}" href="/{!! Request::path() !!}/' +
                                     id +
                                     '/edit/{!! $queryParameters !!}"><i class="fa fa-pencil-alt"></i></a>';
                             @endif ;
                             @if ($permisos['destroy'])
                                 html += '<form action="/{!! Request::path() !!}/' + id + '{!! $queryParameters !!}" class="btn-delete" method="POST">\
-                                        <input type="hidden" name="_method" value="DELETE">\
-                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                        <button type="submit" class="btn btn-sm btn-block btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                        <i class="fa fa-trash"></i>\
-                                        </button>\
-                                        </form>';
+                                                    <input type="hidden" name="_method" value="DELETE">\
+                                                    <input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                    <i class="fa fa-trash"></i>\
+                                                    </button>\
+                                                    </form>';
                             @endif ;
                             html += '</div>'
                             return html;
