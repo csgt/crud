@@ -139,6 +139,10 @@ class CrudController extends BaseController
 
         $newMulti = [];
         foreach ($this->fields as $campo) {
+            if (!array_key_exists($campo['field'], $fields)) {
+                continue;
+            }
+
             if ((($campo['type'] == 'date') || ($campo['type'] == 'datetime')) && $campo['utc']) {
                 $fields[$campo['field']] = Carbon::parse($fields[$campo['field']])
                     ->shiftTimezone($request->__tz__)
