@@ -5,6 +5,7 @@ use DB;
 use Crypt;
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -120,6 +121,8 @@ class CrudController extends BaseController
     {
         $fields = $request->except($this->noGuardar);
         $fields = array_merge($fields, $this->camposHidden);
+
+        $newMulti = [];
         foreach ($this->campos as $campo) {
             if (array_key_exists($campo['campo'], $fields)) {
                 if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
@@ -148,11 +151,24 @@ class CrudController extends BaseController
                     $fields[$campo['campo']] = $filename;
                 }
             }
+
+            if ($campo['tipo'] == 'multi') {
+                if (array_key_exists($campo['campo'], $fields)) {
+                    $newMulti[$campo['campo']] = $fields[$campo['campo']];
+                } else {
+                    $newMulti[$campo['campo']] = [];
+                }
+
+                $fields = Arr::except($fields, $campo['campo']);
+            }
         }
 
         $nuevasVars = $this->getQueryString($request);
         if ($aId === 0) {
             $item = $this->modelo->create($fields);
+            foreach ($newMulti as $relationship => $values) {
+                $item->{$relationship}()->attach($values);
+            }
             if ($request->expectsJson()) {
                 return response()->json($item);
             }
@@ -161,6 +177,10 @@ class CrudController extends BaseController
         } else {
             $m = $this->modelo->find(Crypt::decrypt($aId));
             $m->update($fields);
+            foreach ($newMulti as $relationship => $values) {
+                $m->{$relationship}()->detach();
+                $m->{$relationship}()->attach($values);
+            }
             if ($request->expectsJson()) {
                 return response()->json($m);
             }
@@ -314,7 +334,11 @@ class CrudController extends BaseController
                         $colName = explode('AS ', $colName)[1];
                     }
                 } else {
-                    $colName = $ordenColumnas[$i];
+                    if (strpos($ordenColumnas[$i], ' AS ')) {
+                        $colName = explode('AS ', $ordenColumnas[$i])[1];
+                    } else {
+                        $colName = $ordenColumnas[$i];
+                    }
                 }
 
                 if ($colName == $this->uniqueid) {
@@ -335,7 +359,34 @@ class CrudController extends BaseController
                         $cols[] = null;
                     }
                 } else {
-                    $cols[] = $item[$colName];
+                    $fullCampo = array_filter($this->campos, function ($campo) use ($colName) {
+                        return $campo['campo'] == $colName;
+                    });
+                    if (count($fullCampo) > 0) {
+                        $fullCampoFixed = array_values($fullCampo)[0];
+                        if ($fullCampoFixed['tipo'] == 'securefile') {
+                            if ($item[$colName] != null) {
+                                $cols[] = Storage::disk($fullCampoFixed['filedisk'])->temporaryUrl(
+                                    $item[$colName], now()->addMinutes(5)
+                                );
+                            } else {
+                                $cols[] = $item[$colName];
+                            }
+                        } else if ($fullCampoFixed['tipo'] == 'multi') {
+                            $methodName = 'fetch' . ucfirst($fullCampoFixed['campo']) . 'Column';
+                            $keyName    = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+
+                            $cols[] = implode(', ',
+                                $this->modelo
+                                    ->find($item[$this->uniqueid])
+                                    ->{$fullCampoFixed['campo']}
+                                    ->pluck($keyName)
+                                    ->toArray()
+                            );
+                        } else {
+                            $cols[] = $item[$colName];
+                        }
+                    }
                 }
             }
 
@@ -366,6 +417,17 @@ class CrudController extends BaseController
                 }
 
                 $combos[$campo['alias']] = $arr;
+            } else if ($campo['tipo'] == 'multi') {
+                $methodName = 'fetch' . ucfirst($campo['campo']) . 'Column';
+                $keyName    = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+
+                $options = $this->modelo
+                    ->{'fetch' . ucfirst($campo['campo'])}()
+                    ->mapWithKeys(function ($item) use ($keyName) {
+                        return [$item->{$item->getKeyName()} => $item->{$keyName}];
+                    }
+                    );
+                $combos[$campo['alias']] = $options;
             }
         }
 
@@ -478,6 +540,7 @@ class CrudController extends BaseController
             function ($c) {
                 return (
                     $c['show'] == true &&
+                    $c['tipo'] != 'multi' &&
                     (strpos($c['campo'], '.') === false ||
                         strpos($c['campo'], '"') !== false || !$c['isforeign'])
                 );
@@ -553,7 +616,7 @@ class CrudController extends BaseController
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'collection',
             'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc'];
-        $tipos = ['string', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
+        $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
             if (!in_array($key, $allowed)) {

@@ -105,6 +105,22 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <!---------------------------- MULTI ---------------------------------->
+                        @elseif($columna['tipo'] == 'multi')
+                            @php
+                                $arr['class'] = 'selectpicker form-control';
+                                $arr['data-width'] = 'auto';
+                            @endphp
+                            {!! $label !!}
+                            <?php $campo = $data ? $data->{$columna['campo']} : ''; ?>
+                            <select multiple="multiple" name="{{ $columna['campo'] }}[]" {!! arrayToFields($arr) !!}>
+
+                                @foreach ($combos[$columna['alias']] as $id => $opcion)
+                                    <option value="{{ $id }}"
+                                        @if ($campo != '') {{ $campo->find($id) ? "selected='selected'" : '' }} @endif>
+                                        {!! $opcion !!}</option>
+                                @endforeach
+                            </select>
                             <!---------------------------- ENUM ---------------------------------->
                         @elseif($columna['tipo'] == 'enum')
                             @php
