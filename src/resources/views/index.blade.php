@@ -53,7 +53,7 @@
                         sortable: false,
                         render: function(data, type, full, meta) {
                             var id = data['DT_RowId'];
-                            var html = '';
+                            var html = '<div class="btn-group" role="group">';
                             @foreach ($botonesExtra as $botonExtra)
                                 @php
                                     $url = $botonExtra['url'];
@@ -70,30 +70,31 @@
                                     }
                                 @endphp
                                 html +=
-                                    '<div class="btn-group btn-group-sm"><a class="mr-1 btn btn-sm btn-block {{ $botonExtra['class'] }}" title="{!! $botonExtra['titulo'] !!}" href="{{ $parte1 }}' +
+                                    '<a class="btn btn-sm {{ $botonExtra['class'] }}" title="{!! $botonExtra['titulo'] !!}" href="{{ $parte1 }}' +
                                     id +
-                                    '{{ $parte2 . $urlVars }}" {{ $target }} {!! $botonExtra['confirm'] ? "onclick=\"return confirm(\'" . $botonExtra['confirmmessage'] . "\');\"" : '' !!}><i class="{{ $botonExtra['icon'] }}"></i></a></div>';
+                                    '{{ $parte2 . $urlVars }}" {{ $target }} {!! $botonExtra['confirm'] ? "onclick=\"return confirm(\'" . $botonExtra['confirmmessage'] . "\');\"" : '' !!}><i class="{{ $botonExtra['icon'] }}"></i></a>';
                             @endforeach
 
                             @if ($permisos['edit'])
                                 html +=
-                                    '<div class="btn-group btn-group-sm"><a class="btn btn-sm btn-block btn-info" title="{{ trans('csgtcrud::crud.editar') }}" href="/{!! Request::path() !!}/' +
+                                    '<a class="btn btn-sm btn-info" title="{{ trans('csgtcrud::crud.editar') }}" href="/{!! Request::path() !!}/' +
                                     id +
-                                    '/edit/{!! $nuevasVars !!}"><i class="fa fa-pencil"></i></a></div>';
+                                    '/edit/{!! $nuevasVars !!}"><i class="fa fa-pencil"></i></a>';
                             @endif ;
                             @if ($permisos['delete'])
                                 html +=
-                                    '<div class="btn-group btn-group-sm">\
-                                                                                                                                    <form action="{!! URL::to(Request::url()) !!}/' +
+                                    '\
+                                                                                                                                                            <form action="{!! URL::to(Request::url()) !!}/' +
                                     id +
                                     '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
-                                                                                                                                                                                        								<input type="hidden" name="_method" value="DELETE">\
-                                                                                                                                                                                        								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                                                                                                                                                                        								<button type="submit" class="btn btn-sm btn-block btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                                                                                                                                                                        								<i class="fa fa-trash"></i>\
-                                                                                                                                                                                        								</button>\
-                                                                                                                                                                                        								</form></div>';
+                                                                                                                                                                                                                								<input type="hidden" name="_method" value="DELETE">\
+                                                                                                                                                                                                                								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                                                                                                                                                                                								<button type="submit" class="btn btn-sm btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                                                                                                                                                                                								<i class="fa fa-trash"></i>\
+                                                                                                                                                                                                                								</button>\
+                                                                                                                                                                                                                								</form>';
                             @endif ;
+                            html += "</div>"
                             return html;
                         }
                     },
