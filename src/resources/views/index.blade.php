@@ -84,15 +84,15 @@
                             @if ($permisos['delete'])
                                 html +=
                                     '\
-                                                                                                                                                            <form action="{!! URL::to(Request::url()) !!}/' +
+                                                                                                                                                                <form action="{!! URL::to(Request::url()) !!}/' +
                                     id +
                                     '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
-                                                                                                                                                                                                                								<input type="hidden" name="_method" value="DELETE">\
-                                                                                                                                                                                                                								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                                                                                                                                                                                                								<button type="submit" class="btn btn-sm btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                                                                                                                                                                                                								<i class="fa fa-trash"></i>\
-                                                                                                                                                                                                                								</button>\
-                                                                                                                                                                                                                								</form>';
+                                                                                                                                                                                                                    								<input type="hidden" name="_method" value="DELETE">\
+                                                                                                                                                                                                                    								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                                                                                                                                                                                    								<button type="submit" class="btn btn-sm btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                                                                                                                                                                                    								<i class="fa fa-trash"></i>\
+                                                                                                                                                                                                                    								</button>\
+                                                                                                                                                                                                                    								</form>';
                             @endif ;
                             html += "</div>"
                             return html;
@@ -204,6 +204,11 @@
                         '<a type="button" class="btn btn-default btn-light" href="{!! URL::to(Request::url() . '/create/' . $nuevasVars) !!}">{{ trans('csgtcrud::crud.agregar') }}</a>'
                     );
                 @endif
+                @foreach ($accionesExtra as $action)
+                    $('.btn-group-agregar').append(
+                        '<a type="button" class="btn btn-default" href="{!! $action['url'] !!}">{{ $action['titulo'] }}</a>'
+                    );
+                @endforeach
                 $('.dt-buttons').addClass('btn-group-sm');
                 $('div[id$=_filter] input').css('width', '100%').attr('placeholder',
                     '{{ trans('csgtcrud::crud.buscar') }}');

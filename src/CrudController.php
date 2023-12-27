@@ -10,27 +10,28 @@ use Illuminate\Routing\Controller as BaseController;
 
 class CrudController extends BaseController
 {
-    private $uniqueid     = '___id___';
-    private $modelo       = null;
-    private $showExport   = true;
-    private $showSearch   = true;
-    private $stateSave    = true;
-    private $responsive   = true;
-    private $layout       = 'layouts.app';
-    private $perPage      = 50;
-    private $titulo       = '';
-    private $campos       = [];
-    private $camposHidden = [];
-    private $permisos     = ['add' => false, 'edit' => false, 'delete' => false];
-    private $orders       = [];
-    private $botonesExtra = [];
-    private $joins        = [];
-    private $leftJoins    = [];
-    private $wheres       = [];
-    private $wheresIn     = [];
-    private $wheresRaw    = [];
-    private $noGuardar    = ['_token'];
-    private $breadcrumb   = ['mostrar' => true, 'breadcrumb' => []];
+    private $uniqueid      = '___id___';
+    private $modelo        = null;
+    private $showExport    = true;
+    private $showSearch    = true;
+    private $stateSave     = true;
+    private $responsive    = true;
+    private $layout        = 'layouts.app';
+    private $perPage       = 50;
+    private $titulo        = '';
+    private $campos        = [];
+    private $camposHidden  = [];
+    private $permisos      = ['add' => false, 'edit' => false, 'delete' => false];
+    private $orders        = [];
+    private $botonesExtra  = [];
+    private $accionesExtra = [];
+    private $joins         = [];
+    private $leftJoins     = [];
+    private $wheres        = [];
+    private $wheresIn      = [];
+    private $wheresRaw     = [];
+    private $noGuardar     = ['_token'];
+    private $breadcrumb    = ['mostrar' => true, 'breadcrumb' => []];
 
     public function index(Request $request)
     {
@@ -52,6 +53,7 @@ class CrudController extends BaseController
             ->with('permisos', $this->permisos)
             ->with('orders', $this->orders)
             ->with('botonesExtra', $this->botonesExtra)
+            ->with('accionesExtra', $this->accionesExtra)
             ->with('nuevasVars', $this->getQueryString($request));
     }
 
@@ -731,6 +733,32 @@ class CrudController extends BaseController
         ];
 
         $this->botonesExtra[] = $arr;
+    }
+
+    public function setAccionExtra($aParams)
+    {
+        $allowed = ['url', 'titulo', 'target'];
+
+        foreach ($aParams as $key => $val) {
+            //Validamos que todas las variables del array son permitidas.
+            if (!in_array($key, $allowed)) {
+                dd('setAccionExtra no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+            }
+        }
+        if (!array_key_exists('url', $aParams)) {
+            dd('setAccionExtra debe tener un valor para "url"');
+        }
+
+        $titulo = (!array_key_exists('titulo', $aParams) ? '' : $aParams['titulo']);
+        $target = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
+
+        $arr = [
+            'url'    => $aParams['url'],
+            'titulo' => $titulo,
+            'target' => $target,
+        ];
+
+        $this->accionesExtra[] = $arr;
     }
 
     public function setPermisos($aFuncionPermisos, $aModulo = false)
