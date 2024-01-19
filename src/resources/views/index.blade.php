@@ -40,7 +40,7 @@
                     ],
                 @endif
                 "ajax": {
-                    "url": "/{!! Request::path() !!}/data{{ $nuevasVars }}",
+                    "url": "/{!! Request::path() !!}/data{!! $nuevasVars !!}",
                     "headers": {
                         "X-CSRF-Token": "{{ csrf_token() }}"
                     },
@@ -82,17 +82,17 @@
                                 html +=
                                     '<div class="btn-group btn-group-xs"><a class="btn btn-xs btn-primary" title="{{ trans('csgtcrud::crud.editar') }}" href="/{!! Request::path() !!}/' +
                                     id +
-                                    '/edit/{{ $nuevasVars }}"><span class="fa fa-pencil"></span></a></div>';
+                                    '/edit/{!! $nuevasVars !!}"><span class="fa fa-pencil"></span></a></div>';
                             @endif ;
                             @if ($permisos['delete'])
                                 html += '<div class="btn-group btn-group-xs">\
-        								<form action="/{!! Request::path() !!}/' + id + '{{ $nuevasVars }}" class="btn-delete" method="POST">\
-        								<input type="hidden" name="_method" value="DELETE">\
-        								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
-        								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-        								<i class="fa fa-trash"></i>\
-        								</button>\
-        								</form></div>';
+            								<form action="/{!! Request::path() !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
+            								<input type="hidden" name="_method" value="DELETE">\
+            								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
+            								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+            								<i class="fa fa-trash"></i>\
+            								</button>\
+            								</form></div>';
                             @endif ;
                             html += '</div>';
                             return html;
