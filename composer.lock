@@ -38,14 +38,10 @@
                 "psr-0": {
                     "Illuminate\\Support": ""
                 },
-                "files": [
-                    "Illuminate/Support/helpers.php"
-                ]
+                "files": ["Illuminate/Support/helpers.php"]
             },
             "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
+            "license": ["MIT"],
             "authors": [
                 {
                     "name": "Taylor Otwell",

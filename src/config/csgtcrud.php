@@ -1,4 +1,5 @@
 <?php
-return array(
-	'pathToAssets'        => '/packages/csgt/components/',
-);
+
+return [
+    'pathToAssets' => '/packages/csgt/components/',
+];
