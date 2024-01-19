@@ -15,14 +15,9 @@ class CrudServiceProvider extends ServiceProvider
             return $registrar;
         });
 
-        $this->mergeConfigFrom(__DIR__ . '/config/csgtcrud.php', 'csgtcrud');
-        //AliasLoader::getInstance()->alias('Crud','Csgt\Crud\Crud');
         $this->loadViewsFrom(__DIR__ . '/resources/views/', 'csgtcrud');
         $this->loadTranslationsFrom(__DIR__ . '/resources/lang/', 'csgtcrud');
 
-        $this->publishes([
-            __DIR__ . '/config/csgtcrud.php' => config_path('csgtcrud.php'),
-        ], 'config');
         $this->publishes([
             __DIR__ . '/resources/lang/' => base_path('/resources/lang/vendor/csgtcrud'),
         ], 'lang');

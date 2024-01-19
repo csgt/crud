@@ -947,9 +947,9 @@ class CrudController extends BaseController
 
     private function getQueryString($request)
     {
-        $query = '?' . $request->getQueryString();
-        if ($query == '?') {
-            $query = '';
+        $query = '';
+        if ($qs = $request->getQueryString()) {
+            $query = '?' . urldecode($qs);
         }
 
         return $query;
