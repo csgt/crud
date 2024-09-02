@@ -22,7 +22,6 @@ class Crud
     private static $tabla;
     private static $tablaId;
     private static $titulo;
-    private static $data;
     private static $colSlug       = 'slug';
     private static $slugSeparator = '-';
     private static $camposSlug    = [];
@@ -30,6 +29,7 @@ class Crud
     private static $camposEdit    = [];
     private static $camposHidden  = [];
     private static $wheres        = [];
+    private static $wheresIn      = [];
     private static $wheresRaw     = [];
     private static $leftJoins     = [];
     private static $botonesExtra  = [];
@@ -70,6 +70,11 @@ class Crud
         foreach (self::$wheresRaw as $whereRaw) {
             $query->whereRaw($whereRaw);
         }
+
+        foreach (self::$wheresIn as $where) {
+            $query->whereIn($where['columna'], $where['valor']);
+        }
+
         if (self::$softDelete) {
             $query->whereNull(self::$tabla . '.deleted_at');
         }
@@ -403,6 +408,11 @@ class Crud
         }
 
         self::$wheres[] = ['columna' => $aColumna, 'operador' => $aOperador, 'valor' => $aValor];
+    }
+
+    public static function setWhereIn($aColumna, $aValor)
+    {
+        self::$wheresIn[] = ['columna' => $aColumna, 'valor' => $aValor];
     }
 
     public static function setWhereRaw($aStatement)
