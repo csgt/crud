@@ -43,7 +43,7 @@
                         @endforeach
                     ],
                 @endif
-                "ajax": "/{!! Request::path() !!}/0{{ $nuevasVars }}",
+                "ajax": "/{!! Request::path() !!}/0{!! $nuevasVars !!}",
                 "bLengthChange": false,
                 "sDom": '<"row" @if ($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"pull-left"i><"pull-right"p>',
                 "iDisplayLength": {!! $perPage !!},
@@ -85,13 +85,13 @@
                             @endif ;
                             @if ($permisos['delete'])
                                 html += '<div class="btn-group btn-group-xs">\
-    								<form action="{!! URL::to(Request::url()) !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
-    								<input type="hidden" name="_method" value="DELETE">\
-    								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
-    								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-    								<i class="glyphicon glyphicon-trash"></i>\
-    								</button>\
-    								</form></div>';
+        								<form action="{!! URL::to(Request::url()) !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
+        								<input type="hidden" name="_method" value="DELETE">\
+        								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
+        								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+        								<i class="glyphicon glyphicon-trash"></i>\
+        								</button>\
+        								</form></div>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -151,7 +151,7 @@
                                     var text = (val == 0 ?
                                         '<span class="label label-default" style="display:block; width: 40px; margin: auto;">No</span>' :
                                         '<span class="label label-success" style="display:block; width: 40px; margin:auto;">{{ trans('csgtcrud::crud.si') }}</span>'
-                                        );
+                                    );
                                     return text;
                                 }
                             @elseif ($columna['tipo'] == 'url')
@@ -201,7 +201,7 @@
                 @if ($permisos['add'])
                     $('.btn-group-agregar').html(
                         '<a type="button" class="btn btn-success" href="{!! URL::to(Request::url() . '/create/' . $nuevasVars) !!}">{{ trans('csgtcrud::crud.agregar') }}</a>'
-                        );
+                    );
                 @endif
                 $('.dt-buttons').addClass('btn-group-sm');
                 $('div[id$=_filter] input').css('width', '100%').attr('placeholder',
