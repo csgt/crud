@@ -134,7 +134,7 @@ class CrudController extends BaseController
         // abort(400, json_encode($request->all()));
 
         $this->setup($request);
-        $fields = Arr::except($request->request->all(), $this->ignoreFields);
+        $fields = Arr::except($request->all(), $this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
         $newMulti = [];
