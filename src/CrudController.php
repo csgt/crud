@@ -303,7 +303,9 @@ class CrudController extends BaseController
                 $data = $data->filter(function ($item) use ($search) {
                     $result = false;
                     foreach ($item->getAttributes() as $column) {
-                        $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
+                        if ($column) {
+                            $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
+                        }
                     }
                     $relations = $item->getRelations();
                     foreach ($relations as $relation) {
