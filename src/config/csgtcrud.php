@@ -1,8 +1,17 @@
 <?php
+
 return [
-	'datatables' => [
-		'js'  => '/js/datatables.min.js',
-		'css' => '/css/datatables.min.css',
-	],
-	'font-awesome' => '/css/font-awesome.min.css'
+    /*
+    |--------------------------------------------------------------------------
+    | Usar Encripción
+    |--------------------------------------------------------------------------
+    |
+    | Esta opción cuando en true, envía los IDs de las funciones encriptados
+    | y es necesario utilizar decrypt() para obtener el id desencriptado
+    | de igual forma, si se pone en false, se mandan los ids sin encriptar
+    |
+    |
+     */
+
+    'usar_encripcion' => true,
 ];

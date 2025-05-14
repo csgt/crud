@@ -2,7 +2,6 @@
 namespace Csgt\Crud;
 
 use DB;
-use Crypt;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -60,7 +59,10 @@ class CrudController extends BaseController
 
     public function show(Request $request, $aId)
     {
-        $data = $this->modelo->find(Crypt::decrypt($aId));
+        if (config('csgtcrud.usar_encripcion')) {
+            $aId = decrypt($aId);
+        }
+        $data = $this->modelo->find($aId);
         if ($request->expectsJson()) {
             return response()->json($data);
         }
@@ -70,7 +72,10 @@ class CrudController extends BaseController
     {
         $path = $this->downLevel($request->path()) . '/';
         if ($aId) {
-            $data       = $this->modelo->find(Crypt::decrypt($aId));
+            if (config('csgtcrud.usar_encripcion')) {
+                $aId = decrypt($aId);
+            }
+            $data       = $this->modelo->find($aId);
             $breadcrumb = $this->generarBreadcrumb('edit', $this->downLevel($path));
         } else {
             $data       = null;
@@ -175,7 +180,10 @@ class CrudController extends BaseController
 
             return redirect()->to($request->path() . $nuevasVars);
         } else {
-            $m = $this->modelo->find(Crypt::decrypt($aId));
+            if (config('csgtcrud.usar_encripcion')) {
+                $aId = decrypt($aId);
+            }
+            $m = $this->modelo->find($aId);
             $m->update($fields);
             foreach ($newMulti as $relationship => $values) {
                 $m->{$relationship}()->detach();
@@ -192,7 +200,10 @@ class CrudController extends BaseController
     public function destroy(Request $request, $aId)
     {
         try {
-            $this->modelo->destroy(Crypt::decrypt($aId));
+            if (config('csgtcrud.usar_encripcion')) {
+                $aId = decrypt($aId);
+            }
+            $this->modelo->destroy($aId);
             $request->session()->flash('message', trans('csgtcrud::crud.registroeliminado'));
             $request->session()->flash('type', 'warning');
         } catch (Exception $e) {
@@ -342,7 +353,11 @@ class CrudController extends BaseController
                 }
 
                 if ($colName == $this->uniqueid) {
-                    $lastItem = Crypt::encrypt($item[$colName]);
+                    if (config('csgtcrud.usar_encripcion')) {
+                        $lastItem = encrypt($item[$colName]);
+                    } else {
+                        $lastItem = $item[$colName];
+                    }
                 } elseif ($esRelacion) {
                     //Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
                     if ($item[$relationName]) {
