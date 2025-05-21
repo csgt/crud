@@ -122,7 +122,11 @@ class Crud
             $tmparr = [];
             foreach ($d as $columna => $valor) {
                 if ($columna == self::$tablaId) {
-                    $tmparr[] = Crypt::encrypt($valor);
+                    if (config('csgtcrud.usar_encripcion')) {
+                        $tmparr[] = Crypt::encrypt($valor);
+                    } else {
+                        $tmparr[] = $valor;
+                    }
                 } else {
                     $tmparr[] = $valor;
                 }
@@ -489,9 +493,13 @@ class Crud
         $data = null;
         $hijo = 'Nuevo';
 
+        if (config('csgtcrud.usar_encripcion')) {
+            $aId = Crypt::decrypt($aId);
+        }
+
         if (!$aId == 0) {
             $data = DB::table(self::$tabla)
-                ->where(self::$tablaId, Crypt::decrypt($aId))
+                ->where(self::$tablaId, $aId)
                 ->first();
             $hijo = 'Editar';
             $path = self::getUrl(Request::path(), true);
@@ -681,7 +689,11 @@ class Crud
 
             return Redirect::to(Request::path() . self::getGetVars());
         } else {
-            $realId = Crypt::decrypt($id);
+            if (config('csgtcrud.usar_encripcion')) {
+                $realId = Crypt::decrypt($id);
+            } else {
+                $realId = $id;
+            }
             try {
                 $query = DB::table(self::$tabla)
                     ->where(self::$tablaId, $realId)
@@ -718,14 +730,18 @@ class Crud
 
     public static function destroy($aId)
     {
+        if (config('csgtcrud.usar_encripcion')) {
+            $aId = Crypt::encrypt($aId);
+        }
+
         try {
             if (self::$softDelete) {
-                $query = DB::table(self::$tabla)
-                    ->where(self::$tablaId, Crypt::decrypt($aId))
+                DB::table(self::$tabla)
+                    ->where(self::$tablaId, $aId)
                     ->update(['deleted_at' => date_create()]);
             } else {
-                $query = DB::table(self::$tabla)
-                    ->where(self::$tablaId, Crypt::decrypt($aId))
+                DB::table(self::$tabla)
+                    ->where(self::$tablaId, $aId)
                     ->delete();
             }
 

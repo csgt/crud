@@ -84,13 +84,13 @@
                             @endif ;
                             @if ($permisos['delete'])
                                 html += '<div class="btn-group btn-group-xs">\
-                                								<form action="{!! URL::to(Request::url()) !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
-                                								<input type="hidden" name="_method" value="DELETE">\
-                                								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                								<i class="glyphicon glyphicon-trash"></i>\
-                                								</button>\
-                                								</form></div>';
+                                    								<form action="{!! URL::to(Request::url()) !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
+                                    								<input type="hidden" name="_method" value="DELETE">\
+                                    								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                    								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                    								<i class="glyphicon glyphicon-trash"></i>\
+                                    								</button>\
+                                    								</form></div>';
                             @endif ;
                             html += '</div>';
                             return html;
