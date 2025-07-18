@@ -731,7 +731,7 @@ class Crud
     public static function destroy($aId)
     {
         if (config('csgtcrud.usar_encripcion')) {
-            $aId = Crypt::encrypt($aId);
+            $aId = Crypt::decrypt($aId);
         }
 
         try {
