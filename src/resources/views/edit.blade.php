@@ -26,14 +26,20 @@
                     {{ csrf_field() }}
                     @foreach ($columns as $column)
                         @php
-                            $valor = $data ? $data->{$column['campoReal']} : $column['default'];
-                            $label = '<label for="' . $column['campoReal'] . '" class="control-label">' . $column['name'] . '</label>';
-                            $arr = ['class' => 'form-control'];
-                            //dd($columns);
-                            foreach ($column['validationRules'] as $regla) {
-                                $arr['data-fv-' . $regla] = 'true';
-                                $arr['data-fv-' . $regla . '-message'] = $column['validationRulesMessage'];
-                            }
+                            $real = $column['campoReal'];
+                            $valor = $data
+                                ? $data->{$column['campoReal']}
+                                : (old($column['campoReal']) ?:
+                                $column['default']);
+                            $label =
+                                '<label for="' .
+                                $column['campoReal'] .
+                                '" class="control-label">' .
+                                $column['name'] .
+                                '</label>';
+                            $arr = [
+                                'class' => 'form-control' . ($errors->has($real) ? ' is-invalid' : ''),
+                            ];
                         @endphp
                         <div class="{{ $column['editClass'] }}">
                             <div class="form-group">
@@ -44,22 +50,11 @@
                                         <div class="col-sm-6">
                                             @php
                                                 $arr['placeholder'] = 'Password';
-                                                $arr['data-fv-identical'] = 'true';
-                                                $arr['data-fv-identical-field'] = $column['campoReal'] . 'confirm';
-                                                $arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
-
-                                                if (!$data) {
-                                                    $arr['data-fv-notempty'] = 'true';
-                                                    $arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
-                                                }
                                             @endphp
                                             <input type="password" name="{{ $column['campoReal'] }}"
                                                 {!! arrayToFields($arr) !!}>
                                         </div>
                                         <div class="col-sm-6">
-                                            @php
-                                                $arr['data-fv-identical-field'] = $column['campoReal'];
-                                            @endphp
                                             <input type="password" name="{{ $column['campoReal'] . 'confirm' }}"
                                                 {!! arrayToFields($arr) !!}>
                                             @if ($data)
@@ -71,52 +66,42 @@
                                 @elseif($column['type'] == 'textarea')
                                     <!---------------------------- TEXTAREA ---------------------------------->
                                     {!! $label !!}
-                                    <div>
-                                        <textarea name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
-                                    </div>
+                                    <textarea name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
                                 @elseif($column['type'] == 'summernote')
                                     <!---------------------------- SUMMERNOTE ---------------------------------->
                                     {!! $label !!}
-                                    <div>
-                                        <?php $arr = ['class' => 'summernote']; ?>
-                                        <textarea name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
-                                    </div>
+                                    <?php $arr = ['class' => 'summernote']; ?>
+                                    <textarea name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
                                 @elseif($column['type'] == 'bool')
                                     <!---------------------------- BOOLEAN ---------------------------------->
                                     <div>&nbsp;</div>
-                                    <div>
-                                        <div class="checkbox">
-                                            <label>
-                                                <input type="checkbox" name="{{ $column['campoReal'] }}" value="1"
-                                                    {{ $valor == 1 ? 'checked' : '' }}>
-                                                {!! $column['name'] !!}
-                                            </label>
-                                            <input class="hiddencheckbox" type='hidden' value='0'
-                                                name='{{ $column['campoReal'] }}'>
-                                        </div>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="{{ $column['campoReal'] }}" value="1"
+                                                {{ $valor == 1 ? 'checked' : '' }}>
+                                            {!! $column['name'] !!}
+                                        </label>
+                                        <input class="hiddencheckbox" type='hidden' value='0'
+                                            name='{{ $column['campoReal'] }}'>
                                     </div>
                                 @elseif($column['type'] == 'date')
                                     <!---------------------------- DATE ---------------------------------->
                                     {!! $label !!}
-                                    <div>
-                                        <input id="div{!! $column['campoReal'] !!}" type="date"
-                                            class="form-control {{ $column['utc'] ? 'dputc' : 'dp' }}"
-                                            name="{{ $column['campoReal'] }}" data-value="{{ $valor }}"
-                                            {!! arrayToFields($arr) !!}>
-                                    </div>
+                                    <input id="div{!! $column['campoReal'] !!}" type="date"
+                                        class="{{ $arr['class'] }} {{ $column['utc'] ? 'dputc' : 'dp' }}"
+                                        name="{{ $column['campoReal'] }}" data-value="{{ $valor }}"
+                                        {!! arrayToFields($arr) !!}>
                                 @elseif($column['type'] == 'datetime')
                                     <!---------------------------- DATETIME ---------------------------------->
                                     {!! $label !!}
-                                    <div>
-                                        <input id="div{!! $column['campoReal'] !!}" type="datetime-local"
-                                            class="form-control {{ $column['utc'] ? 'dtputc' : 'dtp' }}"
-                                            name="{{ $column['campoReal'] }}" data-value="{{ $valor }}"
-                                            {!! arrayToFields($arr) !!}>
-                                    </div>
+                                    <input id="div{!! $column['campoReal'] !!}" type="datetime-local"
+                                        class="{{ $arr['class'] }} {{ $column['utc'] ? 'dtputc' : 'dtp' }}"
+                                        name="{{ $column['campoReal'] }}" data-value="{{ $valor }}"
+                                        {!! arrayToFields($arr) !!}>
                                 @elseif($column['type'] == 'combobox')
                                     <!---------------------------- COMBOBOX ---------------------------------->
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] = 'selectpicker ' . $arr['class'];
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -133,7 +118,7 @@
                                 @elseif($column['type'] == 'multi')
                                     <!---------------------------- MULTI ---------------------------------->
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] = 'selectpicker ' . $arr['class'];
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -152,19 +137,17 @@
                                 @elseif($column['type'] == 'enum')
                                     <!---------------------------- ENUM ---------------------------------->
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] = 'selectpicker ' . $arr['class'];
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
-                                    <div>
-                                        <select name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
-                                            @foreach ($column['enumarray'] as $id => $opcion)
-                                                <option value="{{ $id }}"
-                                                    {{ $valor == $id ? "selected='selected'" : '' }}>
-                                                    {!! $opcion !!}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    <select name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
+                                        @foreach ($column['enumarray'] as $id => $opcion)
+                                            <option value="{{ $id }}"
+                                                {{ $valor == $id ? "selected='selected'" : '' }}>
+                                                {!! $opcion !!}</option>
+                                        @endforeach
+                                    </select>
                                 @elseif($column['type'] == 'file' || $column['type'] == 'image' || $column['type'] == 'securefile')
                                     <!---------------------------- FILE/IMAGE/SECUREFILE ---------------------------------->
                                     {!! $label !!}
@@ -182,12 +165,14 @@
                                 @else
                                     <!---------------------------- DEFAULT ---------------------------------->
                                     {!! $label !!}
-                                    <div>
-                                        <input type="text" name="{{ $column['campoReal'] }}"
-                                            value="{{ $valor }}" {!! arrayToFields($arr) !!}>
-                                    </div>
+                                    <input type="text" name="{{ $column['campoReal'] }}" value="{{ $valor }}"
+                                        {!! arrayToFields($arr) !!}>
                                 @endif
+                                @error($real)
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
+
                         </div>
                     @endforeach
                 </div>

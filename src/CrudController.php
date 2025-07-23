@@ -3,7 +3,6 @@ namespace Csgt\Crud;
 
 use DB;
 use Storage;
-use Response;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -33,6 +32,7 @@ class CrudController extends BaseController
     private $wheres       = [];
     private $wheresIn     = [];
     private $wheresRaw    = [];
+    private $validations  = [];
     private $ignoreFields = ['_token'];
     private $breadcrumb   = ['mostrar' => true, 'breadcrumb' => []];
 
@@ -134,6 +134,7 @@ class CrudController extends BaseController
         // abort(400, json_encode($request->all()));
 
         $this->setup($request);
+        $request->validate($this->validations);
         $fields = Arr::except($request->all(), $this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
@@ -709,26 +710,28 @@ class CrudController extends BaseController
             dd('setField must have a value for "campo"');
         }
 
-        $nombre        = (!array_key_exists('name', $aParams) ? str_replace('_', ' ', ucfirst($aParams['field'])) : $aParams['name']);
-        $edit          = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
-        $show          = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
-        $tipo          = (!array_key_exists('type', $aParams) ? 'string' : $aParams['type']);
-        $class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
-        $default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
-        $reglas        = (!array_key_exists('validationRules', $aParams) ? [] : $aParams['validationRules']);
-        $decimals      = (!array_key_exists('decimals', $aParams) ? 0 : $aParams['decimals']);
-        $collection    = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
-        $reglasmensaje = (!array_key_exists('validationRulesMessage', $aParams) ? '' : $aParams['validationRulesMessage']);
-        $filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
-        $filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
-        $fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
-        $target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
-        $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
-        $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
-        $filedisk      = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
-        $utc           = (!array_key_exists('utc', $aParams) ? true : $aParams['utc']);
-        $editClass     = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
-        $searchable    = true;
+        if (array_key_exists('validationRules', $aParams)) {
+            $this->validations[$aParams['field']] = $aParams['validationRules'];
+        }
+
+        $nombre     = (!array_key_exists('name', $aParams) ? str_replace('_', ' ', ucfirst($aParams['field'])) : $aParams['name']);
+        $edit       = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
+        $show       = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
+        $tipo       = (!array_key_exists('type', $aParams) ? 'string' : $aParams['type']);
+        $class      = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
+        $default    = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
+        $decimals   = (!array_key_exists('decimals', $aParams) ? 0 : $aParams['decimals']);
+        $collection = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
+        $filepath   = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
+        $filewidth  = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
+        $fileheight = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
+        $target     = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
+        $enumarray  = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
+        $isforeign  = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
+        $filedisk   = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
+        $utc        = (!array_key_exists('utc', $aParams) ? true : $aParams['utc']);
+        $editClass  = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
+        $searchable = true;
 
         if (!in_array($tipo, $tipos)) {
             dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
@@ -776,29 +779,27 @@ class CrudController extends BaseController
         }
 
         $arr = [
-            'name'                   => $nombre,
-            'field'                  => $aParams['field'],
-            'alias'                  => $alias,
-            'campoReal'              => $campoReal,
-            'type'                   => $tipo,
-            'show'                   => $show,
-            'editable'               => $edit,
-            'default'                => $default,
-            'validationRules'        => $reglas,
-            'validationRulesMessage' => $reglasmensaje,
-            'class'                  => $class,
-            'decimals'               => $decimals,
-            'collection'             => $collection,
-            'searchable'             => $searchable,
-            'enumarray'              => $enumarray,
-            'filepath'               => $filepath,
-            'filewidth'              => $filewidth,
-            'fileheight'             => $fileheight,
-            'filedisk'               => $filedisk,
-            'target'                 => $target,
-            'isforeign'              => $isforeign,
-            'utc'                    => $utc,
-            'editClass'              => $editClass,
+            'name'       => $nombre,
+            'field'      => $aParams['field'],
+            'alias'      => $alias,
+            'campoReal'  => $campoReal,
+            'type'       => $tipo,
+            'show'       => $show,
+            'editable'   => $edit,
+            'default'    => $default,
+            'class'      => $class,
+            'decimals'   => $decimals,
+            'collection' => $collection,
+            'searchable' => $searchable,
+            'enumarray'  => $enumarray,
+            'filepath'   => $filepath,
+            'filewidth'  => $filewidth,
+            'fileheight' => $fileheight,
+            'filedisk'   => $filedisk,
+            'target'     => $target,
+            'isforeign'  => $isforeign,
+            'utc'        => $utc,
+            'editClass'  => $editClass,
         ];
         $this->fields[] = $arr;
     }
