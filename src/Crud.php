@@ -493,7 +493,7 @@ class Crud
         $data = null;
         $hijo = 'Nuevo';
 
-        if (config('csgtcrud.usar_encripcion') && $aId != 0) {
+        if (config('csgtcrud.usar_encripcion') && $aId !== 0) {
             $aId = Crypt::decrypt($aId);
         }
 
