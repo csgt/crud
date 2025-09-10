@@ -2,9 +2,7 @@
 namespace Csgt\Crud;
 
 use DB;
-use Crypt;
 use Storage;
-use Response;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -63,7 +61,11 @@ class CrudController extends BaseController
 
     public function show(Request $request, $aId)
     {
-        $data = $this->model->find(Crypt::decrypt($aId));
+        if (config('csgtcrud.use_encryption')) {
+            $aId = decrypt($aId);
+        }
+        $data = $this->model->find($aId);
+
         if ($request->expectsJson()) {
             return response()->json($data);
         }
@@ -71,12 +73,15 @@ class CrudController extends BaseController
 
     public function edit(Request $request, $aId)
     {
+        if (config('csgtcrud.use_encryption')) {
+            $aId = decrypt($aId);
+        }
+        $data = $this->model->find($aId);
+
         $path = $this->downLevel($request->path()) . '/';
         if ($aId) {
-            $data       = $this->model->find(Crypt::decrypt($aId));
             $breadcrumb = $this->generateBreadcrumb('edit', $this->downLevel($path));
         } else {
-            $data       = null;
             $breadcrumb = $this->generateBreadcrumb('create', $path);
         }
 
@@ -175,7 +180,10 @@ class CrudController extends BaseController
             if ($campo['type'] == 'securefile') {
                 if ($request->hasFile($campo['field'])) {
                     if ($aId !== 0) {
-                        $existing = $this->model->find(Crypt::decrypt($aId));
+                        if (config('csgtcrud.use_encryption')) {
+                            $aId = decrypt($aId);
+                        }
+                        $existing = $this->model->find($aId);
                         if ($existing) {
                             if ($existing->{$campo['field']} != '') {
                                 Storage::disk($campo['filedisk'])->delete($existing->{$campo['field']});
@@ -212,7 +220,10 @@ class CrudController extends BaseController
 
             return redirect()->to($request->path() . $queryParameters);
         } else {
-            $m = $this->model->find(Crypt::decrypt($aId));
+            if (config('csgtcrud.use_encryption')) {
+                $aId = decrypt($aId);
+            }
+            $m = $this->model->find($aId);
             $m->update($fields);
             foreach ($newMulti as $relationship => $values) {
                 $m->{$relationship}()->detach();
@@ -229,7 +240,10 @@ class CrudController extends BaseController
     public function destroy(Request $request, $aId)
     {
         try {
-            $this->model->destroy(Crypt::decrypt($aId));
+            if (config('csgtcrud.use_encryption')) {
+                $aId = decrypt($aId);
+            }
+            $this->model->destroy($aId);
             $request->session()->flash('message', trans('csgtcrud::crud.registroeliminado'));
             $request->session()->flash('type', 'warning');
         } catch (Exception $e) {
@@ -383,7 +397,11 @@ class CrudController extends BaseController
                 }
 
                 if ($colName == $this->uniqueid) {
-                    $lastItem = Crypt::encrypt($item[$colName]);
+                    if (config('csgtcrud.use_encryption')) {
+                        $lastItem = encrypt($item[$colName]);
+                    } else {
+                        $lastItem = $item[$colName];
+                    }
                 } elseif ($esRelacion) {
                     //Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
                     if ($item[$relationName]) {
