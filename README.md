@@ -2,15 +2,16 @@
 
 This package is used to generate cruds.
 
-| Package Version | Bootstrap | Methods | Views engine | Dependencies | Crypt | Constructor | UTC Default |
-| --------------- | --------- | ------- | ------------ | ------------ | ----- | ----------- | ----------- |
-| 5.5             | 3         | es      | blade        | js           | yes   | yes         | no          |
-| 5.6             | 4         | es      | blade        | npm          | yes   | yes         | no          |
-| 6.0             | 4         | en      | blade        | npm          | yes   | yes         | no          |
-| 7.0 Beta        | 4         | en      | vue          | npm          | yes   | yes         | no          |
-| 8.0             | 4         | en      | blade        | npm          | no    | no          | yes         |
+| Package Version | Bootstrap | Methods | Views engine | Dependencies | Crypt | Constructor | UTC | Validation     |
+| --------------- | --------- | ------- | ------------ | ------------ | ----- | ----------- | --- | -------------- |
+| 5.5             | 3         | es      | blade        | js           | yes   | yes         | no  | formvaldiation |
+| 5.6             | 4         | es      | blade        | npm          | yes   | yes         | no  | formvaldiation |
+| 5.7             | 4         | es      | blade        | npm          | yes   | no          | no  | laravel        |
+| 6.0             | 4         | en      | blade        | npm          | yes   | yes         | no  | formvaldiation |
+| 7.0 Beta        | 4         | en      | vue          | npm          | yes   | yes         | no  | formvaldiation |
+| 8.0             | 4         | en      | blade        | npm          | no    | no          | yes | laravel        |
 
-## Upgrade from version 6 to version 8
+## Upgrade from version 6 to version 8 or from 5.6 to 5.7
 
 Add the following includes:
 
@@ -32,6 +33,7 @@ $this->setPermissions(Cancerbero::crudPermissions('module'));
 ```
 
 Remove all references to `Crypt::encrypt` and `Crypt::decrypt` if any methos were overriden.
+Remove all references to `validationRulesMessages` or `reglasmensaje`
 
 Remove the enclosing middleware. It is now unnecessary.
 
