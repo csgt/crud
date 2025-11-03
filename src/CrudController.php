@@ -181,6 +181,10 @@ class CrudController extends BaseController
 
                 $fields = Arr::except($fields, $campo['campo']);
             }
+
+            if ($campo['tipo'] == 'bool') {
+                $fields[$campo['campo']] = !empty($fields[$campo['campo']]) ? 1 : 0;
+            }
         }
 
         $nuevasVars = $this->getQueryString($request);
