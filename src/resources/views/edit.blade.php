@@ -67,12 +67,10 @@
                                 @elseif($columna['tipo'] == 'bool')
                                     <div class="checkbox">
                                         <label>
-                                            <input type="checkbox" name="{{ $columna['campoReal'] }}" value="1"
+                                            <input type="checkbox" name="{{ $columna['campoReal'] }}"
                                                 {{ $valor == 1 ? 'checked' : '' }}>
                                             {!! $columna['nombre'] !!}
                                         </label>
-                                        <input class="hiddencheckbox" type='hidden' value='0'
-                                            name='{{ $columna['campoReal'] }}'>
                                     </div>
                                     <!---------------------------- DATE ---------------------------------->
                                 @elseif($columna['tipo'] == 'date')
