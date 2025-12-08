@@ -2,14 +2,14 @@
 
 This package is used to generate cruds.
 
-| Package Version | Bootstrap | Methods | Views engine | Dependencies | Crypt | Constructor | UTC | Validation     |
-| --------------- | --------- | ------- | ------------ | ------------ | ----- | ----------- | --- | -------------- |
-| 5.5             | 3         | es      | blade        | js           | yes   | yes         | no  | formvaldiation |
-| 5.6             | 4         | es      | blade        | npm          | yes   | yes         | no  | formvaldiation |
-| 5.9             | 4         | es      | blade        | npm          | yes   | no          | no  | laravel        |
-| 6.0             | 4         | en      | blade        | npm          | yes   | yes         | no  | formvaldiation |
-| 7.0 Beta        | 4         | en      | vue          | npm          | yes   | yes         | no  | formvaldiation |
-| 8.0             | 4         | en      | blade        | npm          | no    | no          | yes | laravel        |
+| Package Version | Bootstrap | Methods | Views engine | Crypt | Constructor | UTC | Validation     |
+| --------------- | --------- | ------- | ------------ | ----- | ----------- | --- | -------------- |
+| 5.5             | 3         | es      | blade        | yes   | yes         | no  | formvaldiation |
+| 5.6             | 4         | es      | blade        | yes   | yes         | no  | formvaldiation |
+| 5.9             | 4         | es      | blade        | yes   | no          | no  | laravel        |
+| 6.0             | 4         | en      | blade        | yes   | yes         | no  | formvaldiation |
+| 7.0 Beta        | 4         | en      | vue          | yes   | yes         | no  | formvaldiation |
+| 8.0             | 4         | en      | blade        | no    | no          | yes | laravel        |
 
 ## Upgrade from version 6 to version 8 or from 5.6 to 5.9
 
