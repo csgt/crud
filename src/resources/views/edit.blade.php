@@ -4,15 +4,10 @@
 @stop
 @section('content')
     @php
-        $includefechas = false;
         $includeselect = false;
         $includesummernote = false;
 
         foreach ($columnas as $columna) {
-            if ($columna['tipo'] == 'date' || ($columna['tipo'] == 'datetime' || $columna['tipo'] == 'time')) {
-                $includefechas = true;
-            }
-
             if ($columna['tipo'] == 'combobox' || $columna['tipo'] == 'enum' || $columna['tipo'] == 'multi') {
                 $includeselect = true;
             }
@@ -31,26 +26,10 @@
             return $fields;
         }
     @endphp
-    @if (config('csgtcrud.pathToAssets', '/') != '')
-        <link type="text/css" rel="stylesheet" href="{!! config('csgtcrud.pathToAssets', '/') !!}css/formValidation.min.css">
-
-        @if ($includefechas)
-            <link type="text/css" rel="stylesheet" href="{!! config('csgtcrud.pathToAssets', '/') !!}css/bootstrap-datetimepicker.min.css">
-        @endif
-
-        @if ($includeselect)
-            <link type="text/css" rel="stylesheet" href="{!! config('csgtcrud.pathToAssets', '/') !!}css/selectize.css">
-            <link type="text/css" rel="stylesheet" href="{!! config('csgtcrud.pathToAssets', '/') !!}css/selectize.bootstrap3.css">
-        @endif
-
-        @if ($includesummernote)
-            <link type="text/css" rel="stylesheet" href="{!! config('csgtcrud.pathToAssets', '/') !!}css/summernote.min.css">
-        @endif
-    @endif
-    <div class="box">
-        <div class="box-body">
-            <form method="POST" action="/{{ $pathstore . $nuevasVars }}" class="form-horizontal" id="frmCrud"
-                enctype="multipart/form-data">
+    <form method="POST" action="/{{ $pathstore . $nuevasVars }}" class="form-horizontal" id="frmCrud"
+        enctype="multipart/form-data">
+        <div class="box">
+            <div class="box-body">
                 @if ($data)
                     <input type="hidden" name="_method" value="PUT">
                 @endif
@@ -58,7 +37,12 @@
                 @foreach ($columnas as $columna)
                     @php
                         $valor = $data ? $data->{$columna['campoReal']} : $columna['default'];
-                        $label = '<label for="' . $columna['campoReal'] . '" class="col-sm-2 control-label">' . $columna['nombre'] . '</label>';
+                        $label =
+                            '<label for="' .
+                            $columna['campoReal'] .
+                            '" class="col-sm-2 control-label">' .
+                            $columna['nombre'] .
+                            '</label>';
                         $arr = ['class' => 'form-control'];
                         //dd($columnas);
                         foreach ($columna['reglas'] as $regla) {
@@ -124,53 +108,19 @@
                             <!---------------------------- DATE ---------------------------------->
                         @elseif($columna['tipo'] == 'date')
                             @php
-                                $datearray = explode('-', $valor);
-                                if (count($datearray) == 3) {
-                                    $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0];
-                                } else {
-                                    $laFecha = null;
-                                }
-                                $arr['data-date-locale'] = 'es';
-                                $arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
-                                $arr['data-date-pickTime'] = 'false'; //Backwards compatible con datepicker 2
-                                $arr['data-date-format'] = 'DD/MM/YYYY';
-                                $arr['data-fv-date-format'] = 'DD/MM/YYYY';
-                                $arr['data-fv-date'] = 'true';
+                                $laFecha = substr($valor, 0, 10);
                             @endphp
                             {!! $label !!}
                             <div class="col-sm-10">
-                                <div id="div{!! $columna['campoReal'] !!}" class="input-group date catalogoFecha">
-                                    <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}"
-                                        {!! arrayToFields($arr) !!}>
-                                    <span class="input-group-addon"><span
-                                            class="glyphicon glyphicon-calendar"></span></span>
-                                </div>
+                                <input type="date" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}"
+                                    {!! arrayToFields($arr) !!}>
                             </div>
                             <!---------------------------- DATETIME ---------------------------------->
                         @elseif($columna['tipo'] == 'datetime')
-                            @php
-                                $datearray2 = explode(' ', $valor);
-                                if (count($datearray2) == 2) {
-                                    $hora = explode(':', $datearray2[1]);
-                                    $datearray = explode('-', $datearray2[0]);
-                                    $laFecha = $datearray[2] . '/' . $datearray[1] . '/' . $datearray[0] . ' ' . $hora[0] . ':' . $hora[1];
-                                } else {
-                                    $laFecha = null;
-                                }
-                                $arr['data-date-locale'] = 'es';
-                                $arr['data-date-language'] = 'es'; //Backwards compatible con datepicker 2
-                                $arr['data-date-format'] = 'DD/MM/YYYY HH:mm';
-                                $arr['data-fv-date-format'] = 'DD/MM/YYYY HH:mm';
-                                $arr['data-fv-date'] = 'true';
-                            @endphp
                             {!! $label !!}
                             <div class="col-sm-10">
-                                <div id="div{!! $columna['campoReal'] !!}" class="input-group date catalogoFecha">
-                                    <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $laFecha }}"
-                                        {!! arrayToFields($arr) !!}>
-                                    <span class="input-group-addon"><span
-                                            class="glyphicon glyphicon-calendar"></span></span>
-                                </div>
+                                <input type="datetime-local" name="{{ $columna['campoReal'] }}"
+                                    value="{{ $valor }}" {!! arrayToFields($arr) !!}>
                             </div>
                             <!---------------------------- TIME ---------------------------------->
                         @elseif($columna['tipo'] == 'time')
@@ -201,7 +151,8 @@
                                 <select name="{{ $columna['campo'] }}" {!! arrayToFields($arr) !!}>
                                     @foreach ($combos[$columna['alias']] as $id => $opcion)
                                         <option value="{{ $id }}"
-                                            {{ $campo == $id ? "selected='selected'" : '' }}>{!! $opcion !!}
+                                            {{ $campo == $id ? "selected='selected'" : '' }}>
+                                            {!! $opcion !!}
                                         </option>
                                     @endforeach
                                 </select>
@@ -235,7 +186,8 @@
                                 <select name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>
                                     @foreach ($columna['enumarray'] as $id => $opcion)
                                         <option value="{{ $id }}"
-                                            {{ $valor == $id ? "selected='selected'" : '' }}>{!! $opcion !!}
+                                            {{ $valor == $id ? "selected='selected'" : '' }}>
+                                            {!! $opcion !!}
                                         </option>
                                     @endforeach
                                 </select>
@@ -266,43 +218,19 @@
                         @endif
                     </div>
                 @endforeach
-                <div class="form-group">
-                    <div class="col-sm-offset-2 col-sm-10">
-                        <input type="submit" value="{{ trans('csgtcrud::crud.guardar') }}" class="btn btn-primary">&nbsp;
-                        <a href="javascript:window.history.back();"
-                            class="btn btn-default">{{ trans('csgtcrud::crud.cancelar') }}</a>
-                    </div>
-                </div>
-            </form>
+            </div>
+            <div class="box-footer">
+                <input type="submit" value="{{ trans('csgtcrud::crud.guardar') }}" class="btn btn-primary">&nbsp;
+                <a href="javascript:window.history.back();"
+                    class="btn btn-default">{{ trans('csgtcrud::crud.cancelar') }}</a>
+            </div>
         </div>
-    </div>
+    </form>
 @endsection
 
 @section('javascript')
-    @if (config('csgtcrud.pathToAssets', '/') != '')
-        <script src="{!! config('csgtcrud.pathToAssets', '/') !!}js/formValidation.min.js"></script>
-        <script src="{!! config('csgtcrud.pathToAssets', '/') !!}js/framework/bootstrap.min.js"></script>
-
-        @if ($includefechas)
-            <script src="{!! config('csgtcrud.pathToAssets', '/') !!}js/moment-with-locales.min.js"></script>
-            <script src="{!! config('csgtcrud.pathToAssets', '/') !!}js/bootstrap-datetimepicker.min.js"></script>
-        @endif
-
-        @if ($includeselect)
-            <script src="{!! config('csgtcrud.pathToAssets', '/') !!}js/selectize.min.js"></script>
-        @endif
-
-        @if ($includesummernote)
-            <script src="{!! config('csgtcrud.pathToAssets', '/') !!}js/summernote.min.js"></script>
-            <script src="{!! config('csgtcrud.pathToAssets', '/') !!}js/summernote-es-ES.js"></script>
-        @endif
-    @endif
-
     <script type="text/javascript">
         $(function() {
-            @if ($includefechas)
-                $('.catalogoFecha').datetimepicker();
-            @endif
             @if ($includeselect)
                 $('.selectpicker').selectize();
             @endif
@@ -311,14 +239,6 @@
                     'lang': 'es-ES',
                 });
             @endif
-            $('#frmCrud').formValidation({
-                message: '{{ trans('csgtcrud::crud.revisarcampo') }}',
-                feedbackIcons: {
-                    valid: 'glyphicon glyphicon-ok',
-                    invalid: 'glyphicon glyphicon-remove',
-                    validating: 'glyphicon glyphicon-refresh'
-                }
-            });
 
             function makeCheckValidation(checkbox) {
                 if ($(checkbox).is(":checked")) {

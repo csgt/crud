@@ -82,6 +82,8 @@ class CrudController extends BaseController
         $breadcrumb = $this->generarBreadcrumb('edit', $this->downLevel($path));
         $nuevasVars = $this->getQueryString($request);
 
+        //dd($data);
+
         return view('csgtcrud::edit')
             ->with('pathstore', $path)
             ->with('template', $this->layout)
@@ -125,25 +127,20 @@ class CrudController extends BaseController
         foreach ($this->campos as $campo) {
             if (array_key_exists($campo['campo'], $fields)) {
                 if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
-                    $aFecha    = $fields[$campo['campo']];
-                    $fechahora = explode(' ', $fields[$campo['campo']]);
-
-                    if (sizeof($fechahora) == 2) {
-                        $formato    = 'd/m/Y H:i';
-                        $formatoOut = 'Y-m-d H:i';
-                        $aFecha     = substr($aFecha, 0, 16);
-                    } else {
-                        $formato    = 'd/m/Y';
-                        $formatoOut = 'Y-m-d';
-                    }
-
+                    $aFecha = $fields[$campo['campo']];
                     try {
-                        $fecha                   = Carbon::createFromFormat($formato, $aFecha);
+                        $fecha                   = Carbon::parse($aFecha);
                         $fields[$campo['campo']] = $fecha;
                     } catch (Exception $e) {
                         $fields[$campo['campo']] = null;
                     }
                 }
+            }
+
+            if ((($campo['tipo'] == 'date') || ($campo['tipo'] == 'datetime')) && $campo['utc']) {
+                $fields[$campo['campo']] = Carbon::parse($fields[$campo['campo']])
+                    ->shiftTimezone($request->__tz__)
+                    ->setTimezone('UTC');
             }
 
             if (($campo['tipo'] == 'file') || ($campo['tipo'] == 'image')) {

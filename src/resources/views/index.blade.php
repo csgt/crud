@@ -1,10 +1,10 @@
 @extends($layout)
 @section('titulo')
     {!! $titulo !!}
-@endsection
+@stop
 @section('breadcrumb')
     {!! $breadcrumb !!}
-@endsection
+@stop
 
 @section('javascript')
     <script>
@@ -80,13 +80,13 @@
                             @endif ;
                             @if ($permisos['delete'])
                                 html += '<div class="btn-group btn-group-xs">\
-                                            								<form action="/{!! Request::path() !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
-                                            								<input type="hidden" name="_method" value="DELETE">\
-                                            								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                            								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                            								<i class="fa fa-trash"></i>\
-                                            								</button>\
-                                            								</form></div>';
+                                                								<form action="/{!! Request::path() !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
+                                                								<input type="hidden" name="_method" value="DELETE">\
+                                                								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                								<i class="fa fa-trash"></i>\
+                                                								</button>\
+                                                								</form></div>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -104,7 +104,7 @@
                                     var date = moment.utc(data[{{ $loop->index }}]);
                                     if (!date.isValid()) return null
 
-                                    @if ($columna['utc'] == true)
+                                    @if ($columna['utc'] == false)
                                         date.local()
                                     @endif
 
@@ -207,7 +207,6 @@
             @endif ;
 
             $('.tabla-catalogo').on('init.dt', function() {
-                console.log('init');
                 $('.pagination').addClass('pagination-sm');
                 $('.dataTables_info').addClass('small text-muted');
                 @if ($permisos['add'])
@@ -227,8 +226,6 @@
             });
 
             $('.tabla-catalogo').on('processing.dt', function(e, settings, processing) {
-                console.log('processing');
-                console.log(processing);
                 if (processing == false)
                     $('#modal-procesando').modal('hide');
                 else
@@ -298,4 +295,4 @@
     @if (isset($extraView))
         @include($extraView)
     @endif
-@endsection
+@stop
