@@ -1,18 +1,12 @@
 @extends($layout)
 @section('titulo')
     {!! $titulo !!}
-@stop
+@endsection
 @section('breadcrumb')
     {!! $breadcrumb !!}
-@stop
+@endsection
 
 @section('javascript')
-    @if (config('csgtcrud.datatables.js', '/js/datatables.min.js') != '')
-        <script src="{!! config('csgtcrud.datatables.js', '/js/datatables.min.js') !!}"></script>
-    @endif
-    @if (config('csgtcrud.moment', '/js/moment-with-locales.min.js') != '')
-        <script src="{!! config('csgtcrud.moment', '/js/moment-with-locales.min.js') !!}"></script>
-    @endif
     <script>
         $(document).ready(function() {
             $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
@@ -86,13 +80,13 @@
                             @endif ;
                             @if ($permisos['delete'])
                                 html += '<div class="btn-group btn-group-xs">\
-            								<form action="/{!! Request::path() !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
-            								<input type="hidden" name="_method" value="DELETE">\
-            								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
-            								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-            								<i class="fa fa-trash"></i>\
-            								</button>\
-            								</form></div>';
+                                            								<form action="/{!! Request::path() !!}/' + id + '{!! $nuevasVars !!}" class="btn-delete" method="POST">\
+                                            								<input type="hidden" name="_method" value="DELETE">\
+                                            								<input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                            								<button type="submit" class="btn btn-xs btn-danger" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                            								<i class="fa fa-trash"></i>\
+                                            								</button>\
+                                            								</form></div>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -253,21 +247,8 @@
                 (aDec ? "." + Math.abs(n - i).toFixed(aDec).slice(2) : "");
         };
     </script>
-@stop
-
-@section('content')
-    <?php
-    $fontawesome = false;
-    foreach ($botonesExtra as $botonExtra) {
-        if (strpos($botonExtra['icon'], 'fa-')) {
-            $fontawesome = true;
-        }
-    }
-    ?>
-    <link type="text/css" rel="stylesheet" href="{!! config('csgtcrud.datatables.css', '/css/datatables.min.css') !!}">
-    @if ($fontawesome)
-        <link type="text/css" rel="stylesheet" href="{!! config('csgtcrud.font-awesome', '/css/font-awesome.min.css') !!}">
-    @endif
+@endsection
+@section('css')
     <style>
         .btn-toolbar-flex {
             display: flex;
@@ -277,7 +258,9 @@
             margin-left: 2px;
         }
     </style>
+@endsection
 
+@section('content')
     <div class="clearfix"></div>
     <div class="box">
         <div class="box-body">
@@ -315,4 +298,4 @@
     @if (isset($extraView))
         @include($extraView)
     @endif
-@stop
+@endsection
