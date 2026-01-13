@@ -630,7 +630,7 @@ class CrudController extends BaseController
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'collection',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc'];
+            'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
@@ -660,6 +660,7 @@ class CrudController extends BaseController
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
         $utc           = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
+        $editClass     = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable    = true;
 
         if (!in_array($tipo, $tipos)) {
@@ -726,6 +727,7 @@ class CrudController extends BaseController
             'target'        => $target,
             'isforeign'     => $isforeign,
             'utc'           => $utc,
+            'editClass'     => $editClass,
         ];
         $this->campos[] = $arr;
     }
