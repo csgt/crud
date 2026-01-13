@@ -80,13 +80,13 @@
                             @endif ;
                             @if ($permisos['destroy'])
                                 html += '\
-                                    <form action="/{!! Request::path() !!}/' + id + '{!! $queryParameters !!}" method="POST">\
-                                    <input type="hidden" name="_method" value="DELETE">\
-                                    <input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                    <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                    <i class="fa fa-trash"></i>\
-                                    </button>\
-                                    </form>';
+                                                                <form action="/{!! Request::path() !!}/' + id + '{!! $queryParameters !!}" method="POST">\
+                                                                <input type="hidden" name="_method" value="DELETE">\
+                                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                                <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                                <i class="fa fa-trash"></i>\
+                                                                </button>\
+                                                                </form>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -101,17 +101,34 @@
                             @if ($column['type'] == 'date' || $column['type'] == 'datetime' || $column['type'] == 'time')
                                 data: null,
                                 render: function(data) {
-                                    var date = moment.utc(data[{{ $loop->index }}]);
-                                    if (!date.isValid()) return null
-
-                                    @if ($column['utc'] == true)
-                                        date.local()
+                                    let raw = data[{{ $loop->index }}];
+                                    raw = raw.replace(/Z$/, "");
+                                    @if ($column['utc'] == false)
+                                        let date = new Date(raw + "Z");
+                                    @else
+                                        let date = new Date(raw);
                                     @endif
 
+                                    if (isNaN(date.getTime())) return null;
+
+                                    function formatDate(d) {
+                                        const dd = String(d.getDate()).padStart(2, "0");
+                                        const mm = String(d.getMonth() + 1).padStart(2, "0");
+                                        const yyyy = d.getFullYear();
+                                        return `${dd}-${mm}-${yyyy}`;
+                                    }
+
+                                    function formatDateTime(d) {
+                                        const ddmmyyyy = formatDate(d);
+                                        const hh = String(d.getHours()).padStart(2, "0");
+                                        const min = String(d.getMinutes()).padStart(2, "0");
+                                        return `${ddmmyyyy} ${hh}:${min}`;
+                                    }
+
                                     @if ($column['type'] == 'date')
-                                        return date.format('DD-MM-YYYY')
+                                        return formatDate(date);
                                     @else
-                                        return date.format('DD-MM-YYYY HH:mm')
+                                        return formatDateTime(date);
                                     @endif
                                 }
                             @elseif ($column['type'] == 'image')
