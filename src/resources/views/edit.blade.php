@@ -4,14 +4,16 @@
 @stop
 @section('content')
     @php
-        function arrayToFields($arr)
-        {
-            $callback = function ($key, $value) {
-                return $key . "=\"" . $value . "\"";
-            };
-            $fields = implode(' ', array_map($callback, array_keys($arr), $arr));
+        if (!function_exists('arrayToFields')) {
+            function arrayToFields($arr)
+            {
+                $callback = function ($key, $value) {
+                    return $key . "=\"" . $value . "\"";
+                };
+                $fields = implode(' ', array_map($callback, array_keys($arr), $arr));
 
-            return $fields;
+                return $fields;
+            }
         }
     @endphp
     <form method="POST" action="/{{ $pathstore . $queryParameters }}" class="form-horizontal" id="frmCrud"
