@@ -103,7 +103,7 @@
                                 @elseif($column['type'] == 'combobox')
                                     <!---------------------------- COMBOBOX ---------------------------------->
                                     @php
-                                        $arr['class'] = 'selectpicker ' . $arr['class'];
+                                        $arr['class'] = 'selectpicker form-select' . $arr['class'];
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -139,7 +139,7 @@
                                 @elseif($column['type'] == 'enum')
                                     <!---------------------------- ENUM ---------------------------------->
                                     @php
-                                        $arr['class'] = 'selectpicker ' . $arr['class'];
+                                        $arr['class'] = 'selectpicker form-select ' . $arr['class'];
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
