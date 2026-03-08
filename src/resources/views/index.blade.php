@@ -41,7 +41,16 @@
                     },
                 },
                 bLengthChange: false,
-                sDom: '<"row" @if ($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-add">>>>     t<"pull-left"i><"pull-right"p>',
+                layout: {
+                    topStart: 'pageLength',
+                    topEnd: ['search', {
+                        div: {
+                            className: 'btn-group-add d-inline-block ms-2 btn-sm'
+                        }
+                    }],
+                    bottomStart: 'info',
+                    bottomEnd: 'paging'
+                },
                 iDisplayLength: {!! $perPage !!},
                 columnDefs: [{
                         targets: -1,
@@ -79,14 +88,16 @@
                                     '/edit/{!! $queryParameters !!}"><i class="fa fa-pencil-alt"></i></a>';
                             @endif ;
                             @if ($permisos['destroy'])
-                                html += '\
-                                                                <form action="/{!! Request::path() !!}/' + id + '{!! $queryParameters !!}" method="POST">\
-                                                                <input type="hidden" name="_method" value="DELETE">\
-                                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                                                <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                                                <i class="fa fa-trash"></i>\
-                                                                </button>\
-                                                                </form>';
+                                html +=
+                                    '\
+                                                                                                        <form action="/{!! Request::path() !!}/' +
+                                    id + '{!! $queryParameters !!}" method="POST">\
+                                                                                                        <input type="hidden" name="_method" value="DELETE">\
+                                                                                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                                                                        <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                                                                        <i class="fa fa-trash"></i>\
+                                                                                                        </button>\
+                                                                                                        </form>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -222,7 +233,6 @@
             @endif ;
 
             $('.dataTable').on('init.dt', function() {
-                console.log('init');
                 $('.pagination').addClass('pagination-sm');
                 $('.dataTables_info').addClass('small text-muted');
                 @if ($permisos['create'])
@@ -254,7 +264,6 @@
 @stop
 
 @section('content')
-    <div class="clearfix"></div>
     <div class="card">
         <div class="card-body">
             <div class="{{ $responsive ? 'table-responsive' : '' }}">

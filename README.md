@@ -9,7 +9,7 @@ This package is used to generate cruds.
 | 5.9             | 4         | es      | blade        | yes   | no          | no  | laravel        |
 | 6.0             | 4         | en      | blade        | yes   | yes         | no  | formvaldiation |
 | 7.0 Beta        | 4         | en      | vue          | yes   | yes         | no  | formvaldiation |
-| 8.0             | 4         | en      | blade        | no    | no          | yes | laravel        |
+| 8.0             | 4/5       | en      | blade        | no    | no          | yes | laravel        |
 
 ## Upgrade from version 6 to version 8 or from 5.6 to 5.9
 
