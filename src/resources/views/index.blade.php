@@ -90,14 +90,14 @@
                             @if ($permisos['destroy'])
                                 html +=
                                     '\
-                                                                                                        <form action="/{!! Request::path() !!}/' +
+                                                                                                            <form action="/{!! Request::path() !!}/' +
                                     id + '{!! $queryParameters !!}" method="POST">\
-                                                                                                        <input type="hidden" name="_method" value="DELETE">\
-                                                                                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                                                                                        <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                                                                                        <i class="fa fa-trash"></i>\
-                                                                                                        </button>\
-                                                                                                        </form>';
+                                                                                                            <input type="hidden" name="_method" value="DELETE">\
+                                                                                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                                                                            <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                                                                            <i class="fa fa-trash"></i>\
+                                                                                                            </button>\
+                                                                                                            </form>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -113,12 +113,14 @@
                                 data: null,
                                 render: function(data) {
                                     let raw = data[{{ $loop->index }}];
+                                    if (raw == null || raw === "") return null;
                                     raw = raw.replace(/Z$/, "");
                                     @if ($column['utc'] == false)
                                         let date = new Date(raw + "Z");
                                     @else
                                         let date = new Date(raw);
                                     @endif
+
 
                                     if (isNaN(date.getTime())) return null;
 
