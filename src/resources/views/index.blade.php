@@ -42,12 +42,17 @@
                 },
                 bLengthChange: false,
                 layout: {
-                    topStart: 'pageLength',
-                    topEnd: ['search', {
+                    topEnd: {
                         div: {
                             className: 'btn-group-add d-inline-block ms-2 btn-sm'
                         }
-                    }],
+                    },
+                    topStart: {
+                        search: {
+                            placeholder: '{{ trans('csgtcrud::crud.buscar') }}',
+                            className: 'w-100'
+                        }
+                    },
                     bottomStart: 'info',
                     bottomEnd: 'paging'
                 },
@@ -90,14 +95,15 @@
                             @if ($permisos['destroy'])
                                 html +=
                                     '\
-                                                                                                            <form action="/{!! Request::path() !!}/' +
-                                    id + '{!! $queryParameters !!}" method="POST">\
-                                                                                                            <input type="hidden" name="_method" value="DELETE">\
-                                                                                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                                                                                            <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                                                                                            <i class="fa fa-trash"></i>\
-                                                                                                            </button>\
-                                                                                                            </form>';
+                                                                                                                                                                <form action="/{!! Request::path() !!}/' +
+                                    id +
+                                    '{!! $queryParameters !!}" method="POST">\
+                                                                                                                                                                <input type="hidden" name="_method" value="DELETE">\
+                                                                                                                                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                                                                                                                                <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                                                                                                                                <i class="fa fa-trash"></i>\
+                                                                                                                                                                </button>\
+                                                                                                                                                                </form>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -168,7 +174,8 @@
                                         var valArray = val.split('.')
                                         var extension = valArray[valArray.length - 1]
                                         if (["jpg", "png", "gif"].indexOf(extension)) {
-                                            return '<img width="{!! $column['filewidth'] !!}" src="' + val +
+                                            return '<img width="{!! $column['filewidth'] !!}" src="' +
+                                                val +
                                                 '">';
                                         }
                                         return '<a href="{!! $column['filepath'] !!}' + val +
