@@ -15,14 +15,8 @@
                 processing: true,
                 serverSide: true,
                 searchDelay: 500,
-                @if ($stateSave)
-                    stateSave: true,
-                    stateSaveParams: function(settings, data) {
-                        data.columns.forEach(function(column) {
-                            delete column.visible;
-                        });
-                    },
-                @endif
+                stateSave: true,
+
                 @if ($orders)
                     order: [
                         @foreach ($orders as $col => $orden)
@@ -42,15 +36,33 @@
                 },
                 bLengthChange: false,
                 layout: {
-                    topEnd: {
-                        div: {
-                            className: 'btn-group-add d-inline-block ms-2 btn-sm'
-                        }
+                    topEnd: function() {
+                        let toolbar = document.createElement('div');
+                        var html =
+                            '<div class="btn-group btn-group-sm" role="group" aria-label="Actions">';
+                        @if ($permisos['create'])
+                            html +=
+                                '<a type="button" class="btn btn-sm btn-dark" href = "/{!! Request::path() . '/create/' . $queryParameters !!}"> {{ trans('csgtcrud::crud.agregar') }} </a>';
+                        @endif
+                        @foreach ($extraActions as $action)
+                            html +=
+                                '<a type="button" class="btn btn-sm btn-dark" href="{!! $action['url'] !!}"> {{ $action['title'] }} </a>';
+                        @endforeach
+                        html += '</div>';
+
+                        toolbar.innerHTML = html;
+                        return toolbar;
                     },
+
                     topStart: {
                         search: {
                             placeholder: '{{ trans('csgtcrud::crud.buscar') }}',
                             className: 'w-100'
+                        }
+                    },
+                    bottom: {
+                        div: {
+                            className: 'mt-2'
                         }
                     },
                     bottomStart: 'info',
@@ -95,15 +107,15 @@
                             @if ($permisos['destroy'])
                                 html +=
                                     '\
-                                                                                                                                                                <form action="/{!! Request::path() !!}/' +
+                                                                                                                                                                                                                                                                            <form action="/{!! Request::path() !!}/' +
                                     id +
                                     '{!! $queryParameters !!}" method="POST">\
-                                                                                                                                                                <input type="hidden" name="_method" value="DELETE">\
-                                                                                                                                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">\
-                                                                                                                                                                <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
-                                                                                                                                                                <i class="fa fa-trash"></i>\
-                                                                                                                                                                </button>\
-                                                                                                                                                                </form>';
+                                                                                                                                                                                                                                                                            <input type="hidden" name="_method" value="DELETE">\
+                                                                                                                                                                                                                                                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">\
+                                                                                                                                                                                                                                                                            <button type="submit" class="btn btn-sm  btn-danger ml-1" title="{{ trans('csgtcrud::crud.eliminar') }}" onclick="return confirm(\'{{ trans('csgtcrud::crud.seguro') }}\')">\
+                                                                                                                                                                                                                                                                            <i class="fa fa-trash"></i>\
+                                                                                                                                                                                                                                                                            </button>\
+                                                                                                                                                                                                                                                                            </form>';
                             @endif ;
                             html += '</div>';
                             return html;
@@ -240,25 +252,6 @@
             @if (!$permisos['update'] && !$permisos['destroy'] && count($extraButtons) == 0)
                 oTable.fnSetColumnVis(-1, false);
             @endif ;
-
-            $('.dataTable').on('init.dt', function() {
-                $('.pagination').addClass('pagination-sm');
-                $('.dataTables_info').addClass('small text-muted');
-                @if ($permisos['create'])
-                    $('.btn-group-add').html(
-                        '<a type="button" class="btn btn-dark" href="/{!! Request::path() . '/create/' . $queryParameters !!}">{{ trans('csgtcrud::crud.agregar') }}</a>'
-                    );
-                @endif
-                @foreach ($extraActions as $action)
-                    $('.btn-group-add').append(
-                        '<a type="button" class="btn btn-dark" href="{!! $action['url'] !!}">{{ $action['title'] }}</a>'
-                    );
-                @endforeach
-                $('.dt-buttons').addClass('btn-group-sm');
-                $('div[id$=_filter] input').css('width', '100%').attr('placeholder',
-                    '{{ trans('csgtcrud::crud.buscar') }}');
-                $('.dataTables_filter label').css('width', '100%');
-            });
         });
 
         Number.prototype.formatMoney = function(aDec) {
