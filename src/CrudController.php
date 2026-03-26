@@ -490,7 +490,7 @@ class CrudController extends BaseController
                 switch ($aTipo) {
                     case 'edit':
                         $html .= '<li class="breadcrumb-item">
-                                <a href="/' . $aUrl . '">' . $this->title . '</a>
+                                <a href="' . $aUrl . '">' . $this->title . '</a>
                             </li>
                             <li class="breadcrumb-item active">
                                 <i class="far fa-pencil"></i> Editar
@@ -498,7 +498,7 @@ class CrudController extends BaseController
                         break;
                     case 'create':
                         $html .= '<li class="breadcrumb-item">
-                                <a href="/' . $aUrl . '">' . $this->title . '</a>
+                                <a href="' . $aUrl . '">' . $this->title . '</a>
                             </li>
                             <li class="breadcrumb-item active">
                                 <i class="far fa-plus-circle"></i> Nuevo
