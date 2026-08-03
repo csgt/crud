@@ -1,42 +1,65 @@
 <?php
+
 namespace Csgt\Crud;
 
+use Carbon\Carbon;
 use DB;
 use Exception;
-use Carbon\Carbon;
-use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Arr;
 
 class CrudController extends BaseController
 {
-    private $uniqueid      = '___id___';
-    private $modelo        = null;
-    private $showExport    = true;
-    private $showSearch    = true;
-    private $stateSave     = true;
-    private $responsive    = true;
-    private $layout        = 'layouts.app';
-    private $perPage       = 50;
-    private $titulo        = '';
-    private $campos        = [];
-    private $camposHidden  = [];
-    private $permisos      = ['add' => false, 'edit' => false, 'delete' => false];
-    private $orders        = [];
-    private $botonesExtra  = [];
+    private $uniqueid = '___id___';
+
+    private $modelo = null;
+
+    private $showExport = true;
+
+    private $showSearch = true;
+
+    private $stateSave = true;
+
+    private $responsive = true;
+
+    private $layout = 'layouts.app';
+
+    private $perPage = 50;
+
+    private $titulo = '';
+
+    private $campos = [];
+
+    private $camposHidden = [];
+
+    private $permisos = ['add' => false, 'edit' => false, 'delete' => false];
+
+    private $orders = [];
+
+    private $botonesExtra = [];
+
     private $accionesExtra = [];
-    private $joins         = [];
-    private $leftJoins     = [];
-    private $wheres        = [];
-    private $wheresIn      = [];
-    private $wheresRaw     = [];
-    private $reglas        = [];
-    private $noGuardar     = ['_token'];
-    private $breadcrumb    = ['mostrar' => true, 'breadcrumb' => []];
+
+    private $joins = [];
+
+    private $leftJoins = [];
+
+    private $wheres = [];
+
+    private $wheresIn = [];
+
+    private $wheresRaw = [];
+
+    private $reglas = [];
+
+    private $noGuardar = ['_token'];
+
+    private $breadcrumb = ['mostrar' => true, 'breadcrumb' => []];
 
     public function setup(Request $request)
     {
-        abort(400, "Este método debe ser sobreescrito en el controlador padre");
+        abort(400, 'Este método debe ser sobreescrito en el controlador padre');
     }
 
     public function index(Request $request)
@@ -82,24 +105,24 @@ class CrudController extends BaseController
     {
         $this->setup($request);
 
-        $path = $this->downLevel($request->path()) . '/';
+        $path = $this->downLevel($request->path()).'/';
         if ($aId) {
             if (config('csgtcrud.usar_encripcion')) {
                 $aId = decrypt($aId);
             }
-            $data       = $this->modelo->find($aId);
+            $data = $this->modelo->find($aId);
             $breadcrumb = $this->generarBreadcrumb('edit', $this->downLevel($path));
         } else {
-            $data       = null;
+            $data = null;
             $breadcrumb = $this->generarBreadcrumb('create', $path);
         }
 
         $camposEdit = $this->getCamposEditMine();
-        $combos     = $this->fillCombos($camposEdit);
+        $combos = $this->fillCombos($camposEdit);
         $nuevasVars = $this->getQueryString($request);
 
         $uses = [
-            'selectize'  => false,
+            'selectize' => false,
             'summernote' => false,
         ];
 
@@ -147,7 +170,7 @@ class CrudController extends BaseController
             if (array_key_exists($campo['campo'], $fields)) {
                 if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
                     try {
-                        $fecha                   = Carbon::parse($fields[$campo['campo']]);
+                        $fecha = Carbon::parse($fields[$campo['campo']]);
                         $fields[$campo['campo']] = $fecha;
                     } catch (Exception $e) {
                         $fields[$campo['campo']] = null;
@@ -159,10 +182,10 @@ class CrudController extends BaseController
                 if ($request->hasFile($campo['campo'])) {
                     $file = $request->file($campo['campo']);
 
-                    $filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
-                    $path     = public_path() . $campo['filepath'];
+                    $filename = date('Ymdhis').mt_rand(1, 1000).'.'.strtolower($file->getClientOriginalExtension());
+                    $path = public_path().$campo['filepath'];
 
-                    if (!file_exists($path)) {
+                    if (! file_exists($path)) {
                         mkdir($path, 0777, true);
                     }
 
@@ -183,7 +206,7 @@ class CrudController extends BaseController
             }
 
             if ($campo['tipo'] == 'bool') {
-                $fields[$campo['campo']] = !empty($fields[$campo['campo']]) ? 1 : 0;
+                $fields[$campo['campo']] = ! empty($fields[$campo['campo']]) ? 1 : 0;
             }
         }
 
@@ -197,7 +220,7 @@ class CrudController extends BaseController
                 return response()->json($item);
             }
 
-            return redirect()->to($request->path() . $nuevasVars);
+            return redirect()->to($request->path().$nuevasVars);
         } else {
             if (config('csgtcrud.usar_encripcion')) {
                 $aId = decrypt($aId);
@@ -212,7 +235,7 @@ class CrudController extends BaseController
                 return response()->json($m);
             }
 
-            return redirect()->to($this->downLevel($request->path()) . $nuevasVars);
+            return redirect()->to($this->downLevel($request->path()).$nuevasVars);
         }
     }
 
@@ -242,16 +265,17 @@ class CrudController extends BaseController
     {
         $this->setup($request);
 
-        //Definimos las variables que nos ayudar'an en el proceso de devolver la data
-        $search          = $request->search;
-        $orders          = $request->order;
-        $columns         = $this->getCamposShowMine();
-        $campos          = $this->getSelect($columns);
+        // Definimos las variables que nos ayudar'an en el proceso de devolver la data
+        $search = $request->search;
+        $orders = $request->order;
+        $columns = $this->getCamposShowMine();
+        $campos = $this->getSelect($columns);
         $recordsFiltered = 0;
-        $recordsTotal    = 0;
+        $recordsTotal = 0;
 
-        //Se obtienen los campos a mostrar desde el modelo
-        $data = $this->modelo->select($campos);
+        // Se obtienen los campos a mostrar desde el modelo
+        $data = $this->modelo->newQuery();
+        $data->select($campos);
 
         $foreigns = $this->getCamposShowForeign();
 
@@ -271,82 +295,79 @@ class CrudController extends BaseController
                 $data->addSelect($foreignModel->getQualifiedParentKeyName());
             }
         }
-        $data->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
+        $data->addSelect($this->modelo->getKeyName().' AS '.$this->uniqueid);
         foreach ($this->leftJoins as $leftJoin) {
             $data->leftJoin($leftJoin['tabla'], $leftJoin['col1'], $leftJoin['operador'], $leftJoin['col2']);
         }
 
-        //Filtramos a partir del where
+        // Filtramos a partir del where
         foreach ($this->wheres as $where) {
             $data->where($where['columna'], $where['operador'], $where['valor']);
         }
-        //Filtramos a partir del whereIn
+        // Filtramos a partir del whereIn
         foreach ($this->wheresIn as $whereIn) {
             $data->whereIn($whereIn['columna'], $whereIn['arreglo']);
         }
-        //Filtramos a partir de WhereRaw
+        // Filtramos a partir de WhereRaw
         foreach ($this->wheresRaw as $whereRaw) {
             $data->whereRaw($whereRaw);
         }
 
-        $data = $data->get();
-        //Obtenemos la cantidad de registros antes de filtrar
-        $recordsTotal = $data->count();
+        // Obtenemos la cantidad de registros antes de filtrar
+        $recordsTotal = (clone $data)->count();
 
-        //Filtramos con el campo de la vista
+        // Filtramos con el campo de la vista en la base de datos
         if ($search['value'] != '') {
-            if ($recordsTotal > 0) {
-                $data = $data->filter(function ($item) use ($search) {
-                    $result = false;
-                    foreach ($item->getAttributes() as $column) {
-                        $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                    }
-                    $relations = $item->getRelations();
-                    foreach ($relations as $relation) {
-                        if ($relation && method_exists($relation, 'getAttributes')) {
-                            foreach ($relation->getAttributes() as $column) {
-                                $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                            }
-                        }
-                    }
-
-                    return $result;
-                });
-            }
+            $this->applySearchToQuery($data, $search['value'], $columns, $foreigns);
         }
 
-        //Obtenemos la cantidad de registros luego de haber filtrado
-        $recordsFiltered = $data->count();
+        // Obtenemos la cantidad de registros luego de haber filtrado
+        $recordsFiltered = $search['value'] != '' ? (clone $data)->count() : $recordsTotal;
 
-        //Ahora order by
+        // Ahora order by en la base de datos
         $ordenColumnas = $this->getCamposOrden();
         if ($orders) {
             foreach ($orders as $order) {
-                if ($order['dir'] == 'asc') {
-                    $data = $data->sortBy($ordenColumnas[$order['column']]);
+                $columnName = isset($ordenColumnas[$order['column']]) ? $ordenColumnas[$order['column']] : null;
+                if ($columnName === null) {
+                    continue;
+                }
+
+                if ($columnName == $this->uniqueid) {
+                    $data->orderBy($this->modelo->getTable().'.'.$this->modelo->getKeyName(), $order['dir']);
                 } else {
-                    $data = $data->sortByDesc($ordenColumnas[$order['column']]);
+                    $data->orderBy($columnName, $order['dir']);
                 }
             }
         }
 
-        //Filtramos los registros y obtenemos el arreglo con la data
+        $this->debugQueryPlan($data, $request);
+
+        // Filtramos los registros y obtenemos el arreglo con la data
         $items = $data
-            ->splice($request->start)
-            ->take($request->length)
-            ->toArray();
+            ->offset((int) $request->start)
+            ->limit((int) $request->length)
+            ->get();
+
+        $multiRelations = array_values(array_unique(array_filter(array_map(function ($campo) {
+            return $campo['tipo'] === 'multi' ? $campo['campo'] : null;
+        }, $this->campos))));
+
+        if (! empty($multiRelations)) {
+            $items->load($multiRelations);
+        }
 
         $arr = [];
-        //dd($items);
+        // dd($items);
         foreach ($items as $item) {
-            $cols     = [];
+            $cols = [];
             $lastItem = '';
 
-            for ($i = 0; $i < sizeof($ordenColumnas); $i++) {
-                $colName             = '';
-                $relationName        = '';
+            for ($i = 0; $i < count($ordenColumnas); $i++) {
+                $colName = '';
+                $relationName = '';
                 $actualOrdenColumnas = $ordenColumnas[$i];
-                $tienePunto          = (strpos($ordenColumnas[$i], '.') !== false) && (strpos($ordenColumnas[$i], '"') === false);
+                $tienePunto = (strpos($ordenColumnas[$i], '.') !== false) && (strpos($ordenColumnas[$i], '"') === false);
 
                 $column = collect($this->campos)->first(function ($item, $key) use ($actualOrdenColumnas) {
                     return $item['campo'] == $actualOrdenColumnas;
@@ -362,7 +383,7 @@ class CrudController extends BaseController
 
                 if ($tienePunto) {
                     $helperString = explode('.', $ordenColumnas[$i]);
-                    $colName      = $helperString[1];
+                    $colName = $helperString[1];
                     $relationName = $helperString[0];
                     if (strpos($colName, ' AS ')) {
                         $colName = explode('AS ', $colName)[1];
@@ -382,20 +403,16 @@ class CrudController extends BaseController
                         $lastItem = $item[$colName];
                     }
                 } elseif ($esRelacion) {
-                    //Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
-                    if ($item[$relationName]) {
-                        if (array_key_exists(0, $item[$relationName])) {
-                            $cols[] = $item[$relationName][0][$colName];
-                        } else {
-                            if (array_key_exists($colName, $item[$relationName])) {
-                                $cols[] = $item[$relationName][$colName];
-                            } else {
-                                $cols[] = null;
-                            }
-                        }
-                    } else {
-                        $cols[] = null;
+                    // Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
+                    $relation = $item[$relationName];
+
+                    if ($relation instanceof \Illuminate\Support\Collection) {
+                        $relation = $relation->first();
+                    } elseif (is_array($relation) && array_key_exists(0, $relation)) {
+                        $relation = $relation[0];
                     }
+
+                    $cols[] = data_get($relation, $colName);
                 } else {
                     $fullCampo = array_filter($this->campos, function ($campo) use ($colName) {
                         return $campo['campo'] == $colName;
@@ -410,15 +427,17 @@ class CrudController extends BaseController
                             } else {
                                 $cols[] = $item[$colName];
                             }
-                        } else if ($fullCampoFixed['tipo'] == 'multi') {
-                            $methodName = 'fetch' . ucfirst($fullCampoFixed['campo']) . 'Column';
-                            $keyName    = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+                        } elseif ($fullCampoFixed['tipo'] == 'multi') {
+                            $methodName = 'fetch'.ucfirst($fullCampoFixed['campo']).'Column';
+                            $keyName = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+                            $relation = $item->{$fullCampoFixed['campo']} ?? collect();
 
                             $cols[] = implode(', ',
-                                $this->modelo
-                                    ->find($item[$this->uniqueid])
-                                    ->{$fullCampoFixed['campo']}
+                                $relation
                                     ->pluck($keyName)
+                                    ->filter(function ($value) {
+                                        return $value !== null && $value !== '';
+                                    })
                                     ->toArray()
                             );
                         } else {
@@ -429,7 +448,7 @@ class CrudController extends BaseController
             }
 
             $cols['DT_RowId'] = $lastItem;
-            $arr[]            = $cols;
+            $arr[] = $cols;
         }
 
         return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
@@ -444,6 +463,77 @@ class CrudController extends BaseController
         return $route;
     }
 
+    private function applySearchToQuery($query, $searchValue, $columns, $foreigns)
+    {
+        $searchValue = '%'.trim($searchValue).'%';
+
+        $query->where(function ($searchQuery) use ($searchValue, $columns, $foreigns) {
+            foreach ($columns as $column) {
+                $field = $column['campo'];
+                if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
+                    $searchQuery->orWhereRaw('LOWER('.$field.') LIKE ?', [$searchValue]);
+                } else {
+                    $searchQuery->orWhere($field, 'like', $searchValue);
+                }
+            }
+
+            foreach ($foreigns as $relation => $relationFields) {
+                $searchQuery->orWhereHas($relation, function ($relationQuery) use ($relationFields, $searchValue) {
+                    $relationQuery->where(function ($relationWhere) use ($relationFields, $searchValue) {
+                        foreach ($relationFields as $fields) {
+                            foreach ($fields as $field) {
+                                $field = trim($field);
+                                if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
+                                    $relationWhere->orWhereRaw('LOWER('.$field.') LIKE ?', [$searchValue]);
+                                } else {
+                                    $relationWhere->orWhere($field, 'like', $searchValue);
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    private function debugQueryPlan($query, Request $request)
+    {
+        // if (!$request->has('debug_explain')) {
+        //     return;
+        // }
+
+        $sql = $query->toSql();
+        $bindings = $query->getBindings();
+
+        $explainQuery = 'EXPLAIN '.$sql;
+        $explainBindings = $bindings;
+
+        try {
+            $results = DB::select($explainQuery, $explainBindings);
+            $this->logDebugInfo($sql, $bindings, $results);
+        } catch (Exception $e) {
+            $this->logDebugInfo($sql, $bindings, [['error' => $e->getMessage()]]);
+        }
+    }
+
+    private function logDebugInfo($sql, $bindings, $results)
+    {
+        if (app()->environment('production')) {
+            return;
+        }
+
+        $message = [
+            'sql' => $sql,
+            'bindings' => $bindings,
+            'explain' => $results,
+        ];
+
+        logger()->info('crud_query_explain', $message);
+        if (function_exists('dump')) {
+            dump($message);
+        }
+    }
+
     private function fillCombos($aCampos)
     {
         $combos = [];
@@ -455,12 +545,12 @@ class CrudController extends BaseController
                 }
 
                 $combos[$campo['alias']] = $arr;
-            } else if ($campo['tipo'] == 'multi') {
-                $methodName = 'fetch' . ucfirst($campo['campo']) . 'Column';
-                $keyName    = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+            } elseif ($campo['tipo'] == 'multi') {
+                $methodName = 'fetch'.ucfirst($campo['campo']).'Column';
+                $keyName = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
 
                 $options = $this->modelo
-                    ->{'fetch' . ucfirst($campo['campo'])}()
+                    ->{'fetch'.ucfirst($campo['campo'])}()
                     ->mapWithKeys(function ($item) use ($keyName) {
                         return [$item->{$item->getKeyName()} => $item->{$keyName}];
                     }
@@ -485,28 +575,28 @@ class CrudController extends BaseController
             if (empty($this->breadcrumb['breadcrumb'])) {
                 switch ($aTipo) {
                     case 'edit':
-                        $html .= '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="breadcrumb-item active"><i class="fa fa-pencil"></i> Editar</li>';
+                        $html .= '<li class="breadcrumb-item"><a href="/'.$aUrl.'">'.$this->titulo.'</a></li><li class="breadcrumb-item active"><i class="fa fa-pencil"></i> Editar</li>';
                         break;
                     case 'create':
-                        $html .= '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . $this->titulo . '</a></li><li class="breadcrumb-item active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
+                        $html .= '<li class="breadcrumb-item"><a href="/'.$aUrl.'">'.$this->titulo.'</a></li><li class="breadcrumb-item active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
                         break;
                     default:
-                        $html .= '<li class="breadcrumb-item active">' . $this->titulo . '</li>';
+                        $html .= '<li class="breadcrumb-item active">'.$this->titulo.'</li>';
                         break;
                 }
             } else {
-                $array     = $this->breadcrumb['breadcrumb'];
+                $array = $this->breadcrumb['breadcrumb'];
                 $htmlArray = [];
-                $lastItem  = end($array);
+                $lastItem = end($array);
                 switch ($aTipo) {
                     case 'edit':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/'.$aUrl.'">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</a></li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</li>';
                             } else {
-                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/'.$item['url'].'">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</a></li>';
                             }
                         }, $array);
 
@@ -515,29 +605,29 @@ class CrudController extends BaseController
                     case 'create':
                         $htmlArray = array_map(function ($item) use ($aUrl, $lastItem) {
                             if ($item == $lastItem) {
-                                return '<li class="breadcrumb-item"><a href="/' . $aUrl . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/'.$aUrl.'">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</a></li>';
                             } elseif ($item['url'] == '') {
-                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</li>';
                             } else {
-                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/'.$item['url'].'">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</a></li>';
                             }
                         }, $array);
 
                         $htmlArray[] = '<li class="breadcrumb-item active"><i class="fa fa-plus-circle"></i> Nuevo</li>';
                         break;
                     default:
-                        $htmlArray = array_map(function ($item) use ($aUrl) {
+                        $htmlArray = array_map(function ($item) {
                             if ($item['url'] == '') {
-                                return '<li class="breadcrumb-item active">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</li>';
+                                return '<li class="breadcrumb-item active">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</li>';
                             } else {
-                                return '<li class="breadcrumb-item"><a href="/' . $item['url'] . '">' . ($item['icon'] == '' ? '' : '<i class="' . $item['icon'] . '"></i> ') . $item['title'] . '</a></li>';
+                                return '<li class="breadcrumb-item"><a href="/'.$item['url'].'">'.($item['icon'] == '' ? '' : '<i class="'.$item['icon'].'"></i> ').$item['title'].'</a></li>';
                             }
                         }, $array);
                         break;
                 }
                 $html .= implode('', $htmlArray);
 
-                //Armarlo a partir del array
+                // Armarlo a partir del array
             }
             $html .= '</ol>';
         }
@@ -550,7 +640,7 @@ class CrudController extends BaseController
         $this->breadcrumb['mostrar'] = $aBool;
     }
 
-    /*==================== GETTERS =====================================*/
+    /* ==================== GETTERS ===================================== */
     private function getCamposOrden()
     {
         $tempArray = array_filter($this->campos, function ($c) {
@@ -567,7 +657,7 @@ class CrudController extends BaseController
     private function getCamposShow()
     {
         return array_values(array_filter($this->campos, function ($c) {
-            return ($c['show'] == true);
+            return $c['show'] == true;
         }));
     }
 
@@ -576,12 +666,11 @@ class CrudController extends BaseController
         return array_values(array_filter(
             $this->campos,
             function ($c) {
-                return (
+                return
                     $c['show'] == true &&
                     $c['tipo'] != 'multi' &&
                     (strpos($c['campo'], '.') === false ||
-                        strpos($c['campo'], '"') !== false || !$c['isforeign'])
-                );
+                        strpos($c['campo'], '"') !== false || ! $c['isforeign']);
             }
         ));
     }
@@ -589,26 +678,26 @@ class CrudController extends BaseController
     private function getCamposEditMine()
     {
         return array_values(array_filter($this->campos, function ($c) {
-            return ($c['editable'] == true && strpos($c['campo'], '.') === false);
+            return $c['editable'] == true && strpos($c['campo'], '.') === false;
         }));
     }
 
     private function getCamposShowForeign()
     {
-        $arr      = [];
+        $arr = [];
         $foreigns =
             array_filter(
-            $this->campos,
-            function ($c) {
-                return ($c['show'] == true && strpos($c['campo'], '.') != 0 && strpos($c['campo'], '"') === false);
-            }
-        );
+                $this->campos,
+                function ($c) {
+                    return $c['show'] == true && strpos($c['campo'], '.') != 0 && strpos($c['campo'], '"') === false;
+                }
+            );
         $i = 0;
-        //dd($foreigns);
+        // dd($foreigns);
         foreach ($foreigns as $foreign) {
             if ($foreign['isforeign']) {
                 $partes = explode('.', $foreign['campo']);
-                $key    = $partes[0];
+                $key = $partes[0];
                 array_shift($partes);
                 if (is_array($partes)) {
                     $valor = implode('.', $partes);
@@ -638,7 +727,7 @@ class CrudController extends BaseController
         }, $aCampos);
     }
 
-    /*==================== SETTERS =====================================*/
+    /* ==================== SETTERS ===================================== */
     public function setModelo($aModelo)
     {
         $this->modelo = $aModelo;
@@ -657,13 +746,13 @@ class CrudController extends BaseController
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file',
             'image', 'textarea', 'url', 'summernote', 'securefile'];
 
-        foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
-            if (!in_array($key, $allowed)) {
-                dd('setCampo no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+        foreach ($aParams as $key => $val) { // Validamos que todas las variables del array son permitidas.
+            if (! in_array($key, $allowed)) {
+                dd('setCampo no recibe parametros con el nombre: '.$key.'! solamente se permiten: '.implode(', ', $allowed));
             }
         }
 
-        if (!array_key_exists('campo', $aParams)) {
+        if (! array_key_exists('campo', $aParams)) {
             dd('setCampo debe tener un valor para "campo"');
         }
 
@@ -671,26 +760,26 @@ class CrudController extends BaseController
             $this->reglas[$aParams['campo']] = $aParams['reglas'];
         }
 
-        $nombre     = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']);
-        $edit       = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
-        $show       = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
-        $tipo       = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
-        $class      = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
-        $default    = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
-        $decimales  = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
-        $collection = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
-        $filepath   = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
-        $filewidth  = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
-        $fileheight = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
-        $target     = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
-        $enumarray  = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
-        $isforeign  = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
-        $utc        = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
-        $editClass  = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
+        $nombre = (! array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']);
+        $edit = (! array_key_exists('editable', $aParams) ? true : $aParams['editable']);
+        $show = (! array_key_exists('show', $aParams) ? true : $aParams['show']);
+        $tipo = (! array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
+        $class = (! array_key_exists('class', $aParams) ? '' : $aParams['class']);
+        $default = (! array_key_exists('default', $aParams) ? '' : $aParams['default']);
+        $decimales = (! array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
+        $collection = (! array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
+        $filepath = (! array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
+        $filewidth = (! array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
+        $fileheight = (! array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
+        $target = (! array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
+        $enumarray = (! array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
+        $isforeign = (! array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
+        $utc = (! array_key_exists('utc', $aParams) ? false : $aParams['utc']);
+        $editClass = (! array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable = true;
 
-        if (!in_array($tipo, $tipos)) {
-            dd('El tipo configurado (' . $tipo . ') no existe! solamente se permiten: ' . implode(', ', $tipos));
+        if (! in_array($tipo, $tipos)) {
+            dd('El tipo configurado ('.$tipo.') no existe! solamente se permiten: '.implode(', ', $tipos));
         }
 
         if ($tipo == 'combobox' && ($collection == '')) {
@@ -713,7 +802,7 @@ class CrudController extends BaseController
             dd('Para el tipo enum el enumarray es requerido');
         }
 
-        if (!strpos($aParams['campo'], ')')) {
+        if (! strpos($aParams['campo'], ')')) {
             $arr = explode('.', $aParams['campo']);
             if (count($arr) >= 2) {
                 $campoReal = $arr[count($arr) - 1];
@@ -723,35 +812,35 @@ class CrudController extends BaseController
             $alias = str_replace('.', '__', $aParams['campo']);
         } else {
             $campoReal = $aParams['campo'];
-            $alias     = 'a' . date('U') . count($this->getCamposShow()); //Nos inventamos un alias para los subqueries
+            $alias = 'a'.date('U').count($this->getCamposShow()); // Nos inventamos un alias para los subqueries
         }
 
         if ($aParams['campo'] == $this->modelo->getKeyName()) {
-            $alias = 'idsinenc' . count($this->getCamposShow());
-            $edit  = false;
+            $alias = 'idsinenc'.count($this->getCamposShow());
+            $edit = false;
         }
 
         $arr = [
-            'nombre'     => $nombre,
-            'campo'      => $aParams['campo'],
-            'alias'      => $alias,
-            'campoReal'  => $campoReal,
-            'tipo'       => $tipo,
-            'show'       => $show,
-            'editable'   => $edit,
-            'default'    => $default,
-            'class'      => $class,
-            'decimales'  => $decimales,
+            'nombre' => $nombre,
+            'campo' => $aParams['campo'],
+            'alias' => $alias,
+            'campoReal' => $campoReal,
+            'tipo' => $tipo,
+            'show' => $show,
+            'editable' => $edit,
+            'default' => $default,
+            'class' => $class,
+            'decimales' => $decimales,
             'collection' => $collection,
             'searchable' => $searchable,
-            'enumarray'  => $enumarray,
-            'filepath'   => $filepath,
-            'filewidth'  => $filewidth,
+            'enumarray' => $enumarray,
+            'filepath' => $filepath,
+            'filewidth' => $filewidth,
             'fileheight' => $fileheight,
-            'target'     => $target,
-            'isforeign'  => $isforeign,
-            'utc'        => $utc,
-            'editClass'  => $editClass,
+            'target' => $target,
+            'isforeign' => $isforeign,
+            'utc' => $utc,
+            'editClass' => $editClass,
         ];
         $this->campos[] = $arr;
     }
@@ -769,7 +858,7 @@ class CrudController extends BaseController
     public function setWhere($aColumna, $aOperador, $aValor = null)
     {
         if ($aValor == null) {
-            $aValor    = $aOperador;
+            $aValor = $aOperador;
             $aOperador = '=';
         }
 
@@ -810,29 +899,29 @@ class CrudController extends BaseController
     {
         $allowed = ['url', 'titulo', 'target', 'icon', 'class', 'confirm', 'confirmmessage'];
 
-        foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
-            if (!in_array($key, $allowed)) {
-                dd('setBotonExtra no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+        foreach ($aParams as $key => $val) { // Validamos que todas las variables del array son permitidas.
+            if (! in_array($key, $allowed)) {
+                dd('setBotonExtra no recibe parametros con el nombre: '.$key.'! solamente se permiten: '.implode(', ', $allowed));
             }
         }
-        if (!array_key_exists('url', $aParams)) {
+        if (! array_key_exists('url', $aParams)) {
             dd('setBotonExtra debe tener un valor para "url"');
         }
 
-        $icon           = (!array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star' : $aParams['icon']);
-        $class          = (!array_key_exists('class', $aParams) ? 'default' : $aParams['class']);
-        $titulo         = (!array_key_exists('titulo', $aParams) ? '' : $aParams['titulo']);
-        $target         = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
-        $confirm        = (!array_key_exists('confirm', $aParams) ? false : $aParams['confirm']);
-        $confirmmessage = (!array_key_exists('confirmmessage', $aParams) ? '¿Estas seguro?' : $aParams['confirmmessage']);
+        $icon = (! array_key_exists('icon', $aParams) ? 'glyphicon glyphicon-star' : $aParams['icon']);
+        $class = (! array_key_exists('class', $aParams) ? 'default' : $aParams['class']);
+        $titulo = (! array_key_exists('titulo', $aParams) ? '' : $aParams['titulo']);
+        $target = (! array_key_exists('target', $aParams) ? '' : $aParams['target']);
+        $confirm = (! array_key_exists('confirm', $aParams) ? false : $aParams['confirm']);
+        $confirmmessage = (! array_key_exists('confirmmessage', $aParams) ? '¿Estas seguro?' : $aParams['confirmmessage']);
 
         $arr = [
-            'url'            => $aParams['url'],
-            'titulo'         => $titulo,
-            'icon'           => $icon,
-            'class'          => $class,
-            'target'         => $target,
-            'confirm'        => $confirm,
+            'url' => $aParams['url'],
+            'titulo' => $titulo,
+            'icon' => $icon,
+            'class' => $class,
+            'target' => $target,
+            'confirm' => $confirm,
             'confirmmessage' => $confirmmessage,
         ];
 
@@ -844,20 +933,20 @@ class CrudController extends BaseController
         $allowed = ['url', 'titulo', 'target'];
 
         foreach ($aParams as $key => $val) {
-            //Validamos que todas las variables del array son permitidas.
-            if (!in_array($key, $allowed)) {
-                dd('setAccionExtra no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+            // Validamos que todas las variables del array son permitidas.
+            if (! in_array($key, $allowed)) {
+                dd('setAccionExtra no recibe parametros con el nombre: '.$key.'! solamente se permiten: '.implode(', ', $allowed));
             }
         }
-        if (!array_key_exists('url', $aParams)) {
+        if (! array_key_exists('url', $aParams)) {
             dd('setAccionExtra debe tener un valor para "url"');
         }
 
-        $titulo = (!array_key_exists('titulo', $aParams) ? '' : $aParams['titulo']);
-        $target = (!array_key_exists('target', $aParams) ? '' : $aParams['target']);
+        $titulo = (! array_key_exists('titulo', $aParams) ? '' : $aParams['titulo']);
+        $target = (! array_key_exists('target', $aParams) ? '' : $aParams['target']);
 
         $arr = [
-            'url'    => $aParams['url'],
+            'url' => $aParams['url'],
             'titulo' => $titulo,
             'target' => $target,
         ];
@@ -867,7 +956,7 @@ class CrudController extends BaseController
 
     public function setPermisos($aFuncionPermisos, $aModulo = false)
     {
-        if (!$aModulo) {
+        if (! $aModulo) {
             $this->permisos = $aFuncionPermisos;
         } else {
             $this->middleware(function ($request, $next) use ($aFuncionPermisos, $aModulo) {
@@ -882,9 +971,9 @@ class CrudController extends BaseController
     {
         $allowed = ['campo', 'valor'];
 
-        foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
-            if (!in_array($key, $allowed)) {
-                dd('setHidden no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+        foreach ($aParams as $key => $val) { // Validamos que todas las variables del array son permitidas.
+            if (! in_array($key, $allowed)) {
+                dd('setHidden no recibe parametros con el nombre: '.$key.'! solamente se permiten: '.implode(', ', $allowed));
             }
         }
 
@@ -903,7 +992,7 @@ class CrudController extends BaseController
 
     private function getQueryString($request)
     {
-        $query = '?' . $request->getQueryString();
+        $query = '?'.$request->getQueryString();
         if ($query == '?') {
             $query = '';
         }
@@ -913,17 +1002,17 @@ class CrudController extends BaseController
 
     public function setOrderBy($aParams)
     {
-        $allowed     = ['columna', 'direccion'];
+        $allowed = ['columna', 'direccion'];
         $direcciones = ['asc', 'desc'];
 
-        foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
-            if (!in_array($key, $allowed)) {
-                dd('setOrderBy no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+        foreach ($aParams as $key => $val) { // Validamos que todas las variables del array son permitidas.
+            if (! in_array($key, $allowed)) {
+                dd('setOrderBy no recibe parametros con el nombre: '.$key.'! solamente se permiten: '.implode(', ', $allowed));
             }
         }
 
-        $columna   = (!array_key_exists('columna', $aParams) ? 0 : $aParams['columna']);
-        $direccion = (!array_key_exists('direccion', $aParams) ? 'asc' : $aParams['direccion']);
+        $columna = (! array_key_exists('columna', $aParams) ? 0 : $aParams['columna']);
+        $direccion = (! array_key_exists('direccion', $aParams) ? 'asc' : $aParams['direccion']);
 
         $this->orders[$columna] = $direccion;
     }
