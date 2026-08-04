@@ -104,3 +104,15 @@ Available setters: `setTabla`, `setTablaId`, `setTitulo`, `setCampo`,
 
 This branch is archived. It receives no fixes; the listing optimization
 applied to `5.3` and up was not backported here. Use branch `5.3` or newer.
+
+## Tests
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+The suite covers the methods that build the listing query, asserting on the SQL
+and the bindings they produce. It needs Eloquent but never a database server:
+no query is executed. The test tooling is `require-dev` only, so nothing
+changes for consumers of the package.
