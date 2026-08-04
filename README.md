@@ -109,3 +109,30 @@ Previously the whole table was loaded into memory and filtered/sorted with
 Collection methods, so the cost grew with the total number of rows instead of
 the page size. No public API changed: `setField`, `setWhere`, `setOrderBy` and
 the JSON response shape are the same.
+
+## Column filters
+
+The listing no longer uses the DataTables global search box. Instead the view
+sends a list of column/value pairs as `filters[]`, and each one becomes a
+`WHERE` clause:
+
+- a plain column becomes `column LIKE ?`
+- a relation column (`relation.column`, `isforeign`) is matched with `whereHas`
+- a `multi` field is matched against its related column, also with `whereHas`
+- a raw expression is matched with `whereRaw`, after its `AS alias` is stripped
+
+Rows can be added and removed in the UI, they are all applied together, and the
+active set is kept in the DataTables saved state. `recordsFiltered` is only
+recounted when at least one filter is actually applied.
+
+## Tests
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+The suite covers the methods that build the listing query, asserting on the SQL
+and the bindings they produce. It needs Eloquent but never a database server:
+no query is executed. PHPUnit, `illuminate/database` and `illuminate/routing`
+are `require-dev` only, so nothing changes for consumers of the package.
