@@ -336,12 +336,10 @@ class CrudController extends BaseController
                 if ($columnName == $this->uniqueid) {
                     $data->orderBy($this->modelo->getTable().'.'.$this->modelo->getKeyName(), $order['dir']);
                 } else {
-                    $data->orderBy($columnName, $order['dir']);
+                    $this->applyOrderToQuery($data, $columnName, $order['dir']);
                 }
             }
         }
-
-        $this->debugQueryPlan($data, $request);
 
         // Filtramos los registros y obtenemos el arreglo con la data
         $items = $data
@@ -454,6 +452,36 @@ class CrudController extends BaseController
         return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
     }
 
+    private function applyOrderToQuery($query, $columnName, $direction)
+    {
+        $isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false;
+
+        if (! $isRelation) {
+            $query->orderBy($columnName, $direction);
+
+            return;
+        }
+
+        [$relationName, $relatedColumn] = explode('.', $columnName, 2);
+
+        if (! method_exists($this->modelo, $relationName)) {
+            $query->orderBy($columnName, $direction);
+
+            return;
+        }
+
+        $relation = $this->modelo->{$relationName}();
+        $relatedModel = $relation->getRelated();
+        $relationQuery = $relation->getRelationExistenceQuery(
+            $relatedModel->newQuery(),
+            $query
+        )
+            ->select($relatedModel->qualifyColumn($relatedColumn))
+            ->limit(1);
+
+        $query->orderBy($relationQuery, $direction);
+    }
+
     private function downLevel($aPath)
     {
         $arr = explode('/', $aPath);
@@ -494,44 +522,6 @@ class CrudController extends BaseController
                 });
             }
         });
-    }
-
-    private function debugQueryPlan($query, Request $request)
-    {
-        // if (!$request->has('debug_explain')) {
-        //     return;
-        // }
-
-        $sql = $query->toSql();
-        $bindings = $query->getBindings();
-
-        $explainQuery = 'EXPLAIN '.$sql;
-        $explainBindings = $bindings;
-
-        try {
-            $results = DB::select($explainQuery, $explainBindings);
-            $this->logDebugInfo($sql, $bindings, $results);
-        } catch (Exception $e) {
-            $this->logDebugInfo($sql, $bindings, [['error' => $e->getMessage()]]);
-        }
-    }
-
-    private function logDebugInfo($sql, $bindings, $results)
-    {
-        if (app()->environment('production')) {
-            return;
-        }
-
-        $message = [
-            'sql' => $sql,
-            'bindings' => $bindings,
-            'explain' => $results,
-        ];
-
-        logger()->info('crud_query_explain', $message);
-        if (function_exists('dump')) {
-            dump($message);
-        }
     }
 
     private function fillCombos($aCampos)
