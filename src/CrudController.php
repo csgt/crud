@@ -54,6 +54,7 @@ class CrudController extends BaseController
             ->with('perPage', $this->perPage)
             ->with('title', $this->title)
             ->with('columns', $this->getCamposShow())
+            ->with('filterColumns', $this->getFilterColumns())
             ->with('permisos', $this->permissions)
             ->with('orders', $this->orders)
             ->with('extraButtons', $this->extraButtons)
@@ -233,7 +234,7 @@ class CrudController extends BaseController
     public function data(Request $request)
     {
         //Definimos las variables que nos ayudar'an en el proceso de devolver la data
-        $search          = $request->search;
+        $filters         = $request->input('filters', []);
         $orders          = $request->order;
         $multiColumns    = $this->getShowMultipleFields();
         $columns         = $this->getLocalShowFields();
@@ -288,13 +289,11 @@ class CrudController extends BaseController
         //Obtenemos la cantidad de registros antes de filtrar
         $recordsTotal = (clone $data)->count();
 
-        //Filtramos con el campo de la vista, directamente en la base de datos
-        if ($search['value'] != '') {
-            $this->applySearchToQuery($data, $search['value'], $columns, $foreigns);
-        }
+        //Aplicamos solamente los filtros de columna enviados por la vista.
+        $filtersApplied = $this->applyFiltersToQuery($data, $filters);
 
         //Obtenemos la cantidad de registros luego de haber filtrado
-        $recordsFiltered = $search['value'] != '' ? (clone $data)->count() : $recordsTotal;
+        $recordsFiltered = $filtersApplied ? (clone $data)->count() : $recordsTotal;
 
         //Ahora order by, tambien en la base de datos
         $fieldsOrder = $this->getFieldOrder();
@@ -497,42 +496,83 @@ class CrudController extends BaseController
     }
 
     /**
-     * Aplica la busqueda global de DataTables como un WHERE en la base de datos,
-     * incluyendo las columnas de las relaciones via whereHas.
+     * Aplica los filtros por columna enviados por la vista. Devuelve true si al
+     * menos uno se aplico, para saber si hay que recalcular recordsFiltered.
      */
-    private function applySearchToQuery($query, $searchValue, $columns, $foreigns)
+    private function applyFiltersToQuery($query, $filters)
     {
-        $searchValue = '%' . mb_strtolower(trim($searchValue)) . '%';
+        if (!is_array($filters)) {
+            return false;
+        }
 
-        $query->where(function ($searchQuery) use ($searchValue, $columns, $foreigns) {
-            foreach ($columns as $column) {
-                $field = $this->stripAlias($column['field']);
-                if ($field == '' || $field == $this->uniqueid) {
-                    continue;
-                }
-                $searchQuery->orWhereRaw('LOWER(' . $field . ') LIKE ?', [$searchValue]);
+        $columns = $this->getCamposShow();
+        $applied = false;
+
+        foreach ($filters as $filter) {
+            if (!is_array($filter) || !isset($filter['column']) || !array_key_exists('value', $filter)) {
+                continue;
             }
 
-            foreach ($foreigns as $relation => $relationFields) {
-                if (!method_exists($this->model, $relation)) {
-                    continue;
-                }
+            $columnIndex = filter_var($filter['column'], FILTER_VALIDATE_INT);
+            $value       = is_scalar($filter['value']) ? trim((string) $filter['value']) : '';
 
-                $searchQuery->orWhereHas($relation, function ($relationQuery) use ($relationFields, $searchValue) {
-                    $relationQuery->where(function ($relationWhere) use ($relationFields, $searchValue) {
-                        foreach ($relationFields as $fields) {
-                            foreach ($fields as $field) {
-                                $field = $this->stripAlias($field);
-                                if ($field == '') {
-                                    continue;
-                                }
-                                $relationWhere->orWhereRaw('LOWER(' . $field . ') LIKE ?', [$searchValue]);
-                            }
-                        }
-                    });
+            if ($columnIndex === false || !isset($columns[$columnIndex]) || $value === '') {
+                continue;
+            }
+
+            $this->applyColumnFilter($query, $columns[$columnIndex], '%' . $value . '%');
+            $applied = true;
+        }
+
+        return $applied;
+    }
+
+    /**
+     * Traduce un filtro de columna a un WHERE. Las columnas de relaciones y los
+     * campos multi se resuelven con whereHas.
+     */
+    private function applyColumnFilter($query, $column, $searchValue)
+    {
+        $field = $column['field'];
+
+        if ($column['type'] === 'multi' && method_exists($this->model, $field)) {
+            $methodName    = 'fetch' . ucfirst($field) . 'Column';
+            $relatedColumn = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
+
+            $query->whereHas($field, function ($relationQuery) use ($relatedColumn, $searchValue) {
+                $relationQuery->where($relatedColumn, 'like', $searchValue);
+            });
+
+            return;
+        }
+
+        $isRelation = strpos($field, '.') !== false
+        && strpos($field, '"') === false
+        && $column['isforeign'];
+
+        if ($isRelation) {
+            $partes        = explode('.', $field, 2);
+            $relationName  = $partes[0];
+            $relatedColumn = $this->stripAlias($partes[1]);
+
+            if (method_exists($this->model, $relationName)) {
+                $query->whereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
+                    $relationQuery->where($relatedColumn, 'like', $searchValue);
                 });
+
+                return;
             }
-        });
+        }
+
+        $field = $this->stripAlias($field);
+
+        if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
+            $query->whereRaw($field . ' LIKE ?', [$searchValue]);
+
+            return;
+        }
+
+        $query->where($field, 'like', $searchValue);
     }
 
     private function downLevel($aPath)
@@ -700,6 +740,18 @@ class CrudController extends BaseController
         return array_values(array_filter($this->fields, function ($c) {
             return ($c['show'] == true);
         }));
+    }
+
+    private function getFilterColumns()
+    {
+        $columns = $this->getCamposShow();
+
+        return array_map(function ($column, $index) {
+            return [
+                'index' => $index,
+                'label' => strip_tags($column['name']),
+            ];
+        }, $columns, array_keys($columns));
     }
 
     private function getShowMultipleFields()
