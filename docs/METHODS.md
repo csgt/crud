@@ -110,14 +110,12 @@ Any other key aborts with `dd(...)`. `field` is the only required key.
 The allowed `type` values, read directly from the `$tipos` array:
 
 ```
-string, multi, numeric, date, datetime, bool, combobox, password,
+string, multi, numeric, date, datetime, time, bool, combobox, password,
 enum, file, image, textarea, url, summernote, securefile
 ```
 
-There is no `time` type in `setField`, even though `index.blade.php`'s column
-renderer branches on `$column['type'] == 'time'` alongside `date`/`datetime` —
-declaring a field with `type => 'time'` is rejected before it ever reaches the
-view.
+`time` is rendered by `index.blade.php` alongside `date`/`datetime` and edited
+with a native `<input type="time">`.
 
 Notable defaults and per-type requirements enforced in `setField()`:
 

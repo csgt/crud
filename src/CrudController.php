@@ -854,7 +854,7 @@ class CrudController extends BaseController
         $allowed = ['field', 'name', 'editable', 'show', 'type', 'class',
             'default', 'validationRules', 'validationRulesMessage', 'decimals', 'collection',
             'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
-        $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password',
+        $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'time', 'bool', 'combobox', 'password',
             'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) {

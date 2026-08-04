@@ -253,9 +253,22 @@ class CrudControllerTest extends TestCase
 
     /*==================== setters ====================*/
 
+    public function testSetFieldAcceptsTheTimeType()
+    {
+        // index.blade.php renders "time" alongside "date" and "datetime", so
+        // setField() has to accept it or the column can never be declared.
+        $fields = $this->read($this->controller, 'fields');
+        $time = array_values(array_filter($fields, function ($field) {
+            return $field['field'] === 'opens_at';
+        }));
+
+        $this->assertCount(1, $time);
+        $this->assertSame('time', $time[0]['type']);
+    }
+
     public function testSetFieldRejectsUnknownKeys()
     {
         $this->assertSame('Clients', $this->controller->getTitle());
-        $this->assertCount(5, $this->read($this->controller, 'fields'));
+        $this->assertCount(6, $this->read($this->controller, 'fields'));
     }
 }

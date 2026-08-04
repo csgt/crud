@@ -100,6 +100,12 @@
                                         class="{{ $arr['class'] }} {{ $column['utc'] ? 'dtputc' : 'dtp' }}"
                                         name="{{ $column['campoReal'] }}" data-value="{{ $valor }}"
                                         {!! arrayToFields($arr) !!}>
+                                @elseif($column['type'] == 'time')
+                                    <!---------------------------- TIME ---------------------------------->
+                                    {!! $label !!}
+                                    <input id="div{!! $column['campoReal'] !!}" type="time"
+                                        class="{{ $arr['class'] }}" name="{{ $column['campoReal'] }}"
+                                        value="{{ $valor }}" {!! arrayToFields($arr) !!}>
                                 @elseif($column['type'] == 'combobox')
                                     <!---------------------------- COMBOBOX ---------------------------------->
                                     @php

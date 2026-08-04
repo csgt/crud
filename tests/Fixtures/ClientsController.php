@@ -19,5 +19,6 @@ class ClientsController extends CrudController
         $this->setField(['field' => 'tags', 'name' => 'Tags', 'type' => 'multi']);
         $this->setField(['field' => 'CONCAT(name, id) AS composed', 'name' => 'Composed']);
         $this->setField(['field' => 'secret', 'name' => 'Secret', 'show' => false, 'editable' => true]);
+        $this->setField(['field' => 'opens_at', 'name' => 'Opens at', 'type' => 'time', 'show' => false]);
     }
 }
