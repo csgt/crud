@@ -4,6 +4,14 @@ This package is used to generate cruds.
 
 > **You are on branch `5.0` - package version `5.0`.**
 
+## Documentation for contributors
+
+| Document | Read it for |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the package is wired: the static `Crud` class, field metadata, the listing query |
+| [docs/METHODS.md](docs/METHODS.md) | What every method of `Crud` does on this branch |
+| [docs/RULES.md](docs/RULES.md) | What you may and may not change: this branch is archived and closed to new features |
+
 ## Requirements
 
 | Requirement | Supported |
