@@ -46,27 +46,18 @@ class CrudControllerTest extends TestCase
     {
         $foreigns = $this->call($this->controller, 'getForeignShowFields');
 
-        // BUG: the collection returned keeps the *original field index* as its
-        // key (1, the position of the country field among the 5 declared
-        // fields) instead of being keyed by relation name. Callers that do
-        // `foreach ($foreigns as $relation => $fields)` (as data() does) get
-        // the index as $relation, not "country" — so it is unusable as-is to
-        // build `$model->{$relation}()`.
-        $this->assertSame([1], $foreigns->keys()->toArray());
-        $this->assertSame(['country' => 'name AS country_name'], $foreigns->get(1));
+        // data() iterates this as `foreach ($foreigns as $relation => $fields)`
+        // and then calls `$model->{$relation}()`, so the key has to be the
+        // relation name and each value a list of column lists.
+        $this->assertSame(['country'], array_keys($foreigns));
+        $this->assertSame('name AS country_name', $foreigns['country'][0][0]);
     }
 
-    /*==================== getShowMultipleFields ====================*/
+    /*==================== getMultiFields ====================*/
 
-    public function testGetShowMultipleFieldsIsBrokenOnACollectionOfFields()
+    public function testGetMultiFieldsReturnsTheNamesOfTheMultiRelations()
     {
-        // BUG: getShowMultipleFields() runs array_filter() directly on
-        // $this->fields, but $this->fields is an Illuminate\Support\Collection
-        // (set up by setField()), not a plain array. This throws for any
-        // controller that has declared at least one field.
-        $this->expectException(\TypeError::class);
-
-        $this->call($this->controller, 'getShowMultipleFields');
+        $this->assertSame(['tags'], $this->call($this->controller, 'getMultiFields')->values()->toArray());
     }
 
     /*==================== getLocalEditFields ====================*/
@@ -99,16 +90,20 @@ class CrudControllerTest extends TestCase
 
     /*==================== getSelect ====================*/
 
-    public function testGetSelectIsBrokenBecauseItAccessesFieldsAsObjects()
+    public function testGetSelectReturnsOneExpressionPerLocalShownField()
     {
-        // BUG: getSelect() maps with `DB::raw($field->field)`, treating each
-        // field as an object with a public "field" property. But each field is
-        // a plain Collection (built with collect($arr) in setField()), and
-        // Collection only exposes array access, so ->field throws.
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Property [field] does not exist on this collection instance.');
+        $grammar = \Illuminate\Database\Capsule\Manager::connection()->getQueryGrammar();
 
-        $this->call($this->controller, 'getSelect', [$this->call($this->controller, 'getLocalShowFields')]);
+        $select = $this->call($this->controller, 'getSelect', [
+            $this->call($this->controller, 'getLocalShowFields'),
+        ]);
+
+        $this->assertSame(
+            ['name', 'CONCAT(name, id) AS composed'],
+            $select->map(function ($expression) use ($grammar) {
+                return $expression->getValue($grammar);
+            })->values()->toArray()
+        );
     }
 
     /*==================== downLevel ====================*/
@@ -131,16 +126,12 @@ class CrudControllerTest extends TestCase
         $this->assertArrayNotHasKey('country.name AS country_name', $state);
     }
 
-    public function testEmptyStateDoesNotResetMultiFieldsToAnEmptyArray()
+    public function testEmptyStateResetsMultiFieldsToAnEmptyArray()
     {
-        // BUG: the each() closure `use ($ret)` captures $ret by value, not by
-        // reference, so the assignment `$ret[$multi] = []` mutates a copy and
-        // is silently lost. The multi field keeps whatever getLocalEditFields()
-        // put there (its "default", here null) instead of becoming [].
         $state = $this->call($this->controller, 'emptyState');
 
         $this->assertArrayHasKey('tags', $state);
-        $this->assertNull($state['tags']);
+        $this->assertSame([], $state['tags']);
     }
 
     /*==================== setters ====================*/

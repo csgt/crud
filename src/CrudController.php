@@ -90,7 +90,7 @@ class CrudController extends BaseController
             $state      = $this->emptyState();
             $breadcrumb = $this->generateBreadcrumb('create', $urlUpdate);
         }
-        $state = $state->jsonSerialize();
+        $state = is_object($state) ? $state->jsonSerialize() : $state;
 
         $editFields = $this->getLocalEditFields();
         foreach ($editFields as $editField) {
@@ -341,7 +341,7 @@ class CrudController extends BaseController
             $ret[$item['field']] = $item['default'];
         }
 
-        $this->getMultiFields()->each(function ($multi) use ($ret) {
+        $this->getMultiFields()->each(function ($multi) use (&$ret) {
             $ret[$multi] = [];
         });
 
@@ -474,12 +474,6 @@ class CrudController extends BaseController
         return $this->fields->where('show', true);
     }
 
-    private function getShowMultipleFields()
-    {
-        return array_values(array_filter($this->fields, function ($field) {
-            return $field['type'] == 'multi';
-        }));
-    }
 
     private function getLocalShowFields()
     {
@@ -506,50 +500,32 @@ class CrudController extends BaseController
 
     private function getForeignShowFields()
     {
-        $foreigns = $this->fields->where('isforeign', true)->map(function ($field) {
-            $parts = explode('.', $field['field']);
-            $key   = $parts[0];
-            array_shift($parts);
-            if (is_array($parts)) {
-                $value = implode('.', $parts);
-            } else {
-                $value = $parts;
+        $arr = [];
+        $i   = 0;
+
+        foreach ($this->fields as $field) {
+            if (!$field['isforeign'] || !$field['show'] || strpos($field['field'], '"') !== false) {
+                continue;
             }
 
-            return [$key => $value];
-        });
+            $parts = explode('.', $field['field']);
+            $key   = array_shift($parts);
 
-        return $foreigns;
+            if (count($parts) === 0) {
+                continue;
+            }
 
-        // $foreigns =
-        //     array_filter(
-        //     $this->fields,
-        //     function ($c) {
-        //         return ($c['show'] == true && strpos($c['field'], '.') != 0 && strpos($c['field'], '"') === false);
-        //     }
-        // );
-        // $i = 0;
-        // //dd($foreigns);
-        // foreach ($foreigns as $foreign) {
-        //     if ($foreign['isforeign']) {
+            $arr[$key][$i][] = implode('.', $parts);
+            $i++;
+        }
 
-        //     }
-        // }
-
-        // return $arr;
-    }
-
-    private function getCamposEdit()
-    {
-        return array_values(array_filter($this->fields, function ($c) {
-            return $c['editable'] == true;
-        }));
+        return $arr;
     }
 
     private function getSelect($aFields)
     {
         return $aFields->map(function ($field) {
-            return DB::raw($field->field);
+            return DB::raw($field['field']);
         });
     }
 
