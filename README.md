@@ -99,3 +99,15 @@ Route::resource('clients', ClientsController::class);
 This branch already resolves search, ordering and pagination in the database
 (`$query->paginate()`), so it does not need the listing optimization applied to
 the other branches.
+
+## Tests
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+The suite covers the methods that build the listing query, asserting on the SQL
+and the bindings they produce. It needs Eloquent but never a database server:
+no query is executed. The test tooling is `require-dev` only, so nothing
+changes for consumers of the package.
