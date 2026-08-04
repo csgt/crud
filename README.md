@@ -109,3 +109,15 @@ Previously the whole table was loaded into memory and filtered/sorted with
 Collection methods, so the cost grew with the total number of rows instead of
 the page size. No public API changed: `setField`, `setWhere`, `setOrderBy` and
 the JSON response shape are the same.
+
+## Tests
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+The suite covers the methods that build the listing query, asserting on the SQL
+and the bindings they produce. It needs Eloquent but never a database server:
+no query is executed. The test tooling is `require-dev` only, so nothing
+changes for consumers of the package.
