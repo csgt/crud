@@ -252,7 +252,8 @@ class CrudController extends BaseController
         $recordsTotal    = 0;
 
         //Se obtienen los campos a mostrar desde el modelo
-        $data = $this->model->select($fields);
+        $data = $this->model->newQuery();
+        $data->select($fields);
 
         $foreigns = $this->getForeignShowFields();
         foreach ($foreigns as $relation => $fields) {
@@ -294,54 +295,50 @@ class CrudController extends BaseController
             $data->whereRaw($whereRaw);
         }
 
-        $data = $data->get();
         //Obtenemos la cantidad de registros antes de filtrar
-        $recordsTotal = $data->count();
+        $recordsTotal = (clone $data)->count();
 
-        //Filtramos con el campo de la vista
+        //Filtramos con el campo de la vista, directamente en la base de datos
         if ($search['value'] != '') {
-            if ($recordsTotal > 0) {
-                $data = $data->filter(function ($item) use ($search) {
-                    $result = false;
-                    foreach ($item->getAttributes() as $column) {
-                        if ($column) {
-                            $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                        }
-                    }
-                    $relations = $item->getRelations();
-                    foreach ($relations as $relation) {
-                        if ($relation && method_exists($relation, 'getAttributes')) {
-                            foreach ($relation->getAttributes() as $column) {
-                                $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                            }
-                        }
-                    }
-
-                    return $result;
-                });
-            }
+            $this->applySearchToQuery($data, $search['value'], $columns, $foreigns);
         }
 
         //Obtenemos la cantidad de registros luego de haber filtrado
-        $recordsFiltered = $data->count();
+        $recordsFiltered = $search['value'] != '' ? (clone $data)->count() : $recordsTotal;
 
-        //Ahora order by
+        //Ahora order by, tambien en la base de datos
         $fieldsOrder = $this->getFieldOrder();
         if ($orders) {
             foreach ($orders as $order) {
-                if ($order['dir'] == 'asc') {
-                    $data = $data->sortBy($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
+                $columnName = isset($fieldsOrder[$order['column']]) ? $fieldsOrder[$order['column']] : null;
+                if ($columnName === null) {
+                    continue;
+                }
+
+                $direction = strtolower($order['dir']) == 'desc' ? 'desc' : 'asc';
+
+                if ($columnName == $this->uniqueid) {
+                    $data->orderBy($this->model->getTable() . '.' . $this->model->getKeyName(), $direction);
                 } else {
-                    $data = $data->sortByDesc($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
+                    $this->applyOrderToQuery($data, $columnName, $direction);
                 }
             }
         }
 
-        //Filtramos los registros y obtenemos el arreglo con la data
+        //Paginamos en la base de datos y obtenemos unicamente la pagina solicitada
         $items = $data
-            ->splice($request->start)
-            ->take($request->length)
-            ->toArray();
+            ->offset((int) $request->start)
+            ->limit((int) $request->length)
+            ->get();
+
+        //Los campos multi se cargan de una sola vez para evitar N+1
+        $multiRelations = array_values(array_unique(array_map(function ($campo) {
+            return $campo['field'];
+        }, $multiColumns)));
+
+        if (!empty($multiRelations)) {
+            $items->load($multiRelations);
+        }
 
         $arr = [];
         foreach ($items as $item) {
@@ -385,19 +382,15 @@ class CrudController extends BaseController
                     $lastItem = $item[$colName];
                 } elseif ($esRelacion) {
                     //Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
-                    if ($item[$relationName]) {
-                        if (array_key_exists(0, $item[$relationName])) {
-                            $cols[] = $item[$relationName][0][$colName];
-                        } else {
-                            if (array_key_exists($colName, $item[$relationName])) {
-                                $cols[] = $item[$relationName][$colName];
-                            } else {
-                                $cols[] = null;
-                            }
-                        }
-                    } else {
-                        $cols[] = null;
+                    $relation = $item[$relationName];
+
+                    if ($relation instanceof \Illuminate\Support\Collection) {
+                        $relation = $relation->first();
+                    } elseif (is_array($relation) && array_key_exists(0, $relation)) {
+                        $relation = $relation[0];
                     }
+
+                    $cols[] = data_get($relation, $colName);
                 } else {
                     $fullCampo = array_filter($this->fields, function ($campo) use ($colName) {
                         return $campo['field'] == $colName;
@@ -415,12 +408,14 @@ class CrudController extends BaseController
                         } else if ($fullCampoFixed['type'] == 'multi') {
                             $methodName = 'fetch' . ucfirst($fullCampoFixed['field']) . 'Column';
                             $keyName    = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
+                            $relation   = $item->{$fullCampoFixed['field']};
 
-                            $cols[] = implode(', ',
-                                $this->model
-                                    ->find($item[$this->uniqueid])
-                                    ->{$fullCampoFixed['field']}
+                            $cols[] = $relation === null ? '' : implode(', ',
+                                $relation
                                     ->pluck($keyName)
+                                    ->filter(function ($value) {
+                                        return $value !== null && $value !== '';
+                                    })
                                     ->toArray()
                             );
                         } else {
@@ -437,6 +432,117 @@ class CrudController extends BaseController
         }
 
         return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
+    }
+
+    /**
+     * Ordena en la base de datos. Si la columna pertenece a una relacion se ordena
+     * con un subquery correlacionado en lugar de traer toda la tabla a memoria.
+     */
+    private function applyOrderToQuery($query, $columnName, $direction)
+    {
+        $columnName = $this->stripAlias($columnName);
+        $isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false
+        && strpos($columnName, '(') === false;
+
+        if (!$isRelation) {
+            if (strpos($columnName, '(') !== false || strpos($columnName, ' ') !== false) {
+                $query->orderByRaw($columnName . ' ' . $direction);
+            } else {
+                $query->orderBy($columnName, $direction);
+            }
+
+            return;
+        }
+
+        $partes        = explode('.', $columnName, 2);
+        $relationName  = $partes[0];
+        $relatedColumn = $partes[1];
+
+        if (!method_exists($this->model, $relationName)) {
+            $query->orderBy($columnName, $direction);
+
+            return;
+        }
+
+        $relation      = $this->model->{$relationName}();
+        $relatedModel  = $relation->getRelated();
+        $relationQuery = $relation->getRelationExistenceQuery(
+            $relatedModel->newQuery(),
+            $query
+        )
+            ->select(DB::raw($this->qualifyRelatedColumn($relatedModel, $relatedColumn)))
+            ->limit(1);
+
+        $query->orderByRaw('(' . $relationQuery->toSql() . ') ' . $direction, $relationQuery->getBindings());
+    }
+
+    /**
+     * Devuelve la expresion sin el alias, para poder usarla dentro de un WHERE.
+     */
+    private function stripAlias($field)
+    {
+        $field = trim($field);
+        $pos   = stripos($field, ' as ');
+
+        if ($pos !== false) {
+            $field = trim(substr($field, 0, $pos));
+        }
+
+        return $field;
+    }
+
+    /**
+     * Antepone la tabla a la columna solo cuando es un identificador simple.
+     * Las expresiones (alias, funciones) se dejan intactas.
+     */
+    private function qualifyRelatedColumn($relatedModel, $column)
+    {
+        $column = trim($column);
+
+        if (strpos($column, '(') !== false || strpos($column, ' ') !== false || strpos($column, '.') !== false) {
+            return $column;
+        }
+
+        return $relatedModel->getTable() . '.' . $column;
+    }
+
+    /**
+     * Aplica la busqueda global de DataTables como un WHERE en la base de datos,
+     * incluyendo las columnas de las relaciones via whereHas.
+     */
+    private function applySearchToQuery($query, $searchValue, $columns, $foreigns)
+    {
+        $searchValue = '%' . mb_strtolower(trim($searchValue)) . '%';
+
+        $query->where(function ($searchQuery) use ($searchValue, $columns, $foreigns) {
+            foreach ($columns as $column) {
+                $field = $this->stripAlias($column['field']);
+                if ($field == '' || $field == $this->uniqueid) {
+                    continue;
+                }
+                $searchQuery->orWhereRaw('LOWER(' . $field . ') LIKE ?', [$searchValue]);
+            }
+
+            foreach ($foreigns as $relation => $relationFields) {
+                if (!method_exists($this->model, $relation)) {
+                    continue;
+                }
+
+                $searchQuery->orWhereHas($relation, function ($relationQuery) use ($relationFields, $searchValue) {
+                    $relationQuery->where(function ($relationWhere) use ($relationFields, $searchValue) {
+                        foreach ($relationFields as $fields) {
+                            foreach ($fields as $field) {
+                                $field = $this->stripAlias($field);
+                                if ($field == '') {
+                                    continue;
+                                }
+                                $relationWhere->orWhereRaw('LOWER(' . $field . ') LIKE ?', [$searchValue]);
+                            }
+                        }
+                    });
+                });
+            }
+        });
     }
 
     private function downLevel($aPath)
