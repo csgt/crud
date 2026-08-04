@@ -50,13 +50,22 @@ class CrudTest extends TestCase
         Crud::setSearch(false);
         Crud::setStateSave(false);
         Crud::setSoftDelete(true);
-        (new Crud)->setResponsive(false);
+        Crud::setResponsive(false);
 
         $this->assertFalse($this->read(Crud::class, 'showExport'));
         $this->assertFalse($this->read(Crud::class, 'showSearch'));
         $this->assertFalse($this->read(Crud::class, 'stateSave'));
         $this->assertTrue(Crud::getSoftDelete());
         $this->assertFalse($this->read(Crud::class, 'responsive'));
+    }
+
+    public function testSetResponsiveIsCallableStaticallyLikeEveryOtherSetter()
+    {
+        // It writes a static property, so it has to be reachable the same way
+        // the rest of the API is: Crud::setResponsive(...).
+        $method = new \ReflectionMethod(Crud::class, 'setResponsive');
+
+        $this->assertTrue($method->isStatic());
     }
 
     /*==================== setPerPage / setTemplate / setPermisos ====================*/

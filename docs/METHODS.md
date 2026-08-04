@@ -75,7 +75,7 @@ lifecycle call, since no state survives between requests.
 | `setExport($aBool)` | Toggles the export button in the view. |
 | `setSearch($aBool)` | Toggles the DataTables search box in the view. |
 | `setStateSave($aBool)` | Toggles DataTables `stateSave`. |
-| `setResponsive($aResponsive)` | **Not** declared `static` in the source (`public function setResponsive`, no `static` keyword) even though it writes to the `private static $responsive` property — callable as `(new Crud)->setResponsive(...)`, unlike every other setter on this class. |
+| `setResponsive($aResponsive)` | Wraps the table in `table-responsive`. Declared `static` like the rest of the API; it used to be the one setter without the keyword, which made `Crud::setResponsive(...)` fatal even though it wrote a static property. |
 
 ## Read-only helper
 
