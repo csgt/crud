@@ -76,7 +76,7 @@ frozen.
 | Method | Purpose |
 |---|---|
 | `setModel(Model $aModelo)` | The Eloquent model the CRUD is built on. Required, and type-hinted to `Illuminate\Database\Eloquent\Model` (not type-hinted on `5.9`/`6.0`). |
-| `setField($aParams)` | Declares one field. Allowed keys: `field`, `name`, `editable`, `show`, `type`, `class`, `default`, `decimals`, `collection`, `filepath`, `filewidth`, `fileheight`, `filedisk`, `target`, `isforeign`, `utc`, `editClass`. Rejects unknown keys. Types: `string`, `multi`, `numeric`, `date`, `datetime`, `time`, `bool`, `combobox`, `password`, `file`, `image`, `textarea`, `url`, `summernote`, `securefile`. `isforeign` defaults to `false` here (defaults to `true` on `5.9`/`6.0`). No `validationRules`/`reglas` key exists. |
+| `setField($aParams)` | Declares one field. Allowed keys: `field`, `name`, `editable`, `show`, `type`, `class`, `default`, `decimals`, `collection`, `filepath`, `filewidth`, `fileheight`, `filedisk`, `target`, `isforeign`, `utc`, `editClass`. Rejects unknown keys. Types: `string`, `multi`, `numeric`, `date`, `datetime`, `time`, `bool`, `combobox`, `password`, `file`, `image`, `textarea`, `url`, `summernote`, `securefile`. `isforeign` defaults to `false` here (defaults to `true` on `5.9`/`6.0`). No `validationRules`/`reglas` key exists — validation rules are declared separately, through `setValidation()`. |
 | `setTitle($aTitle)` | Listing title. |
 | `setLayout($aLayout)` | Blade layout to extend. |
 | `setPermissions($aPermissionsCallback, $aModule = false)` | `create`/`update`/`destroy` flags, or a middleware-resolved callback when `$aModule` is given. |
@@ -88,6 +88,7 @@ frozen.
 | `setOrderBy($aParams)` | Default order. Allowed keys: `column`, `direction` (`asc`/`desc`). Populates `$this->orders`, which is **never read** by `data()` — the actual order comes only from `$request->sort`. |
 | `setPerPage($aCuantos)` | Rows per page for the paginator. |
 | `setHidden($aParams)` | Values injected on save without being rendered. Allowed keys: `field`, `value`. |
+| `setValidation($aParams)` | Declares the Laravel validation rule for one field. Allowed keys: `field`, `rules` (both required). Rejects unknown keys. Can be called once per field; a repeated `field` overwrites the previous rule. Every rule declared this way is what `update()` (and, through it, `store()`) validates the request against — a controller that never calls `setValidation()` validates against an empty rule set. |
 | `setignoreFields($aField)` | Adds a request key never persisted (`_token` is always ignored). |
 | `setBreadcrumb($aArray)` | Custom breadcrumb trail. |
 | `setExtraButton($aParams)` | Extra button per row. Allowed keys: `url`, `title`, `target`, `icon`, `class`, `confirm`, `confirmmessage`. |

@@ -104,10 +104,11 @@ Allowed keys: `field`, `name`, `editable`, `show`, `type`, `class`, `default`,
 `numeric`, `date`, `datetime`, `time`, `bool`, `combobox`, `password`, `file`,
 `image`, `textarea`, `url`, `summernote`, `securefile`.
 
-Two keys the README's "Known differences from 6.0" section promises do not
-exist in `$allowed` or `$tipos`: there is no `validationRules`/`reglas` key
-(validation is hardcoded in `update()`, see below) and there is no `combo`
-type (only `combobox`); `enum` is indeed gone, as the README says, but nothing
+One key the README's "Known differences from 6.0" section promises does not
+exist in `$allowed` or `$tipos`: there is no `validationRules`/`reglas` key on
+`setField()` — a field's validation rule is declared separately through
+`setValidation()`, see "Persistence" below. There is also no `combo` type
+(only `combobox`); `enum` is indeed gone, as the README says, but nothing
 replaces it.
 
 ## The listing query
@@ -163,15 +164,11 @@ columns are addressed.
 ## Persistence
 
 `store()` delegates to `update($request, 0)`, so one method handles both. It
-validates against a **hardcoded** rules array —
-
-```php
-['email' => 'email|unique:usuarios', 'nombre' => 'numeric', 'roles' => 'required|min:1']
-```
-
-— unrelated to whatever fields the concrete controller actually declares; the
-README's promised `$this->setValidation()` does not exist anywhere in the
-source. Field normalisation then runs per declared field: dates are parsed
+validates against `$this->validations`, the rules collected by
+`$this->setValidation(['field' => ..., 'rules' => ...])` calls made from the
+concrete controller's constructor; a controller that never calls
+`setValidation()` validates against an empty rule set, i.e. no validation at
+all. Field normalisation then runs per declared field: dates are parsed
 with `Carbon::createFromFormat('d/m/Y'[' H:i'], ...)` (not the free-form
 `Carbon::parse()` used on `5.9`), `file`/`image` uploads are moved into
 `public_path()`, `securefile` uploads are stored on their disk and the
@@ -190,8 +187,6 @@ Read this before trusting anything not covered by
 - Ordering by a relation column has no correlated-subquery support.
 - `getFieldOrder()` and `getSelect()` are defined but never called from
   `data()` or anywhere else — dead code.
-- `update()`'s validation rules are hardcoded and unrelated to the declared
-  fields; `$this->setValidation()`, mentioned in the README, does not exist.
 - `$request->searches` and `$request->sort` are read without checking they
   are present, so a request missing either fails outside of any try/catch.
 - The Vue components under `src/resources/js` are the actual UI; there is no

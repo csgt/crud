@@ -35,6 +35,7 @@ class CrudController extends BaseController
     private $wheresRaw    = [];
     private $ignoreFields = ['_token'];
     private $breadcrumb   = ['mostrar' => true, 'breadcrumb' => []];
+    private $validations  = [];
 
     public function index(Request $request)
     {
@@ -138,12 +139,7 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
-        $rules = [
-            'email'  => 'email|unique:usuarios',
-            'nombre' => 'numeric',
-            'roles'  => 'required|min:1',
-        ];
-        $request->validate($rules);
+        $request->validate($this->validations);
         $fields = $request->except($this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
@@ -803,6 +799,27 @@ class CrudController extends BaseController
         }
 
         $this->hiddenFields[$aParams['field']] = $aParams['value'];
+    }
+
+    public function setValidation($aParams)
+    {
+        $allowed = ['field', 'rules'];
+
+        foreach ($aParams as $key => $val) {
+            //Validamos que todas las variables del array son permitidas.
+            if (!in_array($key, $allowed)) {
+                dd('setValidation no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+            }
+        }
+
+        if (!array_key_exists('field', $aParams)) {
+            dd('setValidation must have a value for "field"');
+        }
+        if (!array_key_exists('rules', $aParams)) {
+            dd('setValidation must have a value for "rules"');
+        }
+
+        $this->validations[$aParams['field']] = $aParams['rules'];
     }
 
     public function setPerPage($aCuantos)

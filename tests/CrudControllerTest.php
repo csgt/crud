@@ -141,4 +141,30 @@ class CrudControllerTest extends TestCase
         $this->assertSame('Clients', $this->controller->getTitle());
         $this->assertCount(5, $this->read($this->controller, 'fields'));
     }
+
+    /*==================== setValidation ====================*/
+
+    public function testSetValidationHasNothingDeclaredByDefault()
+    {
+        // ClientsController's constructor never calls setValidation(), which
+        // is exactly the "no bogus rules" case update() must fall back to.
+        $this->assertSame([], $this->read($this->controller, 'validations'));
+    }
+
+    public function testSetValidationStoresRulesKeyedByField()
+    {
+        $this->controller->setValidation(['field' => 'name', 'rules' => 'required|string']);
+        $this->controller->setValidation(['field' => 'secret', 'rules' => 'nullable|numeric']);
+
+        // This is the exact shape update() hands to $request->validate().
+        $this->assertSame(
+            ['name' => 'required|string', 'secret' => 'nullable|numeric'],
+            $this->read($this->controller, 'validations')
+        );
+    }
+
+    // setValidation() rejects an unknown key (and a missing 'field'/'rules')
+    // via dd(), which terminates the process, so that path is not covered
+    // here — same reasoning that keeps setField/setHidden/setExtraButton's
+    // dd() branches untested.
 }
