@@ -453,10 +453,16 @@ class CrudController extends BaseController
 
     private function applyOrderToQuery($query, $columnName, $direction)
     {
-        $isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false;
+        $columnName = $this->stripAlias($columnName);
+        $isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false
+            && strpos($columnName, '(') === false;
 
         if (! $isRelation) {
-            $query->orderBy($columnName, $direction);
+            if (strpos($columnName, '(') !== false || strpos($columnName, ' ') !== false) {
+                $query->orderByRaw($columnName.' '.$direction);
+            } else {
+                $query->orderBy($columnName, $direction);
+            }
 
             return;
         }
@@ -539,6 +545,7 @@ class CrudController extends BaseController
 
         if ($isRelation) {
             [$relationName, $relatedColumn] = explode('.', $field, 2);
+            $relatedColumn = $this->stripAlias($relatedColumn);
 
             if (method_exists($this->modelo, $relationName)) {
                 $query->whereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
@@ -549,6 +556,8 @@ class CrudController extends BaseController
             }
         }
 
+        $field = $this->stripAlias($field);
+
         if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
             $query->whereRaw($field.' LIKE ?', [$searchValue]);
 
@@ -556,6 +565,22 @@ class CrudController extends BaseController
         }
 
         $query->where($field, 'like', $searchValue);
+    }
+
+    /**
+     * Devuelve la expresion sin el alias, para poder usarla dentro de un WHERE
+     * o de un ORDER BY.
+     */
+    private function stripAlias($field)
+    {
+        $field = trim($field);
+        $pos = stripos($field, ' as ');
+
+        if ($pos !== false) {
+            $field = trim(substr($field, 0, $pos));
+        }
+
+        return $field;
     }
 
     private function fillCombos($aCampos)

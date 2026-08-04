@@ -103,28 +103,27 @@ class CrudControllerTest extends TestCase
 
     public function testApplyOrderToQueryOrdersARawExpressionAsAPlainColumnName()
     {
-        // The method has no special casing for raw SQL expressions: a field without
-        // a dot always goes through orderBy() as a plain (quoted) column name, so an
-        // expression like "CONCAT(name, id) AS composed" ends up quoted verbatim.
+        // A raw expression is ordered with orderByRaw, so it is not quoted as if it
+        // were a column name, and its alias is dropped first.
         $query = $this->query();
         $this->call($this->controller, 'applyOrderToQuery', [$query, 'CONCAT(name, id) AS composed', 'asc']);
 
-        $this->assertStringContainsString('order by "CONCAT(name, id)" as "composed" asc', $query->toSql());
+        $this->assertStringContainsString('order by CONCAT(name, id) asc', $query->toSql());
     }
 
     public function testApplyOrderToQueryOrdersARelationWithACorrelatedSubquery()
     {
-        // BUG: the "AS alias" portion of the declared field ("country.name AS
-        // country_name") is not stripped before being used as the related column,
-        // so it leaks into the generated subquery as a literal column alias.
+        // The "AS alias" portion of the declared field ("country.name AS
+        // country_name") is stripped before the column is used in the subquery.
         $query = $this->query();
         $this->call($this->controller, 'applyOrderToQuery', [$query, 'country.name AS country_name', 'desc']);
 
         $sql = $query->toSql();
 
-        $this->assertStringContainsString('order by (select "countries"."name" as "country_name" from "countries"', $sql);
+        $this->assertStringContainsString('order by (select "countries"."name" from "countries"', $sql);
         $this->assertStringContainsString('"clients"."country_id" = "countries"."id"', $sql);
         $this->assertStringContainsString('limit 1) desc', $sql);
+        $this->assertStringNotContainsString('country_name', $sql);
     }
 
     public function testApplyOrderToQueryFallsBackToAPlainOrderForAnUnknownRelation()
@@ -150,8 +149,8 @@ class CrudControllerTest extends TestCase
 
     public function testApplyColumnFilterMatchesARelationColumnThroughWhereHas()
     {
-        // BUG: same alias leak as applyOrderToQuery — the "AS country_name" suffix
-        // ends up as a literal (wrong) column name inside the whereHas closure.
+        // The alias is stripped here too, so the whereHas closure filters on the
+        // real related column.
         $columns = $this->call($this->controller, 'getCamposShow');
         $query   = $this->query();
 
@@ -160,7 +159,8 @@ class CrudControllerTest extends TestCase
         $sql = $query->toSql();
 
         $this->assertStringContainsString('exists (select * from "countries"', $sql);
-        $this->assertStringContainsString('"name" as "country_name" like ?', $sql);
+        $this->assertStringContainsString('"name" like ?', $sql);
+        $this->assertStringNotContainsString('country_name', $sql);
         $this->assertSame(['%mex%'], $query->getBindings());
     }
 
@@ -185,7 +185,10 @@ class CrudControllerTest extends TestCase
 
         $this->call($this->controller, 'applyColumnFilter', [$query, $columns[3], '%abc%']);
 
-        $this->assertStringContainsString('CONCAT(name, id) AS composed LIKE ?', $query->toSql());
+        // The alias is stripped, otherwise "... AS composed LIKE ?" would be
+        // injected verbatim into the WHERE and the statement would not parse.
+        $this->assertStringContainsString('CONCAT(name, id) LIKE ?', $query->toSql());
+        $this->assertStringNotContainsString('composed', $query->toSql());
         $this->assertSame(['%abc%'], $query->getBindings());
     }
 
