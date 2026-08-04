@@ -4,6 +4,14 @@ This package is used to generate cruds.
 
 > **You are on branch `5.9` - package version `5.9`.**
 
+## Documentation for contributors
+
+| Document | Read it for |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the package is wired: request lifecycle, field metadata, the listing query |
+| [docs/METHODS.md](docs/METHODS.md) | What every method of `CrudController` does on this branch |
+| [docs/RULES.md](docs/RULES.md) | What you may and may not change: no repurposing methods, behaviour changes go to a new version branch, legacy compatibility first |
+
 ## Requirements
 
 | Requirement | Supported |
