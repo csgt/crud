@@ -13,6 +13,14 @@ This package is used to generate cruds.
 | 7.0 Beta | 4   | 1.x        | en      | vue          | yes   | yes         | no  | formvaldiation |
 | 8.0      | 4/5 | 2.x        | en      | blade        | no    | no          | yes | laravel        |
 
+## Documentation for contributors
+
+| Document | Read it for |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the package is wired: request lifecycle, field metadata, the listing query |
+| [docs/METHODS.md](docs/METHODS.md) | What every method of `CrudController` does on this branch |
+| [docs/RULES.md](docs/RULES.md) | What you may and may not change: no repurposing methods, behaviour changes go to a new version branch, legacy compatibility first |
+
 ## Requirements
 
 This branch (`master`, package version `8.0`) requires:
