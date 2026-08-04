@@ -2,7 +2,7 @@
 namespace Csgt\Crud;
 
 use Illuminate\Routing\Controller as BaseController;;
-use Response,Crypt, Session;
+use Response,Crypt, Session, DB;
 use Illuminate\Http\Request;
 
 class CrudController extends BaseController {
@@ -397,7 +397,7 @@ class CrudController extends BaseController {
 			$relatedModel->newQuery(),
 			$query
 		)
-			->select(\DB::raw($this->qualifyRelatedColumn($relatedModel, $relatedColumn)))
+			->select(DB::raw($this->qualifyRelatedColumn($relatedModel, $relatedColumn)))
 			->limit(1);
 
 		$query->orderByRaw('(' . $relationQuery->toSql() . ') ' . $direction, $relationQuery->getBindings());

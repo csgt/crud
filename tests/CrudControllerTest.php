@@ -97,16 +97,19 @@ class CrudControllerTest extends TestCase {
 		$this->assertStringContainsString('order by CONCAT(name, id) asc', $query->toSql());
 	}
 
-	// No hay prueba para el ordenamiento por relacion via subquery correlacionado:
-	// esa rama llama \DB::raw() y el archivo no tiene "use DB;" (bug preexistente,
-	// no se corrige aqui). Solo funciona si algo externo registra el alias global
-	// "DB" (una app Laravel real lo hace); no queremos que la suite dependa de eso.
-	// El resto de applyOrderToQuery (columna local, expresion cruda y el fallback
-	// de relacion desconocida) no toca esa linea y si esta cubierto arriba/abajo.
-	// Nota: cuando el Eloquent instalado no tiene getRelationExistenceQuery
-	// (Laravel < 5.5) esta rama tampoco se alcanza y cae al orden por la llave
-	// primaria; con nuestra dependencia de desarrollo (Eloquent moderno) si se
-	// alcanzaria de tener una prueba.
+	public function testApplyOrderToQueryOrdersARelationWithACorrelatedSubquery() {
+		// Cuando el Eloquent instalado expone getRelationExistenceQuery (Laravel 5.5
+		// en adelante) se ordena con un subquery correlacionado. En versiones
+		// anteriores esta rama no se alcanza y se ordena por la llave primaria.
+		$query = $this->query();
+		$this->call($this->controller, 'applyOrderToQuery', [$query, 'country.name', 'desc']);
+
+		$sql = $query->toSql();
+
+		$this->assertStringContainsString('order by (select countries.name from "countries"', $sql);
+		$this->assertStringContainsString('"clients"."country_id" = "countries"."id"', $sql);
+		$this->assertStringContainsString('limit 1) desc', $sql);
+	}
 
 	public function testApplyOrderToQueryFallsBackToAPlainOrderForAnUnknownRelation() {
 		$query = $this->query();
