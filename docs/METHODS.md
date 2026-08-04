@@ -78,7 +78,7 @@ applications depend on; treat every signature as frozen.
 | Method | Purpose |
 |---|---|
 | `setModelo($aModelo)` | The Eloquent model the CRUD is built on. Required. |
-| `setCampo($aParams)` | Declares one field. Accepts `campo`, `nombre`, `editable`, `show`, `tipo`, `class`, `default`, `reglas`, `reglasmensaje`, `decimales`, `collection`, `enumarray`, `filepath`, `filewidth`, `fileheight`, `target`, `isforeign`, `utc`, `editClass`. Types (`tipo`): `string`, `multi`, `numeric`, `date`, `datetime`, `bool`, `combobox`, `password`, `enum`, `file`, `image`, `textarea`, `url`, `summernote`, `securefile`. Rejects unknown keys. Note `filedisk` is not an accepted key even though `securefile` is a valid type — see `ARCHITECTURE.md`. |
+| `setCampo($aParams)` | Declares one field. Accepts `campo`, `nombre`, `editable`, `show`, `tipo`, `class`, `default`, `reglas`, `reglasmensaje`, `decimales`, `collection`, `enumarray`, `filepath`, `filewidth`, `fileheight`, `filedisk`, `target`, `isforeign`, `utc`, `editClass`. Types (`tipo`): `string`, `multi`, `numeric`, `date`, `datetime`, `bool`, `combobox`, `password`, `enum`, `file`, `image`, `textarea`, `url`, `summernote`, `securefile`. Rejects unknown keys. A `securefile` field requires both `filepath` and `filedisk`. |
 | `setLayout($aLayout)` | Blade layout to extend. |
 | `setTitulo($aTitulo)` | Listing title. |
 | `setPermisos($aFuncionPermisos, $aModulo = false)` | `add` / `edit` / `delete` flags. |

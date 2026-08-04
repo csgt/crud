@@ -3,6 +3,7 @@ namespace Csgt\Crud;
 
 use DB;
 use Exception;
+use Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
@@ -155,6 +156,22 @@ class CrudController extends BaseController
                     $file->move($path, $filename);
                     $campos[$campo['campo']] = $filename;
                     $fields[$campo['campo']] = $filename;
+                }
+            }
+
+            if ($campo['tipo'] == 'securefile') {
+                if ($request->hasFile($campo['campo'])) {
+                    if ($aId !== 0) {
+                        $existingId = config('csgtcrud.usar_encripcion') ? decrypt($aId) : $aId;
+                        $existing   = $this->modelo->find($existingId);
+
+                        if ($existing && $existing->{$campo['campo']} != '') {
+                            Storage::disk($campo['filedisk'])->delete($existing->{$campo['campo']});
+                        }
+                    }
+
+                    $fields[$campo['campo']] = Storage::disk($campo['filedisk'])
+                        ->putFile($campo['filepath'], $request->file($campo['campo']));
                 }
             }
 
@@ -791,7 +808,7 @@ class CrudController extends BaseController
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'reglasmensaje', 'decimales', 'collection',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc', 'editClass'];
+            'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) { //Validamos que todas las variables del array son permitidas.
@@ -820,6 +837,7 @@ class CrudController extends BaseController
         $target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
+        $filedisk      = (!array_key_exists('filedisk', $aParams) ? null : $aParams['filedisk']);
         $utc           = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
         $editClass     = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable    = true;
@@ -842,6 +860,9 @@ class CrudController extends BaseController
         }
         if ($tipo == 'securefile' && $filepath == '') {
             dd('Para el tipo securefile hay que especifiarle el filepath');
+        }
+        if ($tipo == 'securefile' && $filedisk == '') {
+            dd('Para el tipo securefile hay que especifiarle el filedisk');
         }
 
         if ($tipo == 'emum' && count($enumarray) == 0) {
@@ -883,6 +904,7 @@ class CrudController extends BaseController
             'searchable'    => $searchable,
             'enumarray'     => $enumarray,
             'filepath'      => $filepath,
+            'filedisk'      => $filedisk,
             'filewidth'     => $filewidth,
             'fileheight'    => $fileheight,
             'target'        => $target,

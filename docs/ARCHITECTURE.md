@@ -109,11 +109,10 @@ computes the eager-loaded `multi` relations inline with an
 `array_filter`/`array_map` over `$this->campos` rather than through a named
 method.
 
-The `securefile` field type is accepted by `setCampo()`'s type list and rendered
-with `Storage::disk($filedisk)->temporaryUrl()` in the listing, but `filedisk`
-is **not** one of `setCampo()`'s allowed keys on this branch, and `update()` has
-no upload handling for `securefile` (only `file`/`image` are handled). A
-`securefile` field declared here can be shown but not usefully uploaded to.
+A `securefile` field is declared with both `filepath` and `filedisk`, which
+`setCampo()` requires for that type. The listing renders it as a temporary URL
+through `Storage::disk($filedisk)->temporaryUrl()`, and `update()` puts the
+upload on that disk with `putFile()`, deleting the previous file first.
 
 ## The listing query
 

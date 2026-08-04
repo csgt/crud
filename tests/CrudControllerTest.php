@@ -255,11 +255,29 @@ class CrudControllerTest extends TestCase
         $this->assertSame('', $this->call($this->controller, 'downLevel', ['clients']));
     }
 
+    /*==================== securefile ====================*/
+
+    public function testSecurefileFieldsKeepTheirDiskAndPath()
+    {
+        // The listing renders a securefile through Storage::disk($field['filedisk']),
+        // so setCampo has to accept and keep the key, otherwise the type cannot work.
+        $campos = $this->read($this->controller, 'campos');
+
+        $contract = array_values(array_filter($campos, function ($campo) {
+            return $campo['campo'] === 'contract';
+        }));
+
+        $this->assertCount(1, $contract);
+        $this->assertSame('securefile', $contract[0]['tipo']);
+        $this->assertSame('s3', $contract[0]['filedisk']);
+        $this->assertSame('contracts', $contract[0]['filepath']);
+    }
+
     /*==================== setters ====================*/
 
     public function testSetFieldRejectsUnknownKeys()
     {
         $this->assertSame('Clients', $this->controller->getTitulo());
-        $this->assertCount(5, $this->read($this->controller, 'campos'));
+        $this->assertCount(6, $this->read($this->controller, 'campos'));
     }
 }
