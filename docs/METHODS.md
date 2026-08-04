@@ -72,7 +72,7 @@ surface most applications depend on; treat every signature as frozen.
 | Method | Purpose |
 |---|---|
 | `setModelo($aModelo)` | The Eloquent model the CRUD is built on. Required. |
-| `setCampo($aParams)` | Declares one field. Allowed keys: `campo`, `nombre`, `editable`, `show`, `tipo`, `class`, `default`, `reglas`, `decimales`, `collection`, `enumarray`, `filepath`, `filewidth`, `fileheight`, `target`, `isforeign`, `utc`, `editClass`. Rejects unknown keys. Types (`tipo`): `string`, `multi`, `numeric`, `date`, `datetime`, `bool`, `combobox`, `password`, `enum`, `file`, `image`, `textarea`, `url`, `summernote`, `securefile`. |
+| `setCampo($aParams)` | Declares one field. Allowed keys: `campo`, `nombre`, `editable`, `show`, `tipo`, `class`, `default`, `reglas`, `decimales`, `collection`, `enumarray`, `filepath`, `filewidth`, `fileheight`, `filedisk`, `target`, `isforeign`, `utc`, `editClass`. Rejects unknown keys. A `securefile` field requires both `filepath` and `filedisk`. Types (`tipo`): `string`, `multi`, `numeric`, `date`, `datetime`, `bool`, `combobox`, `password`, `enum`, `file`, `image`, `textarea`, `url`, `summernote`, `securefile`. |
 | `setTitulo($aTitulo)` | Listing title. |
 | `setLayout($aLayout)` | Blade layout to extend. |
 | `setPermisos($aFuncionPermisos, $aModulo = false)` | `add` / `edit` / `delete` flags, or a middleware-resolved callback when `$aModulo` is given. |

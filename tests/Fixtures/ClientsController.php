@@ -19,5 +19,13 @@ class ClientsController extends CrudController
         $this->setCampo(['campo' => 'tags', 'nombre' => 'Tags', 'tipo' => 'multi']);
         $this->setCampo(['campo' => 'CONCAT(name, id) AS composed', 'nombre' => 'Composed']);
         $this->setCampo(['campo' => 'secret', 'nombre' => 'Secret', 'show' => false]);
+        $this->setCampo([
+            'campo' => 'contract',
+            'nombre' => 'Contract',
+            'tipo' => 'securefile',
+            'filepath' => 'contracts',
+            'filedisk' => 's3',
+            'show' => false,
+        ]);
     }
 }

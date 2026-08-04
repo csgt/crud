@@ -192,9 +192,9 @@ create and update. It filters out `$noGuardar` (`_token` plus anything added
 with `setNoGuardar()`), merges `$camposHidden`, then per field type: parses
 dates with Carbon, moves `file`/`image` uploads into `public_path().filepath`,
 casts `bool` to `1`/`0`, and detaches/attaches `multi` relations after the
-model is saved. `securefile` handling (disk storage, temporary URLs) exists in
-the listing renderer but the upload side is not implemented for it in
-`update()` on this branch — only `file` and `image` move an uploaded file.
+model is saved. A `securefile` upload is put on the disk declared with
+`filedisk` through `putFile()`, replacing and deleting the previous file, and
+the listing renders it as a temporary URL.
 
 ## Extending
 
