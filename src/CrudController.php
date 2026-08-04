@@ -81,6 +81,7 @@ class CrudController extends BaseController
             ->with('perPage', $this->perPage)
             ->with('titulo', $this->titulo)
             ->with('columnas', $this->getCamposShow())
+            ->with('filterColumns', $this->getFilterColumns())
             ->with('permisos', $this->permisos)
             ->with('orders', $this->orders)
             ->with('botonesExtra', $this->botonesExtra)
@@ -266,7 +267,7 @@ class CrudController extends BaseController
         $this->setup($request);
 
         // Definimos las variables que nos ayudar'an en el proceso de devolver la data
-        $search = $request->search;
+        $filters = $request->input('filters', []);
         $orders = $request->order;
         $columns = $this->getCamposShowMine();
         $campos = $this->getSelect($columns);
@@ -316,13 +317,11 @@ class CrudController extends BaseController
         // Obtenemos la cantidad de registros antes de filtrar
         $recordsTotal = (clone $data)->count();
 
-        // Filtramos con el campo de la vista en la base de datos
-        if ($search['value'] != '') {
-            $this->applySearchToQuery($data, $search['value'], $columns, $foreigns);
-        }
+        // Aplicamos solamente los filtros de columna enviados por la vista.
+        $filtersApplied = $this->applyFiltersToQuery($data, $filters);
 
         // Obtenemos la cantidad de registros luego de haber filtrado
-        $recordsFiltered = $search['value'] != '' ? (clone $data)->count() : $recordsTotal;
+        $recordsFiltered = $filtersApplied ? (clone $data)->count() : $recordsTotal;
 
         // Ahora order by en la base de datos
         $ordenColumnas = $this->getCamposOrden();
@@ -491,37 +490,72 @@ class CrudController extends BaseController
         return $route;
     }
 
-    private function applySearchToQuery($query, $searchValue, $columns, $foreigns)
+    private function applyFiltersToQuery($query, $filters)
     {
-        $searchValue = '%'.trim($searchValue).'%';
+        if (! is_array($filters)) {
+            return false;
+        }
 
-        $query->where(function ($searchQuery) use ($searchValue, $columns, $foreigns) {
-            foreach ($columns as $column) {
-                $field = $column['campo'];
-                if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
-                    $searchQuery->orWhereRaw('LOWER('.$field.') LIKE ?', [$searchValue]);
-                } else {
-                    $searchQuery->orWhere($field, 'like', $searchValue);
-                }
+        $columns = $this->getCamposShow();
+        $applied = false;
+
+        foreach ($filters as $filter) {
+            if (! is_array($filter) || ! isset($filter['column']) || ! array_key_exists('value', $filter)) {
+                continue;
             }
 
-            foreach ($foreigns as $relation => $relationFields) {
-                $searchQuery->orWhereHas($relation, function ($relationQuery) use ($relationFields, $searchValue) {
-                    $relationQuery->where(function ($relationWhere) use ($relationFields, $searchValue) {
-                        foreach ($relationFields as $fields) {
-                            foreach ($fields as $field) {
-                                $field = trim($field);
-                                if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
-                                    $relationWhere->orWhereRaw('LOWER('.$field.') LIKE ?', [$searchValue]);
-                                } else {
-                                    $relationWhere->orWhere($field, 'like', $searchValue);
-                                }
-                            }
-                        }
-                    });
+            $columnIndex = filter_var($filter['column'], FILTER_VALIDATE_INT);
+            $value = is_scalar($filter['value']) ? trim((string) $filter['value']) : '';
+
+            if ($columnIndex === false || ! isset($columns[$columnIndex]) || $value === '') {
+                continue;
+            }
+
+            $this->applyColumnFilter($query, $columns[$columnIndex], '%'.$value.'%');
+            $applied = true;
+        }
+
+        return $applied;
+    }
+
+    private function applyColumnFilter($query, $column, $searchValue)
+    {
+        $field = $column['campo'];
+
+        if ($column['tipo'] === 'multi' && method_exists($this->modelo, $field)) {
+            $methodName = 'fetch'.ucfirst($field).'Column';
+            $relatedColumn = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
+
+            $query->whereHas($field, function ($relationQuery) use ($relatedColumn, $searchValue) {
+                $relationQuery->where($relatedColumn, 'like', $searchValue);
+            });
+
+            return;
+        }
+
+        $isRelation = strpos($field, '.') !== false
+            && strpos($field, '"') === false
+            && $column['isforeign'];
+
+        if ($isRelation) {
+            [$relationName, $relatedColumn] = explode('.', $field, 2);
+
+            if (method_exists($this->modelo, $relationName)) {
+                $query->whereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
+                    $relationQuery->where($relatedColumn, 'like', $searchValue);
                 });
+
+                return;
             }
-        });
+        }
+
+        if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
+            $query->whereRaw($field.' LIKE ?', [$searchValue]);
+
+            return;
+        }
+
+        $query->where($field, 'like', $searchValue);
     }
 
     private function fillCombos($aCampos)
@@ -649,6 +683,16 @@ class CrudController extends BaseController
         return array_values(array_filter($this->campos, function ($c) {
             return $c['show'] == true;
         }));
+    }
+
+    private function getFilterColumns()
+    {
+        return array_map(function ($column, $index) {
+            return [
+                'index' => $index,
+                'label' => strip_tags($column['nombre']),
+            ];
+        }, $this->getCamposShow(), array_keys($this->getCamposShow()));
     }
 
     private function getCamposShowMine()
