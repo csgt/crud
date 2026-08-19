@@ -691,6 +691,7 @@ class CrudController extends BaseController
             return [
                 'index' => $index,
                 'label' => strip_tags($column['nombre']),
+                'type' => $column['tipo'],
             ];
         }, $this->getCamposShow(), array_keys($this->getCamposShow()));
     }

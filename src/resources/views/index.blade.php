@@ -18,10 +18,8 @@
             function addFilterRow(filter) {
                 filter = filter || {};
 
-                var $row = $('<div class="form-row align-items-center mb-2 crud-filter-row"></div>');
-                var $column = $('<select class="form-control form-control-sm crud-filter-column"></select>');
-                var $value = $('<input type="text" class="form-control form-control-sm crud-filter-value">')
-                    .val(filter.value || '');
+                var $row = $('<div class="form-row d-flex flex-nowrap align-items-center mb-2 crud-filter-row"></div>');
+                var $column = $('<select class="form-control form-select form-select-sm crud-filter-column"></select>');
 
                 filterColumns.forEach(function(column) {
                     $('<option></option>')
@@ -31,7 +29,14 @@
                         .appendTo($column);
                 });
 
-                $row.append($('<div class="col-sm-4 mb-1 mb-sm-0"></div>').append($column));
+                var selectedColumn = filterColumns.find(function(column) {
+                    return String(column.index) === String($column.val());
+                });
+                var $value = $('<input class="form-control form-control-sm crud-filter-value">')
+                    .attr('type', selectedColumn && selectedColumn.type === 'date' ? 'date' : 'text')
+                    .val(filter.value || '');
+
+                $row.append($('<div class="col-4 mb-1 mb-sm-0"></div>').append($column));
                 $row.append($('<div class="col"></div>').append($value));
                 $row.append(
                     $('<div class="col-auto pl-1"></div>').append(
@@ -47,6 +52,16 @@
                 $filterRows.append($row);
                 updateRemoveButtons();
             }
+
+            $filterRows.on('change', '.crud-filter-column', function() {
+                var selectedColumn = filterColumns.find(function(column) {
+                    return String(column.index) === String($(this).val());
+                }.bind(this));
+                var $value = $(this).closest('.crud-filter-row').find('.crud-filter-value');
+                var value = $value.val();
+
+                $value.attr('type', selectedColumn && selectedColumn.type === 'date' ? 'date' : 'text').val(value);
+            });
 
             function updateRemoveButtons() {
                 $filterRows.find('.crud-filter-remove').prop('disabled', $filterRows.find('.crud-filter-row').length === 1);
