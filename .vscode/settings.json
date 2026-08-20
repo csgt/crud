@@ -1,0 +1,7 @@
+{
+    "laravel-pint.enable": false,
+    "[php]": {
+        "editor.defaultFormatter": "kokororin.vscode-phpfmt",
+        "editor.formatOnSave": true
+    }
+}

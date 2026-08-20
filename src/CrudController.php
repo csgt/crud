@@ -137,12 +137,6 @@ class CrudController extends BaseController
                 }
             }
 
-            if ((($campo['tipo'] == 'date') || ($campo['tipo'] == 'datetime')) && $campo['utc']) {
-                $fields[$campo['campo']] = Carbon::parse($fields[$campo['campo']])
-                    ->shiftTimezone($request->__tz__)
-                    ->setTimezone('UTC');
-            }
-
             if (($campo['tipo'] == 'file') || ($campo['tipo'] == 'image')) {
                 if ($request->hasFile($campo['campo'])) {
                     $file = $request->file($campo['campo']);
