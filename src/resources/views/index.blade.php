@@ -12,11 +12,80 @@
             $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
                 console.log(JSON.stringify(message));
             };
+            var filterColumns = @json($filterColumns);
+            var $filterRows = $('#crud-filter-rows');
+
+            function addFilterRow(filter) {
+                filter = filter || {};
+
+                var $row = $('<div class="row align-items-center mb-2 crud-filter-row"></div>');
+                var $column = $('<select class="form-control form-select form-control-sm form-select-sm crud-filter-column"></select>');
+                var $value = $('<input type="text" class="form-control form-control-sm crud-filter-value">')
+                    .val(filter.value || '');
+
+                filterColumns.forEach(function(column) {
+                    $('<option></option>')
+                        .val(column.index)
+                        .text(column.label)
+                        .prop('selected', String(column.index) === String(filter.column))
+                        .appendTo($column);
+                });
+
+                $row.append($('<div class="col-sm-4 mb-1 mb-sm-0"></div>').append($column));
+                $row.append($('<div class="col"></div>').append($value));
+                $row.append(
+                    $('<div class="col-auto pl-1 ps-1"></div>').append(
+                        $('<button type="button" class="btn btn-sm btn-light crud-filter-add"><i class="fa fas fa-plus"></i></button>')
+                            .attr('aria-label', @json(trans('csgtcrud::crud.agregarfiltro')))
+                            .attr('title', @json(trans('csgtcrud::crud.agregarfiltro'))),
+                        $('<button type="button" class="btn btn-sm btn-light ml-1 ms-1 crud-filter-remove"><i class="fa fas fa-minus"></i></button>')
+                            .attr('aria-label', @json(trans('csgtcrud::crud.quitarfiltro')))
+                            .attr('title', @json(trans('csgtcrud::crud.quitarfiltro')))
+                    )
+                );
+
+                $filterRows.append($row);
+                updateRemoveButtons();
+            }
+
+            function updateRemoveButtons() {
+                $filterRows.find('.crud-filter-remove').prop('disabled', $filterRows.find('.crud-filter-row').length === 1);
+            }
+
+            function getFilters() {
+                return $filterRows.find('.crud-filter-row').map(function() {
+                    return {
+                        column: $(this).find('.crud-filter-column').val(),
+                        value: $(this).find('.crud-filter-value').val()
+                    };
+                }).get().filter(function(filter) {
+                    return filter.value.trim() !== '';
+                });
+            }
+
+            function setFilters(filters) {
+                $filterRows.empty();
+                if (!Array.isArray(filters) || filters.length === 0) {
+                    addFilterRow();
+                    return;
+                }
+
+                filters.forEach(addFilterRow);
+            }
+
+            addFilterRow();
+
             var oTable = $('.dataTable').dataTable({
                 processing: true,
                 serverSide: true,
-                searchDelay: 500,
+                searching: false,
                 stateSave: true,
+                stateSaveParams: function(settings, data) {
+                    data.crudFilters = getFilters();
+                },
+                stateLoadParams: function(settings, data) {
+                    setFilters(data.crudFilters || []);
+                },
 
                 @if ($orders)
                     order: [
@@ -31,6 +100,9 @@
                         'X-CSRF-Token': "{{ csrf_token() }}"
                     },
                     method: "POST",
+                    data: function(data) {
+                        data.filters = getFilters();
+                    },
                     error: function(xhr, error, thrown) {
                         alert(xhr.responseJSON.message)
                     },
@@ -55,12 +127,7 @@
                         return toolbar;
                     },
 
-                    topStart: {
-                        search: {
-                            placeholder: '{{ trans('csgtcrud::crud.buscar') }}',
-                            className: 'w-100'
-                        }
-                    },
+                    topStart: null,
                     bottom: {
                         div: {
                             className: 'mt-2'
@@ -253,6 +320,33 @@
             @if (!$permisos['update'] && !$permisos['destroy'] && count($extraButtons) == 0)
                 oTable.fnSetColumnVis(-1, false);
             @endif ;
+
+            $filterRows.on('click', '.crud-filter-add', function() {
+                addFilterRow();
+                $filterRows.find('.crud-filter-value').last().trigger('focus');
+            });
+
+            $filterRows.on('click', '.crud-filter-remove', function() {
+                $(this).closest('.crud-filter-row').remove();
+                updateRemoveButtons();
+                oTable.api().draw();
+            });
+
+            $filterRows.on('keydown', '.crud-filter-value', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    oTable.api().draw();
+                }
+            });
+
+            $('#crud-filter-apply').on('click', function() {
+                oTable.api().draw();
+            });
+
+            $('#crud-filter-clear').on('click', function() {
+                setFilters([]);
+                oTable.api().draw();
+            });
         });
 
         Number.prototype.formatMoney = function(aDec) {
@@ -269,6 +363,19 @@
 @section('content')
     <div class="card">
         <div class="card-body">
+            @if ($showSearch)
+                <div class="mb-3">
+                    <div id="crud-filter-rows"></div>
+                    <div class="text-right text-end">
+                        <button id="crud-filter-clear" type="button" class="btn btn-sm btn-light">
+                            {{ trans('csgtcrud::crud.limpiar') }}
+                        </button>
+                        <button id="crud-filter-apply" type="button" class="btn btn-sm btn-primary">
+                            <i class="fa fas fa-filter"></i> {{ trans('csgtcrud::crud.filtrar') }}
+                        </button>
+                    </div>
+                </div>
+            @endif
             <div class="{{ $responsive ? 'table-responsive' : '' }}">
                 <table class="table table-sm table-striped table-hover dataTable display">
                     <thead>

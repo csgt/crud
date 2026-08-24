@@ -61,6 +61,7 @@ class CrudController extends BaseController
             ->with('perPage', $this->perPage)
             ->with('title', $this->title)
             ->with('columns', $this->getShowFields())
+            ->with('filterColumns', $this->getFilterColumns())
             ->with('permisos', $this->permissions)
             ->with('orders', $this->orders)
             ->with('extraButtons', $this->extraButtons)
@@ -243,7 +244,7 @@ class CrudController extends BaseController
     {
         $this->setup($request);
         //Definimos las variables que nos ayudar'an en el proceso de devolver la data
-        $search          = $request->search;
+        $filters         = $request->input('filters', []);
         $orders          = $request->order;
         $multiColumns    = $this->getShowMultipleFields();
         $columns         = $this->getLocalShowFields();
@@ -252,7 +253,8 @@ class CrudController extends BaseController
         $recordsTotal    = 0;
 
         //Se obtienen los campos a mostrar desde el modelo
-        $data = $this->model->select($fields);
+        $data = $this->model->newQuery();
+        $data->select($fields);
 
         $foreigns = $this->getForeignShowFields();
         foreach ($foreigns as $relation => $fields) {
@@ -294,54 +296,48 @@ class CrudController extends BaseController
             $data->whereRaw($whereRaw);
         }
 
-        $data = $data->get();
         //Obtenemos la cantidad de registros antes de filtrar
-        $recordsTotal = $data->count();
+        $recordsTotal = (clone $data)->count();
 
-        //Filtramos con el campo de la vista
-        if ($search['value'] != '') {
-            if ($recordsTotal > 0) {
-                $data = $data->filter(function ($item) use ($search) {
-                    $result = false;
-                    foreach ($item->getAttributes() as $column) {
-                        if ($column) {
-                            $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                        }
-                    }
-                    $relations = $item->getRelations();
-                    foreach ($relations as $relation) {
-                        if ($relation && method_exists($relation, 'getAttributes')) {
-                            foreach ($relation->getAttributes() as $column) {
-                                $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
-                            }
-                        }
-                    }
-
-                    return $result;
-                });
-            }
-        }
+        //Aplicamos solamente los filtros de columna enviados por la vista.
+        $filtersApplied = $this->applyFiltersToQuery($data, $filters);
 
         //Obtenemos la cantidad de registros luego de haber filtrado
-        $recordsFiltered = $data->count();
+        $recordsFiltered = $filtersApplied ? (clone $data)->count() : $recordsTotal;
 
-        //Ahora order by
+        //Ahora order by, tambien en la base de datos
         $fieldsOrder = $this->getFieldOrder();
         if ($orders) {
             foreach ($orders as $order) {
-                if ($order['dir'] == 'asc') {
-                    $data = $data->sortBy($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
+                $columnName = isset($fieldsOrder[$order['column']]) ? $fieldsOrder[$order['column']] : null;
+                if ($columnName === null) {
+                    continue;
+                }
+
+                $direction = strtolower($order['dir']) == 'desc' ? 'desc' : 'asc';
+
+                if ($columnName == $this->uniqueid) {
+                    $data->orderBy($this->model->getTable() . '.' . $this->model->getKeyName(), $direction);
                 } else {
-                    $data = $data->sortByDesc($fieldsOrder[$order['column']], SORT_NATURAL | SORT_FLAG_CASE);
+                    $this->applyOrderToQuery($data, $columnName, $direction);
                 }
             }
         }
 
-        //Filtramos los registros y obtenemos el arreglo con la data
+        //Paginamos en la base de datos y obtenemos unicamente la pagina solicitada
         $items = $data
-            ->splice($request->start)
-            ->take($request->length)
-            ->toArray();
+            ->offset((int) $request->start)
+            ->limit((int) $request->length)
+            ->get();
+
+        //Los campos multi se cargan de una sola vez para evitar N+1
+        $multiRelations = array_values(array_unique(array_map(function ($campo) {
+            return $campo['field'];
+        }, $multiColumns)));
+
+        if (!empty($multiRelations)) {
+            $items->load($multiRelations);
+        }
 
         $arr = [];
         foreach ($items as $item) {
@@ -385,19 +381,15 @@ class CrudController extends BaseController
                     $lastItem = $item[$colName];
                 } elseif ($esRelacion) {
                     //Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
-                    if ($item[$relationName]) {
-                        if (array_key_exists(0, $item[$relationName])) {
-                            $cols[] = $item[$relationName][0][$colName];
-                        } else {
-                            if (array_key_exists($colName, $item[$relationName])) {
-                                $cols[] = $item[$relationName][$colName];
-                            } else {
-                                $cols[] = null;
-                            }
-                        }
-                    } else {
-                        $cols[] = null;
+                    $relation = $item[$relationName];
+
+                    if ($relation instanceof \Illuminate\Support\Collection) {
+                        $relation = $relation->first();
+                    } elseif (is_array($relation) && array_key_exists(0, $relation)) {
+                        $relation = $relation[0];
                     }
+
+                    $cols[] = data_get($relation, $colName);
                 } else {
                     $fullCampo = array_filter($this->fields, function ($campo) use ($colName) {
                         return $campo['field'] == $colName;
@@ -415,12 +407,14 @@ class CrudController extends BaseController
                         } else if ($fullCampoFixed['type'] == 'multi') {
                             $methodName = 'fetch' . ucfirst($fullCampoFixed['field']) . 'Column';
                             $keyName    = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
+                            $relation   = $item->{$fullCampoFixed['field']};
 
-                            $cols[] = implode(', ',
-                                $this->model
-                                    ->find($item[$this->uniqueid])
-                                    ->{$fullCampoFixed['field']}
+                            $cols[] = $relation === null ? '' : implode(', ',
+                                $relation
                                     ->pluck($keyName)
+                                    ->filter(function ($value) {
+                                        return $value !== null && $value !== '';
+                                    })
                                     ->toArray()
                             );
                         } else {
@@ -437,6 +431,158 @@ class CrudController extends BaseController
         }
 
         return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
+    }
+
+    /**
+     * Ordena en la base de datos. Si la columna pertenece a una relacion se ordena
+     * con un subquery correlacionado en lugar de traer toda la tabla a memoria.
+     */
+    private function applyOrderToQuery($query, $columnName, $direction)
+    {
+        $columnName = $this->stripAlias($columnName);
+        $isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false
+        && strpos($columnName, '(') === false;
+
+        if (!$isRelation) {
+            if (strpos($columnName, '(') !== false || strpos($columnName, ' ') !== false) {
+                $query->orderByRaw($columnName . ' ' . $direction);
+            } else {
+                $query->orderBy($columnName, $direction);
+            }
+
+            return;
+        }
+
+        $partes        = explode('.', $columnName, 2);
+        $relationName  = $partes[0];
+        $relatedColumn = $partes[1];
+
+        if (!method_exists($this->model, $relationName)) {
+            $query->orderBy($columnName, $direction);
+
+            return;
+        }
+
+        $relation      = $this->model->{$relationName}();
+        $relatedModel  = $relation->getRelated();
+        $relationQuery = $relation->getRelationExistenceQuery(
+            $relatedModel->newQuery(),
+            $query
+        )
+            ->select(DB::raw($this->qualifyRelatedColumn($relatedModel, $relatedColumn)))
+            ->limit(1);
+
+        $query->orderByRaw('(' . $relationQuery->toSql() . ') ' . $direction, $relationQuery->getBindings());
+    }
+
+    /**
+     * Devuelve la expresion sin el alias, para poder usarla dentro de un WHERE.
+     */
+    private function stripAlias($field)
+    {
+        $field = trim($field);
+        $pos   = stripos($field, ' as ');
+
+        if ($pos !== false) {
+            $field = trim(substr($field, 0, $pos));
+        }
+
+        return $field;
+    }
+
+    /**
+     * Antepone la tabla a la columna solo cuando es un identificador simple.
+     * Las expresiones (alias, funciones) se dejan intactas.
+     */
+    private function qualifyRelatedColumn($relatedModel, $column)
+    {
+        $column = trim($column);
+
+        if (strpos($column, '(') !== false || strpos($column, ' ') !== false || strpos($column, '.') !== false) {
+            return $column;
+        }
+
+        return $relatedModel->getTable() . '.' . $column;
+    }
+
+    /**
+     * Aplica los filtros por columna enviados por la vista. Devuelve true si al
+     * menos uno se aplico, para saber si hay que recalcular recordsFiltered.
+     */
+    private function applyFiltersToQuery($query, $filters)
+    {
+        if (!is_array($filters)) {
+            return false;
+        }
+
+        $columns = $this->getShowFields();
+        $applied = false;
+
+        foreach ($filters as $filter) {
+            if (!is_array($filter) || !isset($filter['column']) || !array_key_exists('value', $filter)) {
+                continue;
+            }
+
+            $columnIndex = filter_var($filter['column'], FILTER_VALIDATE_INT);
+            $value       = is_scalar($filter['value']) ? trim((string) $filter['value']) : '';
+
+            if ($columnIndex === false || !isset($columns[$columnIndex]) || $value === '') {
+                continue;
+            }
+
+            $this->applyColumnFilter($query, $columns[$columnIndex], '%' . $value . '%');
+            $applied = true;
+        }
+
+        return $applied;
+    }
+
+    /**
+     * Traduce un filtro de columna a un WHERE. Las columnas de relaciones y los
+     * campos multi se resuelven con whereHas.
+     */
+    private function applyColumnFilter($query, $column, $searchValue)
+    {
+        $field = $column['field'];
+
+        if ($column['type'] === 'multi' && method_exists($this->model, $field)) {
+            $methodName    = 'fetch' . ucfirst($field) . 'Column';
+            $relatedColumn = method_exists($this->model, $methodName) ? $this->model->{$methodName}() : 'name';
+
+            $query->whereHas($field, function ($relationQuery) use ($relatedColumn, $searchValue) {
+                $relationQuery->where($relatedColumn, 'like', $searchValue);
+            });
+
+            return;
+        }
+
+        $isRelation = strpos($field, '.') !== false
+        && strpos($field, '"') === false
+        && $column['isforeign'];
+
+        if ($isRelation) {
+            $partes        = explode('.', $field, 2);
+            $relationName  = $partes[0];
+            $relatedColumn = $this->stripAlias($partes[1]);
+
+            if (method_exists($this->model, $relationName)) {
+                $query->whereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
+                    $relationQuery->where($relatedColumn, 'like', $searchValue);
+                });
+
+                return;
+            }
+        }
+
+        $field = $this->stripAlias($field);
+
+        if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
+            $query->whereRaw($field . ' LIKE ?', [$searchValue]);
+
+            return;
+        }
+
+        $query->where($field, 'like', $searchValue);
     }
 
     private function downLevel($aPath)
@@ -606,6 +752,18 @@ class CrudController extends BaseController
         }));
     }
 
+    private function getFilterColumns()
+    {
+        $columns = $this->getShowFields();
+
+        return array_map(function ($column, $index) {
+            return [
+                'index' => $index,
+                'label' => strip_tags($column['name']),
+            ];
+        }, $columns, array_keys($columns));
+    }
+
     private function getShowMultipleFields()
     {
         return array_values(array_filter($this->fields, function ($campo) {
@@ -696,7 +854,7 @@ class CrudController extends BaseController
         $allowed = ['field', 'name', 'editable', 'show', 'type', 'class',
             'default', 'validationRules', 'validationRulesMessage', 'decimals', 'collection',
             'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
-        $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password',
+        $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'time', 'bool', 'combobox', 'password',
             'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
         foreach ($aParams as $key => $val) {
