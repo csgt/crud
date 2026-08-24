@@ -82,12 +82,18 @@ class CrudControllerTest extends TestCase
 
     /*==================== getFilterColumns ====================*/
 
-    public function testGetFilterColumnsExposesIndexAndPlainLabel()
+    public function testGetFilterColumnsExposesIndexPlainLabelAndType()
     {
+        $this->controller->setField([
+            'field' => 'created_at',
+            'name' => 'Created at',
+            'type' => 'date',
+        ]);
         $columns = $this->call($this->controller, 'getFilterColumns');
 
-        $this->assertSame([0, 1, 2, 3], array_column($columns, 'index'));
-        $this->assertSame(['Name', 'Country', 'Tags', 'Composed'], array_column($columns, 'label'));
+        $this->assertSame([0, 1, 2, 3, 4], array_column($columns, 'index'));
+        $this->assertSame(['Name', 'Country', 'Tags', 'Composed', 'Created at'], array_column($columns, 'label'));
+        $this->assertSame(['string', 'string', 'multi', 'string', 'date'], array_column($columns, 'type'));
     }
 
     /*==================== stripAlias ====================*/

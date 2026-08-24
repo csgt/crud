@@ -167,6 +167,8 @@ wrapped in `%...%`.
 
 Rows can be added and removed in the UI; the current set survives a
 DataTables state save/reload through `stateSaveParams`/`stateLoadParams`.
+`getFilterColumns()` also exposes each field type, so a `date` filter renders
+as a native date input and switches back to text when another column is chosen.
 
 ## Ordering
 

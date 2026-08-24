@@ -54,7 +54,7 @@ Private filters over `$fields`, the list built by `setField()`.
 | `getLocalEditFields()` | Fields with `editable == true` that have no `.` in the field name; drives the edit form. |
 | `getCamposEdit()` | Every field with `editable == true`. |
 | `getFieldOrder()` | The declared field names (`show == true` only) in listing order with `___id___` appended; maps a DataTables column index back to a field. |
-| `getFilterColumns()` | `[['index' => int, 'label' => string], ...]` for the filter `<select>`, built from `getShowFields()`. The label is `strip_tags`ped. |
+| `getFilterColumns()` | `[['index' => int, 'label' => string, 'type' => string], ...]` for the filter controls, built from `getShowFields()`. The label is `strip_tags`ped and the type lets the view use a native date input for date fields. |
 
 ## Rendering helpers
 

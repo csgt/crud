@@ -20,8 +20,6 @@
 
                 var $row = $('<div class="row align-items-center mb-2 crud-filter-row"></div>');
                 var $column = $('<select class="form-control form-select form-control-sm form-select-sm crud-filter-column"></select>');
-                var $value = $('<input type="text" class="form-control form-control-sm crud-filter-value">')
-                    .val(filter.value || '');
 
                 filterColumns.forEach(function(column) {
                     $('<option></option>')
@@ -30,6 +28,13 @@
                         .prop('selected', String(column.index) === String(filter.column))
                         .appendTo($column);
                 });
+
+                var selectedColumn = filterColumns.find(function(column) {
+                    return String(column.index) === String($column.val());
+                });
+                var $value = $('<input class="form-control form-control-sm crud-filter-value">')
+                    .attr('type', selectedColumn && selectedColumn.type === 'date' ? 'date' : 'text')
+                    .val(filter.value || '');
 
                 $row.append($('<div class="col-sm-4 mb-1 mb-sm-0"></div>').append($column));
                 $row.append($('<div class="col"></div>').append($value));
@@ -47,6 +52,16 @@
                 $filterRows.append($row);
                 updateRemoveButtons();
             }
+
+            $filterRows.on('change', '.crud-filter-column', function() {
+                var selectedColumn = filterColumns.find(function(column) {
+                    return String(column.index) === String($(this).val());
+                }.bind(this));
+                var $value = $(this).closest('.crud-filter-row').find('.crud-filter-value');
+                var value = $value.val();
+
+                $value.attr('type', selectedColumn && selectedColumn.type === 'date' ? 'date' : 'text').val(value);
+            });
 
             function updateRemoveButtons() {
                 $filterRows.find('.crud-filter-remove').prop('disabled', $filterRows.find('.crud-filter-row').length === 1);
@@ -364,17 +379,18 @@
     <div class="card">
         <div class="card-body">
             @if ($showSearch)
-                <div class="mb-3">
-                    <div id="crud-filter-rows"></div>
-                    <div class="text-right text-end">
+                <div class="row flex-nowrap align-items-end mb-3">
+                    <div id="crud-filter-rows" class="col"></div>
+                    <div class="col-auto d-flex flex-nowrap align-items-center text-right text-end pb-2">
                         <button id="crud-filter-clear" type="button" class="btn btn-sm btn-light">
                             {{ trans('csgtcrud::crud.limpiar') }}
                         </button>
-                        <button id="crud-filter-apply" type="button" class="btn btn-sm btn-primary">
+                        <button id="crud-filter-apply" type="button" class="btn btn-sm btn-primary ml-1 ms-1">
                             <i class="fa fas fa-filter"></i> {{ trans('csgtcrud::crud.filtrar') }}
                         </button>
                     </div>
                 </div>
+                <hr />
             @endif
             <div class="{{ $responsive ? 'table-responsive' : '' }}">
                 <table class="table table-sm table-striped table-hover dataTable display">

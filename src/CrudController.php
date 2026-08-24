@@ -760,6 +760,7 @@ class CrudController extends BaseController
             return [
                 'index' => $index,
                 'label' => strip_tags($column['name']),
+                'type' => $column['type'],
             ];
         }, $columns, array_keys($columns));
     }

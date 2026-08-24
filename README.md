@@ -154,7 +154,9 @@ sends a list of column/value pairs as `filters[]`, and each one becomes a
 
 Rows can be added and removed in the UI, they are all applied together, and the
 active set is kept in the DataTables saved state. `recordsFiltered` is only
-recounted when at least one filter is actually applied.
+recounted when at least one filter is actually applied. Filters for fields with
+`type => 'date'` use the browser's native date picker and submit an ISO date
+value (`YYYY-MM-DD`).
 
 ## Tests
 
