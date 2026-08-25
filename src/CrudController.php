@@ -35,6 +35,7 @@ class CrudController extends BaseController
     private $wheresRaw    = [];
     private $ignoreFields = ['_token'];
     private $breadcrumb   = ['mostrar' => true, 'breadcrumb' => []];
+    private $validations  = [];
 
     public function index(Request $request)
     {
@@ -90,7 +91,7 @@ class CrudController extends BaseController
             $state      = $this->emptyState();
             $breadcrumb = $this->generateBreadcrumb('create', $urlUpdate);
         }
-        $state = $state->jsonSerialize();
+        $state = is_object($state) ? $state->jsonSerialize() : $state;
 
         $editFields = $this->getLocalEditFields();
         foreach ($editFields as $editField) {
@@ -138,12 +139,7 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
-        $rules = [
-            'email'  => 'email|unique:usuarios',
-            'nombre' => 'numeric',
-            'roles'  => 'required|min:1',
-        ];
-        $request->validate($rules);
+        $request->validate($this->validations);
         $fields = $request->except($this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
@@ -341,7 +337,7 @@ class CrudController extends BaseController
             $ret[$item['field']] = $item['default'];
         }
 
-        $this->getMultiFields()->each(function ($multi) use ($ret) {
+        $this->getMultiFields()->each(function ($multi) use (&$ret) {
             $ret[$multi] = [];
         });
 
@@ -474,12 +470,6 @@ class CrudController extends BaseController
         return $this->fields->where('show', true);
     }
 
-    private function getShowMultipleFields()
-    {
-        return array_values(array_filter($this->fields, function ($field) {
-            return $field['type'] == 'multi';
-        }));
-    }
 
     private function getLocalShowFields()
     {
@@ -506,50 +496,32 @@ class CrudController extends BaseController
 
     private function getForeignShowFields()
     {
-        $foreigns = $this->fields->where('isforeign', true)->map(function ($field) {
-            $parts = explode('.', $field['field']);
-            $key   = $parts[0];
-            array_shift($parts);
-            if (is_array($parts)) {
-                $value = implode('.', $parts);
-            } else {
-                $value = $parts;
+        $arr = [];
+        $i   = 0;
+
+        foreach ($this->fields as $field) {
+            if (!$field['isforeign'] || !$field['show'] || strpos($field['field'], '"') !== false) {
+                continue;
             }
 
-            return [$key => $value];
-        });
+            $parts = explode('.', $field['field']);
+            $key   = array_shift($parts);
 
-        return $foreigns;
+            if (count($parts) === 0) {
+                continue;
+            }
 
-        // $foreigns =
-        //     array_filter(
-        //     $this->fields,
-        //     function ($c) {
-        //         return ($c['show'] == true && strpos($c['field'], '.') != 0 && strpos($c['field'], '"') === false);
-        //     }
-        // );
-        // $i = 0;
-        // //dd($foreigns);
-        // foreach ($foreigns as $foreign) {
-        //     if ($foreign['isforeign']) {
+            $arr[$key][$i][] = implode('.', $parts);
+            $i++;
+        }
 
-        //     }
-        // }
-
-        // return $arr;
-    }
-
-    private function getCamposEdit()
-    {
-        return array_values(array_filter($this->fields, function ($c) {
-            return $c['editable'] == true;
-        }));
+        return $arr;
     }
 
     private function getSelect($aFields)
     {
         return $aFields->map(function ($field) {
-            return DB::raw($field->field);
+            return DB::raw($field['field']);
         });
     }
 
@@ -827,6 +799,27 @@ class CrudController extends BaseController
         }
 
         $this->hiddenFields[$aParams['field']] = $aParams['value'];
+    }
+
+    public function setValidation($aParams)
+    {
+        $allowed = ['field', 'rules'];
+
+        foreach ($aParams as $key => $val) {
+            //Validamos que todas las variables del array son permitidas.
+            if (!in_array($key, $allowed)) {
+                dd('setValidation no recibe parametros con el nombre: ' . $key . '! solamente se permiten: ' . implode(', ', $allowed));
+            }
+        }
+
+        if (!array_key_exists('field', $aParams)) {
+            dd('setValidation must have a value for "field"');
+        }
+        if (!array_key_exists('rules', $aParams)) {
+            dd('setValidation must have a value for "rules"');
+        }
+
+        $this->validations[$aParams['field']] = $aParams['rules'];
     }
 
     public function setPerPage($aCuantos)
