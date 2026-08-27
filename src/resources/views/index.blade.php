@@ -14,40 +14,23 @@
             };
             var filterColumns = @json($filterColumns);
             var $filterRows = $('#crud-filter-rows');
+            var filterRowTemplate = $filterRows.html();
 
             function addFilterRow(filter) {
                 filter = filter || {};
 
-                var $row = $('<div class="row align-items-center mb-2 crud-filter-row"></div>');
-                var $column = $('<select class="form-control form-select form-control-sm form-select-sm crud-filter-column"></select>');
-
-                filterColumns.forEach(function(column) {
-                    $('<option></option>')
-                        .val(column.index)
-                        .text(column.label)
-                        .prop('selected', String(column.index) === String(filter.column))
-                        .appendTo($column);
-                });
+                var $row = $(filterRowTemplate);
+                var $column = $row.find('.crud-filter-column');
+                if (filter.column !== undefined) {
+                    $column.val(String(filter.column));
+                }
 
                 var selectedColumn = filterColumns.find(function(column) {
                     return String(column.index) === String($column.val());
                 });
-                var $value = $('<input class="form-control form-control-sm crud-filter-value">')
+                var $value = $row.find('.crud-filter-value')
                     .attr('type', selectedColumn && selectedColumn.type === 'date' ? 'date' : 'text')
                     .val(filter.value || '');
-
-                $row.append($('<div class="col-sm-4 mb-1 mb-sm-0"></div>').append($column));
-                $row.append($('<div class="col"></div>').append($value));
-                $row.append(
-                    $('<div class="col-auto pl-1 ps-1"></div>').append(
-                        $('<button type="button" class="btn btn-sm btn-light crud-filter-add"><i class="fa fas fa-plus"></i></button>')
-                            .attr('aria-label', @json(trans('csgtcrud::crud.agregarfiltro')))
-                            .attr('title', @json(trans('csgtcrud::crud.agregarfiltro'))),
-                        $('<button type="button" class="btn btn-sm btn-light ml-1 ms-1 crud-filter-remove"><i class="fa fas fa-minus"></i></button>')
-                            .attr('aria-label', @json(trans('csgtcrud::crud.quitarfiltro')))
-                            .attr('title', @json(trans('csgtcrud::crud.quitarfiltro')))
-                    )
-                );
 
                 $filterRows.append($row);
                 updateRemoveButtons();
@@ -88,7 +71,12 @@
                 filters.forEach(addFilterRow);
             }
 
-            addFilterRow();
+            if ($filterRows.find('.crud-filter-row').length === 0) {
+                addFilterRow();
+            } else {
+                $filterRows.find('.crud-filter-column').trigger('change');
+                updateRemoveButtons();
+            }
 
             var oTable = $('.dataTable').dataTable({
                 processing: true,
@@ -153,10 +141,10 @@
                 },
                 iDisplayLength: {!! $perPage !!},
                 columnDefs: [{
-                        targets: -1,
-                        class: "text-right text-end",
+                        targets: {{ count($columns) }},
+                        className: "text-right text-end",
                         data: null,
-                        sortable: false,
+                        orderable: false,
                         render: function(data, type, full, meta) {
                             var id = data['DT_RowId'];
                             var html = '<div class="btn-group btn-group-sm">';
@@ -207,7 +195,7 @@
                     @foreach ($columns as $column)
                         {
                             targets: {{ $loop->index }},
-                            class: "{!! $column['class'] !!}",
+                            className: "{!! $column['class'] !!}",
                             searchable: "{!! $column['searchable'] !!}",
 
                             @if ($column['type'] == 'date' || $column['type'] == 'datetime' || $column['type'] == 'time')
@@ -380,7 +368,32 @@
         <div class="card-body">
             @if ($showSearch)
                 <div class="row flex-nowrap align-items-end mb-3">
-                    <div id="crud-filter-rows" class="col"></div>
+                    <div id="crud-filter-rows" class="col">
+                        <div class="row align-items-center mb-2 crud-filter-row">
+                            <div class="col-sm-4 mb-1 mb-sm-0">
+                                <select class="form-control form-select form-control-sm form-select-sm crud-filter-column">
+                                    @foreach ($filterColumns as $filterColumn)
+                                        <option value="{{ $filterColumn['index'] }}">{{ $filterColumn['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col">
+                                <input type="text" class="form-control form-control-sm crud-filter-value">
+                            </div>
+                            <div class="col-auto pl-1 ps-1">
+                                <button type="button" class="btn btn-sm btn-light crud-filter-add"
+                                    aria-label="{{ trans('csgtcrud::crud.agregarfiltro') }}"
+                                    title="{{ trans('csgtcrud::crud.agregarfiltro') }}">
+                                    <i class="fa fas fa-plus"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light ml-1 ms-1 crud-filter-remove" disabled
+                                    aria-label="{{ trans('csgtcrud::crud.quitarfiltro') }}"
+                                    title="{{ trans('csgtcrud::crud.quitarfiltro') }}">
+                                    <i class="fa fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-auto d-flex flex-nowrap align-items-center text-right text-end pb-2">
                         <button id="crud-filter-clear" type="button" class="btn btn-sm btn-light">
                             {{ trans('csgtcrud::crud.limpiar') }}
@@ -399,7 +412,7 @@
                             @foreach ($columns as $column)
                                 <th>{!! $column['name'] !!}</th>
                                 @if ($loop->last)
-                                    <th>&nbsp;</th>
+                                    <th class="text-right text-end">&nbsp;</th>
                                 @endif
                             @endforeach
                         </tr>
