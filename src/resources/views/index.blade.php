@@ -197,6 +197,9 @@
                             targets: {{ $loop->index }},
                             className: "{!! $column['class'] !!}",
                             searchable: "{!! $column['searchable'] !!}",
+                            @if ($column['type'] == 'string')
+                                type: 'string',
+                            @endif
 
                             @if ($column['type'] == 'date' || $column['type'] == 'datetime' || $column['type'] == 'time')
                                 data: null,
