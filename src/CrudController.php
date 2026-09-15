@@ -758,6 +758,10 @@ class CrudController extends BaseController
             $rules = $aParams['validationRules'];
             $isString = is_string($rules);
             $rules = array_map(function ($rule) {
+                if (is_string($rule) && strtolower($rule) === 'emailaddress') {
+                    return 'email';
+                }
+
                 return $rule === 'notempty' ? 'required' : $rule;
             }, $isString ? explode('|', $rules) : $rules);
             $this->validationRules[$aParams['field']] = $isString ? implode('|', $rules) : $rules;

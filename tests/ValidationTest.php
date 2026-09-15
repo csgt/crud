@@ -72,4 +72,26 @@ class ValidationTest extends TestCase
         $controller->store(Request::create('/items', 'POST'));
     }
 
+    public function testLegacyEmailAddressRulesAreConverted(): void
+    {
+        $controller = new CrudController;
+        $controller->setModel(new class {
+            public function getKeyName() { return 'id'; }
+        });
+        $customRule = function () {};
+        $controller->setField(['field' => 'email', 'validationRules' => ['notempty', 'EmailAddress', $customRule, 'regex:/EmailAddress/']]);
+        $controller->setField(['field' => 'contact', 'validationRules' => 'notempty|emailAddress']);
+        $controller->setField(['field' => 'alternate', 'validationRules' => 'emailaddress']);
+        $controller->setField(['field' => 'native', 'validationRules' => 'nullable|email:rfc']);
+        Request::macro('validate', function ($rules) use ($customRule) {
+            TestCase::assertSame(['required', 'email', $customRule, 'regex:/EmailAddress/'], $rules['email']);
+            TestCase::assertSame('required|email', $rules['contact']);
+            TestCase::assertSame('email', $rules['alternate']);
+            TestCase::assertSame('nullable|email:rfc', $rules['native']);
+            throw new RuntimeException('Validation stopped persistence');
+        });
+        $this->expectExceptionMessage('Validation stopped persistence');
+        $controller->store(Request::create('/items', 'POST'));
+    }
+
 }
