@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"ValidationTest::testStoreValidatesBeforeWritingAndPassesLaravelRulesUnchanged":0.009,"ValidationTest::testUpdateValidatesBeforeWriting":0,"ValidationTest::testLegacyNotemptyRulesAreConvertedWithoutChangingOtherRules":0}}
