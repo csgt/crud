@@ -647,7 +647,12 @@ class CrudController extends BaseController
         }
 
         if (array_key_exists('reglas', $aParams)) {
-            $this->reglas[$aParams['campo']] = $aParams['reglas'];
+            $rules = $aParams['reglas'];
+            $isString = is_string($rules);
+            $rules = array_map(function ($rule) {
+                return $rule === 'notempty' ? 'required' : $rule;
+            }, $isString ? explode('|', $rules) : $rules);
+            $this->reglas[$aParams['campo']] = $isString ? implode('|', $rules) : $rules;
         }
 
         $nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']);
