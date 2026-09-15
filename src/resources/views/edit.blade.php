@@ -27,19 +27,15 @@
                     {{ csrf_field() }}
                     @foreach ($columnas as $columna)
                         @php
-                            $valor = $data ? $data->{$columna['campoReal']} : $columna['default'];
+                            $real = $columna['campoReal'];
+                            $valor = old($columna['campoReal'], $data ? $data->{$columna['campoReal']} : $columna['default']);
                             $label =
                                 '<label for="' .
                                 $columna['campoReal'] .
                                 '" class="control-label">' .
                                 $columna['nombre'] .
                                 '</label>';
-                            $arr = ['class' => 'form-control'];
-                            //dd($columnas);
-                            foreach ($columna['reglas'] as $regla) {
-                                $arr['data-fv-' . $regla] = 'true';
-                                $arr['data-fv-' . $regla . '-message'] = $columna['reglasmensaje'];
-                            }
+                            $arr = ['class' => 'form-control' . ($errors->has($real) ? ' is-invalid' : '')];
                         @endphp
                         <div class="{{ $columna['editClass'] }}">
                             <div class="form-group">
@@ -48,19 +44,8 @@
                                     {!! $label !!}
                                     @php
                                         $arr['placeholder'] = 'Password';
-                                        $arr['data-fv-identical'] = 'true';
-                                        $arr['data-fv-identical-field'] = $columna['campoReal'] . 'confirm';
-                                        $arr['data-fv-identical-message'] = trans('csgtcrud::crud.passnocoinciden');
-
-                                        if (!$data) {
-                                            $arr['data-fv-notempty'] = 'true';
-                                            $arr['data-fv-notempty-message'] = trans('csgtcrud::crud.passrequerida');
-                                        }
                                     @endphp
                                     <input type="password" name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>
-                                    @php
-                                        $arr['data-fv-identical-field'] = $columna['campoReal'];
-                                    @endphp
                                     <input type="password" name="{{ $columna['campoReal'] . 'confirm' }}"
                                         {!! arrayToFields($arr) !!}>
                                     @if ($data)
@@ -69,12 +54,12 @@
                                     <!---------------------------- TEXTAREA ---------------------------------->
                                 @elseif($columna['tipo'] == 'textarea')
                                     {!! $label !!}
-                                    <textarea name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
+                                    <textarea name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>{{ $valor }}</textarea>
                                     <!---------------------------- SUMMERNOTE ---------------------------------->
                                 @elseif($columna['tipo'] == 'summernote')
                                     {!! $label !!}
-                                    @php $arr = ['class' => 'summernote']; @endphp
-                                    <textarea name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>{!! $valor !!}</textarea>
+                                    @php $arr['class'] .= ' summernote'; @endphp
+                                    <textarea name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>{{ $valor }}</textarea>
                                     <!---------------------------- BOOLEAN ---------------------------------->
                                 @elseif($columna['tipo'] == 'bool')
                                     <div class="checkbox">
@@ -103,11 +88,11 @@
                                     <!---------------------------- COMBOBOX ---------------------------------->
                                 @elseif($columna['tipo'] == 'combobox')
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] .= ' selectpicker';
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
-                                    @php $campo = $data ? $data->{$columna['campo']} : ''; @endphp
+                                    @php $campo = old($columna['campo'], $data ? $data->{$columna['campo']} : $columna['default']); @endphp
                                     <select name="{{ $columna['campo'] }}" {!! arrayToFields($arr) !!}>
                                         @foreach ($combos[$columna['alias']] as $id => $opcion)
                                             <option value="{{ $id }}"
@@ -119,23 +104,27 @@
                                     <!---------------------------- MULTI ---------------------------------->
                                 @elseif($columna['tipo'] == 'multi')
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] .= ' selectpicker';
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
-                                    <?php $campo = $data ? $data->{$columna['campo']} : ''; ?>
+                                    @php
+                                        $campo = session()->hasOldInput()
+                                            ? old($columna['campo'], [])
+                                            : ($data ? $data->{$columna['campo']}->modelKeys() : (array) $columna['default']);
+                                    @endphp
                                     <select multiple="multiple" name="{{ $columna['campo'] }}[]" {!! arrayToFields($arr) !!}>
 
                                         @foreach ($combos[$columna['alias']] as $id => $opcion)
                                             <option value="{{ $id }}"
-                                                @if ($campo != '') {{ $campo->find($id) ? "selected='selected'" : '' }} @endif>
+                                                {{ in_array($id, (array) $campo) ? "selected='selected'" : '' }}>
                                                 {!! $opcion !!}</option>
                                         @endforeach
                                     </select>
                                     <!---------------------------- ENUM ---------------------------------->
                                 @elseif($columna['tipo'] == 'enum')
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] .= ' selectpicker';
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -150,7 +139,7 @@
                                     <!---------------------------- FILE/IMAGE/SECUREFILE ---------------------------------->
                                 @elseif($columna['tipo'] == 'file' || $columna['tipo'] == 'image' || $columna['tipo'] == 'securefile')
                                     {!! $label !!}
-                                    <input type="file" name="{{ $columna['campoReal'] }}">
+                                    <input type="file" name="{{ $columna['campoReal'] }}" {!! arrayToFields($arr) !!}>
                                     @if ($data)
                                         <p class="help-block">{!! $valor !!}</p>
                                     @endif
@@ -164,6 +153,9 @@
                                     {!! $label !!}
                                     <input type="text" name="{{ $columna['campoReal'] }}" value="{{ $valor }}"
                                         {!! arrayToFields($arr) !!}>
+                                @endif
+                                @if ($errors->has($real))
+                                    <div class="invalid-feedback">{{ $errors->first($real) }}</div>
                                 @endif
                             </div>
                         </div>

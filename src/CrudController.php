@@ -20,6 +20,7 @@ class CrudController extends BaseController
     private $perPage       = 50;
     private $titulo        = '';
     private $campos        = [];
+    private $reglas        = [];
     private $camposHidden  = [];
     private $permisos      = ['add' => false, 'edit' => false, 'delete' => false];
     private $orders        = [];
@@ -124,6 +125,8 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        $request->validate($this->reglas);
+
         $fields = $request->except($this->noGuardar);
         $fields = array_merge($fields, $this->camposHidden);
 
@@ -629,7 +632,7 @@ class CrudController extends BaseController
     public function setCampo($aParams)
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
-            'default', 'reglas', 'reglasmensaje', 'decimales', 'collection',
+            'default', 'reglas', 'decimales', 'collection',
             'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
@@ -643,16 +646,18 @@ class CrudController extends BaseController
             dd('setCampo debe tener un valor para "campo"');
         }
 
+        if (array_key_exists('reglas', $aParams)) {
+            $this->reglas[$aParams['campo']] = $aParams['reglas'];
+        }
+
         $nombre        = (!array_key_exists('nombre', $aParams) ? str_replace('_', ' ', ucfirst($aParams['campo'])) : $aParams['nombre']);
         $edit          = (!array_key_exists('editable', $aParams) ? true : $aParams['editable']);
         $show          = (!array_key_exists('show', $aParams) ? true : $aParams['show']);
         $tipo          = (!array_key_exists('tipo', $aParams) ? 'string' : $aParams['tipo']);
         $class         = (!array_key_exists('class', $aParams) ? '' : $aParams['class']);
         $default       = (!array_key_exists('default', $aParams) ? '' : $aParams['default']);
-        $reglas        = (!array_key_exists('reglas', $aParams) ? [] : $aParams['reglas']);
         $decimales     = (!array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
         $collection    = (!array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
-        $reglasmensaje = (!array_key_exists('reglasmensaje', $aParams) ? '' : $aParams['reglasmensaje']);
         $filepath      = (!array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
         $filewidth     = (!array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
         $fileheight    = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
@@ -714,8 +719,6 @@ class CrudController extends BaseController
             'show'          => $show,
             'editable'      => $edit,
             'default'       => $default,
-            'reglas'        => $reglas,
-            'reglasmensaje' => $reglasmensaje,
             'class'         => $class,
             'decimales'     => $decimales,
             'collection'    => $collection,
