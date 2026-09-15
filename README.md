@@ -6,11 +6,11 @@ This package is used to generate cruds.
 
 | Version  | BS  | Datatables | Methods | Views engine | Crypt | Constructor | UTC | Validation     |
 | -------- | --- | ---------- | ------- | ------------ | ----- | ----------- | --- | -------------- |
-| 5.5      | 3   | 1.x        | es      | blade        | yes   | yes         | no  | formvaldiation |
-| 5.6      | 4   | 1.x        | es      | blade        | yes   | yes         | no  | formvaldiation |
+| 5.5      | 3   | 1.x        | es      | blade        | yes   | yes         | no  | formvalidation |
+| 5.6      | 4   | 1.x        | es      | blade        | yes   | yes         | no  | laravel        |
 | 5.9      | 4   | 1.x        | es      | blade        | yes   | no          | no  | laravel        |
-| 6.0      | 4   | 1.x        | en      | blade        | yes   | yes         | no  | formvaldiation |
-| 7.0 Beta | 4   | 1.x        | en      | vue          | yes   | yes         | no  | formvaldiation |
+| 6.0      | 4   | 1.x        | en      | blade        | yes   | yes         | no  | laravel        |
+| 7.0 Beta | 4   | 1.x        | en      | vue          | yes   | yes         | no  | formvalidation |
 | 8.0      | 4/5 | 2.x        | en      | blade        | no    | no          | yes | laravel        |
 
 ## Documentation for contributors
