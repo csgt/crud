@@ -632,7 +632,7 @@ class CrudController extends BaseController
     public function setCampo($aParams)
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
-            'default', 'reglas', 'decimales', 'collection',
+            'default', 'reglas', 'reglasmensaje', 'decimales', 'collection',
             'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file', 'image', 'textarea', 'url', 'summernote', 'securefile'];
 
