@@ -71,13 +71,20 @@ class CrudController extends BaseController
     public function show(Request $request, $aId)
     {
         $data = $this->model->find($aId);
-        if ($request->expectsJson()) {
-            return response()->json($data);
-        }
+        return response()->json($data);
     }
 
     public function edit(Request $request, $aId)
     {
+        // Los permisos solo se leian en la vista para esconder botones, asi que la
+        // ruta seguia siendo alcanzable por POST directo. Esta rama no tiene setup():
+        // el controlador hijo los define en su constructor, de modo que ya estan
+        // poblados aca. Se usa empty() y no el indice directo para que un arreglo
+        // parcial deniegue en vez de emitir un warning de clave indefinida en PHP 8.
+        if (empty($this->permissions[$aId ? 'update' : 'create'])) {
+            abort(403);
+        }
+
         $urlUpdate = '/' . $this->downLevel($request->path());
         $urlIndex  = $this->downLevel($urlUpdate);
         if ($aId) {
@@ -138,6 +145,10 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        if (empty($this->permissions[$aId === 0 ? 'create' : 'update'])) {
+            abort(403);
+        }
+
         $rules = [
             'email'  => 'email|unique:usuarios',
             'nombre' => 'numeric',
@@ -245,6 +256,10 @@ class CrudController extends BaseController
 
     public function destroy(Request $request, $aId)
     {
+        if (empty($this->permissions['destroy'])) {
+            abort(403);
+        }
+
         $this->model->destroy($aId);
 
         return response()->json('ok');
@@ -596,7 +611,7 @@ class CrudController extends BaseController
         $fileheight = (!array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
         $target     = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $isforeign  = (!array_key_exists('isforeign', $aParams) ? false : $aParams['isforeign']);
-        $filedisk   = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
+        $filedisk   = (!array_key_exists('filedisk', $aParams) ? '' : $aParams['filedisk']);
         $utc        = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
         $editClass  = (!array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable = true;
