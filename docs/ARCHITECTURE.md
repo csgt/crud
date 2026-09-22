@@ -27,11 +27,17 @@ line is a full CRUD.
 | `src/resources/views/index.blade.php` | Listing: DataTables 2.x config (`layout:` toolbar), column renderers, the column-filter UI |
 | `src/resources/views/edit.blade.php` | Edit/create form, one input per field type |
 | `src/resources/lang/{en,es}/crud.php` | All user-facing strings |
+| `src/config/csgtcrud.php` | Package config, merged under the `csgtcrud` key (`stateDuration`, `extensiones_permitidas`, `max_page_length`); publishable with `--tag=config` |
 | `tests/` | PHPUnit suite over the query-building and field-metadata methods |
 
-There is no `src/config/` directory on this branch: id encryption is gone (see
-the `README.md` compatibility table, "Crypt: no" for `8.0`), so there is
-nothing left to configure through a published config file.
+`src/config/csgtcrud.php` only holds options that are safe to leave unset: every
+key defaults to the value this branch already behaved as before the key
+existed (see `RULES.md` rule 1), so an application that never publishes the
+file sees no change. `CrudController::config($key, $default)` wraps the global
+`config()` helper and falls back to `$default` when it does not exist at all,
+which is only the case in this package's own test suite (see
+`tests/TestCase.php`); a real application always has it, since it ships with
+`illuminate/foundation`.
 
 ## Request lifecycle
 

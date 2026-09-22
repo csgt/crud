@@ -43,11 +43,11 @@ package version lives in its own branch and is released from it.
 | 6.0             | `6.0`    | `>= 7.2` | `>= 5.8` | Maintenance                              |
 | 5.9             | `5.9`    | `>= 7.1` | `>= 6.0` | Maintenance                              |
 | 5.8             | `5.8`    | `>= 7.1` | `>= 5.8` | Maintenance                              |
-| 5.7             | `5.7`    | `>= 7.1` | `>= 5.8` | Maintenance                              |
+| 5.7             | `5.7`    | `>= 7.1` | `5.8` only | Maintenance                            |
 | 5.6             | `5.6`    | `>= 7.0` | `>= 5.5` | Legacy                                   |
 | 5.5             | `5.5`    | `>= 7.0` | `>= 5.5` | Legacy                                   |
-| 5.4             | `5.4`    | `>= 5.6` | `>= 5.4` | Legacy                                   |
-| 5.3             | `5.3`    | `>= 5.5` | `>= 5.1` | Legacy                                   |
+| 5.4             | `5.4`    | `>= 5.6` | `5.4`–`5.8` | Legacy                                  |
+| 5.3             | `5.3`    | `>= 5.5` | `5.1`–`5.8` | Legacy                                  |
 | 5.0             | `5.0`    | `>= 5.5` | `>= 5.0` | Archived                                 |
 
 The Laravel floor is inferred from the framework APIs each branch actually
@@ -59,6 +59,10 @@ calls, since the `composer.json` constraints were never updated:
 - `Relation::getRelationExistenceQuery()` → Laravel `>= 5.5`
 - `Paginator::withQueryString()` → Laravel `>= 7.0`
 - `Form::` helpers (`laravelcollective/html`) on `5.0`–`5.4` → Laravel `5.x` only
+- `array_except()` / `str_slug()` on `5.3`, `5.4` and `5.7` → removed in Laravel
+  6, so those branches have an upper bound as well as a floor. Branch `5.7`
+  combines that ceiling with `getOwnerKeyName()`, which arrives in 5.8, leaving
+  a single supported Laravel version
 
 ## Installation
 
@@ -157,6 +161,51 @@ active set is kept in the DataTables saved state. `recordsFiltered` is only
 recounted when at least one filter is actually applied. Filters for fields with
 `type => 'date'` use the browser's native date picker and submit an ISO date
 value (`YYYY-MM-DD`).
+
+## Configuration
+
+Publish the config with `php artisan vendor:publish --tag=config`.
+
+| Key | Default | Meaning |
+| --- | ------- | ------- |
+| `stateDuration` | `0` | Seconds DataTables keeps the saved listing state — search, column filters, sort and page — in the browser's localStorage. `0` means it never expires. DataTables' own default is 7200, which silently discarded the saved search after two hours. |
+| `extensiones_permitidas` | `null` | Whitelist of extensions accepted when uploading `file` and `image` fields, lowercase and without the dot. `null` applies no restriction, which is the historical behaviour. Set an array to enable it, for example `['jpg', 'png', 'pdf']`. |
+| `max_page_length` | `null` | Largest page size `data()` will honour from the client. `null` applies no limit, which is the historical behaviour, and the `length` the browser sends is used as-is. |
+
+`stateDuration` can be overridden for a single controller with
+`$this->setStateDuration($seconds)`.
+
+Each listing table is rendered with a unique DOM id derived from the request
+path, so two CRUD listings on the same page no longer share, and overwrite, one
+another's saved state.
+
+## Server-side permissions
+
+`$this->permissions` is enforced on every write action, not merely read by the
+index view to hide buttons. `create()`, `edit()`, `store()`, `update()` and
+`destroy()` return `403` when the matching flag is false.
+
+```php
+$this->setPermissions(['create' => true, 'update' => false, 'destroy' => false]);
+```
+
+**This changed.** The routes used to be reachable by a direct request whatever
+the flags said, so the buttons were hidden but the endpoints were not. The three
+flags default to `false`, so an application that never called
+`setPermissions()` had every write action open and will now receive a `403` on
+all of them. Declare the permissions explicitly before upgrading.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` lints the whole `src` tree on PHP 7.2, 7.4 and 8.3,
+and runs the suite on PHP 8.1 and 8.3, on every push and pull request. The dev
+dependencies (phpunit `^9.6`, illuminate `^8`) need PHP 7.3 or newer, which is
+why the test matrix starts above the lint one.
+
+Other branches carry the same workflow with the PHP matrix each one actually
+supports. It replaces a `.travis.yml` that had stopped running: Travis ended
+free open-source builds in 2021, and the file still listed PHP 5.3 to 5.6 plus
+hhvm and invoked a `phpunit` that was never a dependency of most branches.
 
 ## Tests
 

@@ -116,6 +116,11 @@
                                     <div>
                                         <?php $campo = $data ? $data->{$column['field']} : ''; ?>
                                         <select name="{{ $column['field'] }}" {!! arrayToFields($arr) !!}>
+                                            {{-- Ver el comentario del tipo enum: sin opcion vacia se guarda
+                                                 la primera opcion sin que nadie la haya elegido. --}}
+                                            <option value=""
+                                                {{ $campo === null || $campo === '' ? "selected='selected'" : '' }}>
+                                            </option>
                                             @foreach ($combos[$column['alias']] as $id => $opcion)
                                                 <option value="{{ $id }}"
                                                     {{ $campo == $id ? "selected='selected'" : '' }}>
@@ -150,6 +155,12 @@
                                     @endphp
                                     {!! $label !!}
                                     <select name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
+                                        {{-- Sin esta opcion el navegador selecciona la primera de la lista
+                                             cuando el registro no tiene valor, y al guardar la escribe como
+                                             si el usuario la hubiera elegido. --}}
+                                        <option value=""
+                                            {{ $valor === null || $valor === '' ? "selected='selected'" : '' }}>
+                                        </option>
                                         @foreach ($column['enumarray'] as $id => $opcion)
                                             <option value="{{ $id }}"
                                                 {{ $valor == $id ? "selected='selected'" : '' }}>
@@ -192,10 +203,72 @@
             </div>
         </div>
     </form>
+    {{-- Este bloque vive en la seccion de contenido, que siempre se renderiza
+         porque aqui esta la tabla. Si el layout de la aplicacion no rinde
+         @@yield('javascript'), el bloque de scripts nunca corre y la vista queda
+         muerta sin decir por que: el guard de dependencias esta alla adentro y
+         tampoco llega a ejecutarse. --}}
+    <script>
+        window.addEventListener('load', function() {
+            if (window.csgtCrudBooted) {
+                return;
+            }
+            var message = typeof window.jQuery === 'undefined' ?
+                'csgt/crud: falta la libreria jQuery, que esta vista necesita.' :
+                'csgt/crud: el bloque de scripts de esta vista no llego a ejecutarse. Revise que el layout rinda @@yield(\'javascript\').';
+            var banner = document.createElement('div');
+            banner.setAttribute('style',
+                'background:#b00020;color:#fff;padding:12px;font-family:sans-serif;font-size:14px');
+            banner.textContent = message;
+            document.body.insertBefore(banner, document.body.firstChild);
+            console.error(message);
+        });
+    </script>
 @endsection
 
 @section('javascript')
     <script type="module">
+        // Estas vistas no traen sus propias dependencias: las carga la aplicacion.
+        // Cuando faltaba alguna, la pantalla quedaba en blanco sin decir por que.
+        window.csgtCrudRequire = window.csgtCrudRequire || function(name, present, version, min, max) {
+            if (!present) {
+                var message = 'csgt/crud: falta la libreria ' + name + ', que esta vista necesita.';
+                if (document.body) {
+                    var banner = document.createElement('div');
+                    banner.setAttribute('style',
+                        'background:#b00020;color:#fff;padding:12px;font-family:sans-serif;font-size:14px');
+                    banner.textContent = message;
+                    document.body.insertBefore(banner, document.body.firstChild);
+                }
+                throw new Error(message);
+            }
+            if (!version) {
+                return;
+            }
+            var cmp = function(a, b) {
+                var x = String(a).split('.'),
+                    y = String(b).split('.');
+                for (var i = 0; i < 3; i++) {
+                    var d = (parseInt(x[i], 10) || 0) - (parseInt(y[i], 10) || 0);
+                    if (d) {
+                        return d < 0 ? -1 : 1;
+                    }
+                }
+                return 0;
+            };
+            // Fuera del rango probado avisa, pero no corta: ahi la libreria esta y
+            // la vista probablemente funcione.
+            if (min && cmp(version, min) < 0) {
+                console.warn('csgt/crud: ' + name + ' ' + version + ' es anterior a la minima probada (' + min + ').');
+            }
+            if (max && cmp(version, max) >= 0) {
+                console.warn('csgt/crud: ' + name + ' ' + version + ' es igual o posterior a ' + max + ', la primera no probada.');
+            }
+        };
+        csgtCrudRequire('jQuery', typeof window.jQuery !== 'undefined',
+            window.jQuery && window.jQuery.fn && window.jQuery.fn.jquery, '1.7', '');
+        csgtCrudRequire('moment', typeof window.moment !== 'undefined',
+            window.moment && window.moment.version, '2.0', '');
         $(function() {
             document.querySelectorAll(".dtputc").forEach((item) => {
                 item.value = new moment.utc(item.dataset.value).local().format('YYYY-MM-DD\THH:mm');
@@ -224,9 +297,12 @@
             document.getElementById('__tz__').value = new Date().getTimezoneOffset() / -60;
 
             @if ($uses['selectize'])
+                csgtCrudRequire('selectize', !!(window.jQuery && jQuery.fn && jQuery.fn.selectize), null, '', '');
                 $('.selectpicker').selectize();
             @endif
             @if ($uses['summernote'])
+                csgtCrudRequire('summernote', !!(window.jQuery && jQuery.summernote),
+                  window.jQuery && jQuery.summernote && jQuery.summernote.version, '0.8', '');
                 $('.summernote').summernote({
                     'lang': 'es-ES',
                 });
@@ -245,5 +321,8 @@
                 })
             });
         });
+        // Lo ultimo del bloque: si algo de arriba corto, la bandera no se setea
+        // y el backstop de la seccion de contenido avisa.
+        window.csgtCrudBooted = true;
     </script>
 @endsection

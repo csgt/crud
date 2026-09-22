@@ -45,8 +45,16 @@ abstract class TestCase extends BaseTestCase
         static::$capsule->bootEloquent();
 
         $container->instance('db', static::$capsule->getDatabaseManager());
+        $container->instance('log', new TestLog);
         Container::setInstance($container);
         Facade::setFacadeApplication($container);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        TestConfig::reset();
+        Container::getInstance()->make('log')->reset();
     }
 
     /**

@@ -20,12 +20,20 @@ Routed by `Route::resource` (the package's `ResourceRegistrar` adds `data` and
 | `setup(Request $request)` | — (called by every action below) | Base implementation `abort(400, "This method must be overriden in parent")`. A subclass overrides this to declare the model, fields, joins, wheres, permissions and buttons. This replaces `__construct` from earlier branches. |
 | `index(Request $request)` | `GET /resource` | Renders `csgtcrud::index` with the column metadata, filter columns, permissions, breadcrumb, extra buttons/actions and the preserved query string. No listing query is run here; the rows arrive later over AJAX. |
 | `data(Request $request)` | `POST /resource/data` | Builds the listing query, applies the column filters, the order and the page window, and returns the DataTables JSON `{draw, recordsTotal, recordsFiltered, data}`. The hot path of the package. |
-| `show(Request $request, $aId)` | `GET /resource/{id}` | Finds the record and returns it as JSON when the request expects JSON. |
-| `edit(Request $request, $aId)` | `GET /resource/{id}/edit` | Renders `csgtcrud::edit` for an existing record (or a blank form when `$aId` is falsy): editable fields, combo options, breadcrumb, and which JS widgets (`selectize`, `summernote`) the form needs. |
-| `create(Request $request)` | `GET /resource/create` | Delegates to `edit($request, null)`. |
-| `store(Request $request)` | `POST /resource` | Delegates to `update($request, 0)`. |
-| `update(Request $request, $aId)` | `PUT /resource/{id}` | Creates when `$aId === 0`, updates otherwise. Validates against the rules collected from `setField`, filters out the ignored fields, merges the hidden ones, normalises each value by field type (dates through Carbon when `utc => true`, uploads moved, `securefile` put on its disk and the previous one deleted, `multi` values pulled out for attach/detach), saves, then attaches (and, on update, first detaches) the `multi` relations. Returns JSON or a redirect. |
-| `destroy(Request $request, $aId)` | `DELETE /resource/{id}` | Deletes the record, flashes a translated result message and redirects. |
+| `show(Request $request, $aId)` | `GET /resource/{id}` | Finds the record and returns it as JSON. Non-JSON requests get the same JSON response, since this package ships no `show` view — previously the method returned nothing for a non-JSON request, which is an invalid controller return value in Laravel. |
+| `edit(Request $request, $aId)` | `GET /resource/{id}/edit` | `abort(403)` unless `$this->permissions['update']` (existing record) or `['create']` (no `$aId`, which also covers `create()`). Renders `csgtcrud::edit` for an existing record (or a blank form when `$aId` is falsy): editable fields, combo options, breadcrumb, and which JS widgets (`selectize`, `summernote`) the form needs. |
+| `create(Request $request)` | `GET /resource/create` | Delegates to `edit($request, null)` — see the `create` permission check above. |
+| `store(Request $request)` | `POST /resource` | Delegates to `update($request, 0)` — see the `create` permission check below. |
+| `update(Request $request, $aId)` | `PUT /resource/{id}` | `abort(403)` unless `$this->permissions['create']` (`$aId === 0`, which also covers `store()`) or `['update']` otherwise. Creates when `$aId === 0`, updates otherwise. Validates against the rules collected from `setField`, filters out the ignored fields, merges the hidden ones, normalises each value by field type (dates through Carbon when `utc => true`, uploads moved after passing the `extensiones_permitidas` whitelist when one is configured, `securefile` put on its disk and the previous one deleted, `multi` values pulled out for attach/detach), saves, then attaches (and, on update, first detaches) the `multi` relations. Returns JSON or a redirect. |
+| `destroy(Request $request, $aId)` | `DELETE /resource/{id}` | `abort(403)` unless `$this->permissions['destroy']`. Deletes the record, flashes a translated result message and redirects. |
+
+`$this->permissions` used to be read only by the views, to hide buttons; it is
+now also enforced server-side in `edit`/`create`, `update`/`store` and
+`destroy` — a route that a false permission previously only hid now also
+rejects the request with a 403. This is a deliberate, intentionally breaking
+security fix; flag it explicitly to anyone pinning this branch (see
+`RULES.md` rule 1's "provably broken" allowance — a permission that a view
+enforced but a route did not is a bypass, not a stable observable behaviour).
 
 ## Listing query helpers
 
@@ -37,9 +45,11 @@ All private. Called from `data()`, and covered by
 | `applyFiltersToQuery($query, $filters)` | Applies every valid entry of `filters[]`; returns `true` if at least one was applied, which is what decides whether `recordsFiltered` is recounted. | Silently skips a non-array payload, a malformed entry, a non-integer column index (`filter_var(..., FILTER_VALIDATE_INT)`), an unknown index, and an empty (post-trim) value. Never trusts the request. |
 | `applyColumnFilter($query, $column, $searchValue)` | Turns one filter into a clause, picking by field shape: `whereHas` for a `multi` field or a relation column (`isforeign`), `whereRaw` for an expression, plain `where` otherwise. | `$searchValue` arrives already wrapped in `%`. The alias is stripped first with `stripAlias()`. |
 | `applyOrderToQuery($query, $columnName, $direction)` | Orders in the database: `orderBy` for a plain column, `orderByRaw` for an expression, and a correlated subquery (`Relation::getRelationExistenceQuery()`) for a relation column. | Falls back to a plain `orderBy` when `method_exists($this->model, $relationName)` is false, so a stale declaration cannot throw. |
+| `resolveOrderDirection($aOrder)` | Resolves `$request->order`'s `'dir'` to exactly `'asc'`/`'desc'`. | Casts to string first: `$aOrder['dir']` is client-controlled and can be missing, and `strtolower(null)` is deprecated since PHP 8.1. |
 | `stripAlias($field)` | Returns the expression without its ` AS alias` suffix (case-insensitive match on `' as '`). | `AS` is only valid in a `SELECT`; leaving it in a `WHERE`/`ORDER BY` produces invalid SQL. |
 | `qualifyRelatedColumn($relatedModel, $column)` | Prefixes the related table only when the column is a plain identifier (no `(`, space or `.`). | Expressions, already-qualified columns and aliases are returned untouched. |
 | `getSelect($aCampos)` | Maps the given fields to `DB::raw($c['field'])` expressions for the `select`. | Raw on purpose: a field may be an expression. |
+| `resolveLength($aLength)` | Resolves the `limit()` value for `data()` from the client's `length` and `config('csgtcrud.max_page_length')`. | When unset (`null`, the default) it returns `(int) $aLength` unchanged — the historical behaviour. When set, a `length` `<= 0` becomes `$this->perPage`, and any larger value is capped to the configured maximum. |
 
 ## Field metadata helpers
 
@@ -94,6 +104,7 @@ surface most applications depend on; treat every signature as frozen.
 | `setExtraButton($aParams)` | Extra button per row (`url`, `title`, `icon`, `class`, `target`, `confirm`, `confirmmessage`). |
 | `setExtraAction($aParams)` | Extra action next to the Add button (`url`, `title`, `target`). |
 | `setResponsive($aResponsive)` | Wraps the table in `table-responsive` when truthy. |
+| `setStateDuration($aSegundos)` | Overrides `config('csgtcrud.stateDuration')` (default `0`) — passed to `index.blade.php` as the DataTables `stateDuration` default, in seconds. |
 
 ### `setField` allowed keys and types
 
@@ -125,6 +136,16 @@ Notable defaults and per-type requirements enforced in `setField()`:
   `show = false`.
 - `type => 'file'` / `'image'` / `'securefile'` require a non-empty
   `filepath`; `'securefile'` also requires a non-empty `filedisk`.
+- `type => 'enum'` with a missing, `null` or non-array `enumarray` does not
+  abort the request: it logs a warning (`Log::warning`) and normalizes
+  `enumarray` to `[]`, so the field still renders (an empty `<select>`),
+  matching how it behaved before the type had any validation at all. A
+  `count()` call on a non-array is a fatal `TypeError` on PHP 8, which is why
+  the check is `!is_array($enumarray) || count($enumarray) == 0`, not just
+  `count($enumarray) == 0`.
+- `type => 'file'` / `'image'` uploads are additionally checked against
+  `config('csgtcrud.extensiones_permitidas')` (case-insensitively) when that
+  key is set; unset (the default), every extension is still accepted.
 - A field whose `field` equals the model's key name gets `editable = false`
   and a generated `idsinenc{n}` alias (there is no id encryption on this
   branch, so this only keeps the primary key out of the edit form and gives
@@ -137,10 +158,22 @@ Notable defaults and per-type requirements enforced in `setField()`:
 `getForeignShowFields`, `getShowMultipleFields`, `getFieldOrder`,
 `getFilterColumns`, `stripAlias`, `qualifyRelatedColumn`,
 `applyOrderToQuery` (local column, raw expression, relation subquery, unknown
-relation fallback), `applyColumnFilter` (local, relation, `multi`, raw
-expression), `applyFiltersToQuery` (valid filters, invalid/empty/unknown
-filters, non-array payload), `downLevel`, and that `setField` rejects unknown
-keys. Private methods are reached through reflection.
+relation fallback), `resolveOrderDirection` (missing/null/mixed-case `dir`),
+`applyColumnFilter` (local, relation, `multi`, raw expression),
+`applyFiltersToQuery` (valid filters, invalid/empty/unknown filters,
+non-array payload), `resolveLength` (unconfigured maximum, clamping to a
+configured maximum, zero/negative length falling back to `perPage`),
+`downLevel`, that `setField` rejects unknown keys, and that `setField`
+normalizes a missing/`null`/non-array `enumarray` to `[]` instead of
+throwing. Private methods are reached through reflection.
+
+`tests/bootstrap.php` (the PHPUnit `bootstrap`) defines a minimal `config()`
+shim, backed by `Csgt\Crud\Tests\TestConfig`, and binds a `Csgt\Crud\Tests\TestLog`
+stand-in as the `'log'` container service so the `Log` facade resolves —
+neither exists in this suite otherwise, since it never boots
+`illuminate/foundation`. Call `TestConfig::set($key, $value)` to simulate a
+configured value in a test; `TestCase::tearDown()` resets both `TestConfig`
+and `TestLog` after every test so state never leaks between tests.
 
 Not covered, and why: the lifecycle actions (`index`, `data`, `edit`,
 `create`, `store`, `update`, `destroy`, `show`) need a booted application
