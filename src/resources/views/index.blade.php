@@ -7,6 +7,49 @@
 @stop
 @section('javascript')
     <script type="module">
+        // Estas vistas no traen sus propias dependencias: las carga la aplicacion.
+        // Cuando faltaba alguna, la pantalla quedaba en blanco sin decir por que.
+        window.csgtCrudRequire = window.csgtCrudRequire || function(name, present, version, min, max) {
+            if (!present) {
+                var message = 'csgt/crud: falta la libreria ' + name + ', que esta vista necesita.';
+                if (document.body) {
+                    var banner = document.createElement('div');
+                    banner.setAttribute('style',
+                        'background:#b00020;color:#fff;padding:12px;font-family:sans-serif;font-size:14px');
+                    banner.textContent = message;
+                    document.body.insertBefore(banner, document.body.firstChild);
+                }
+                throw new Error(message);
+            }
+            if (!version) {
+                return;
+            }
+            var cmp = function(a, b) {
+                var x = String(a).split('.'),
+                    y = String(b).split('.');
+                for (var i = 0; i < 3; i++) {
+                    var d = (parseInt(x[i], 10) || 0) - (parseInt(y[i], 10) || 0);
+                    if (d) {
+                        return d < 0 ? -1 : 1;
+                    }
+                }
+                return 0;
+            };
+            // Fuera del rango probado avisa, pero no corta: ahi la libreria esta y
+            // la vista probablemente funcione.
+            if (min && cmp(version, min) < 0) {
+                console.warn('csgt/crud: ' + name + ' ' + version + ' es anterior a la minima probada (' + min + ').');
+            }
+            if (max && cmp(version, max) >= 0) {
+                console.warn('csgt/crud: ' + name + ' ' + version + ' es igual o posterior a ' + max + ', la primera no probada.');
+            }
+        };
+        csgtCrudRequire('jQuery', typeof window.jQuery !== 'undefined',
+            window.jQuery && window.jQuery.fn && window.jQuery.fn.jquery, '1.7', '');
+        csgtCrudRequire('DataTables', !!(window.jQuery && jQuery.fn && jQuery.fn.dataTable),
+            window.jQuery && jQuery.fn && jQuery.fn.dataTable && jQuery.fn.dataTable.version, '1.10', '2.0');
+        csgtCrudRequire('moment', typeof window.moment !== 'undefined',
+            window.moment && window.moment.version, '2.0', '');
         $(document).ready(function() {
             $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
                 console.log(JSON.stringify(message));
@@ -14,6 +57,32 @@
 
             var filterColumns = @json($filterColumns);
             var $filterRows = $('#crud-filter-rows');
+
+            // Una columna con lista cerrada (enum, bool) se filtra eligiendo de un
+            // desplegable en lugar de escribiendo el valor exacto. El resto sigue
+            // siendo texto libre, o un selector de fecha cuando corresponde.
+            function buildValueControl(column, value) {
+                if (column && column.options && column.options.length) {
+                    var $select = $('<select class="form-control form-control-sm crud-filter-value"></select>');
+                    $('<option></option>')
+                        .val('')
+                        .text(@json(trans('csgtcrud::crud.todos')))
+                        .appendTo($select);
+                    column.options.forEach(function(option) {
+                        $('<option></option>')
+                            .val(option.value)
+                            .text(option.label)
+                            .prop('selected', String(option.value) === String(value))
+                            .appendTo($select);
+                    });
+
+                    return $select;
+                }
+
+                return $('<input class="form-control form-control-sm crud-filter-value">')
+                    .attr('type', column && column.type === 'date' ? 'date' : 'text')
+                    .val(value);
+            }
 
             function addFilterRow(filter) {
                 filter = filter || {};
@@ -32,9 +101,7 @@
                 var selectedColumn = filterColumns.find(function(column) {
                     return String(column.index) === String($column.val());
                 });
-                var $value = $('<input class="form-control form-control-sm crud-filter-value">')
-                    .attr('type', selectedColumn && selectedColumn.type === 'date' ? 'date' : 'text')
-                    .val(filter.value || '');
+                var $value = buildValueControl(selectedColumn, filter.value || '');
 
                 $row.append($('<div class="col-4 mb-1 mb-sm-0"></div>').append($column));
                 $row.append($('<div class="col"></div>').append($value));
@@ -58,9 +125,8 @@
                     return String(column.index) === String($(this).val());
                 }.bind(this));
                 var $value = $(this).closest('.crud-filter-row').find('.crud-filter-value');
-                var value = $value.val();
 
-                $value.attr('type', selectedColumn && selectedColumn.type === 'date' ? 'date' : 'text').val(value);
+                $value.replaceWith(buildValueControl(selectedColumn, $value.val()));
             });
 
             function updateRemoveButtons() {
@@ -90,12 +156,13 @@
 
             addFilterRow();
 
-            var oTable = $('.tabla-catalogo').dataTable({
+            var oTable = $('#{!! $tableId !!}').dataTable({
                 processing: true,
                 serverSide: true,
                 searching: false,
                 @if ($stateSave)
                     stateSave: true,
+                    stateDuration: {!! (int) $stateDuration !!},
                     stateSaveParams: function(settings, data) {
                         data.columns.forEach(function(column) {
                             delete column.visible;
@@ -278,7 +345,7 @@
                 oTable.fnSetColumnVis(-1, false);
             @endif ;
 
-            $('.tabla-catalogo').on('init.dt', function() {
+            $('#{!! $tableId !!}').on('init.dt', function() {
                 console.log('init');
                 $('.pagination').addClass('pagination-sm');
                 $('.dataTables_info').addClass('small text-muted');
@@ -322,7 +389,7 @@
                 oTable.api().draw();
             });
 
-            $('.tabla-catalogo').on('processing.dt', function(e, settings, processing) {
+            $('#{!! $tableId !!}').on('processing.dt', function(e, settings, processing) {
                 console.log('processing');
                 console.log(processing);
                 if (processing == false)
@@ -341,6 +408,9 @@
             return sign + (j ? i.substr(0, j) + "," : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ",") +
                 (aDec ? "." + Math.abs(n - i).toFixed(aDec).slice(2) : "");
         };
+        // Lo ultimo del bloque: si algo de arriba corto, la bandera no se setea
+        // y el backstop de la seccion de contenido avisa.
+        window.csgtCrudBooted = true;
     </script>
 @stop
 
@@ -362,7 +432,7 @@
                 </div>
             @endif
             <div class="{{ $responsive ? 'table-responsive' : '' }}">
-                <table class="table table-sm table-striped table-hover tabla-catalogo display">
+                <table id="{{ $tableId }}" class="table table-sm table-striped table-hover tabla-catalogo display">
                     <thead>
                         <tr>
                             @foreach ($columnas as $columna)
@@ -389,4 +459,25 @@
     @if (isset($extraView))
         @include($extraView)
     @endif
+    {{-- Este bloque vive en la seccion de contenido, que siempre se renderiza
+         porque aqui esta la tabla. Si el layout de la aplicacion no rinde
+         @@yield('javascript'), el bloque de scripts nunca corre y la vista queda
+         muerta sin decir por que: el guard de dependencias esta alla adentro y
+         tampoco llega a ejecutarse. --}}
+    <script>
+        window.addEventListener('load', function() {
+            if (window.csgtCrudBooted) {
+                return;
+            }
+            var message = typeof window.jQuery === 'undefined' ?
+                'csgt/crud: falta la libreria jQuery, que esta vista necesita.' :
+                'csgt/crud: el bloque de scripts de esta vista no llego a ejecutarse. Revise que el layout rinda @@yield(\'javascript\').';
+            var banner = document.createElement('div');
+            banner.setAttribute('style',
+                'background:#b00020;color:#fff;padding:12px;font-family:sans-serif;font-size:14px');
+            banner.textContent = message;
+            document.body.insertBefore(banner, document.body.firstChild);
+            console.error(message);
+        });
+    </script>
 @stop
