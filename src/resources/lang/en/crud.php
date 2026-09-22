@@ -26,4 +26,5 @@ return [
     'registroerror'      => 'Error saving record: ',
     'registroeliminado'  => 'Record deleted succesfully',
     'registroelimiandoe' => 'Error deleting record.  Check related data.',
+    'extensionnopermitida' => 'This file extension is not allowed.',
 ];
