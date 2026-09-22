@@ -9,6 +9,7 @@ use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controller as BaseController;
 
 class CrudController extends BaseController
@@ -106,13 +107,20 @@ class CrudController extends BaseController
     public function show(Request $request, $aId)
     {
         $data = $this->modelo->find(Crypt::decrypt($aId));
-        if ($request->expectsJson()) {
-            return response()->json($data);
-        }
+        return response()->json($data);
     }
 
     public function edit(Request $request, $aId)
     {
+        // Los permisos solo se leian en la vista para esconder botones, asi que la
+        // ruta seguia siendo alcanzable por POST directo. Esta rama no tiene setup():
+        // el controlador hijo los define en su constructor, de modo que ya estan
+        // poblados aca. Se usa empty() y no el indice directo para que un arreglo
+        // parcial deniegue en vez de emitir un warning de clave indefinida en PHP 8.
+        if (empty($this->permisos['edit'])) {
+            abort(403);
+        }
+
         $data       = $this->modelo->find(Crypt::decrypt($aId));
         $path       = $this->downLevel($request->path()) . '/';
         $camposEdit = $this->getCamposEditMine();
@@ -132,6 +140,10 @@ class CrudController extends BaseController
 
     public function create(Request $request)
     {
+        if (empty($this->permisos['add'])) {
+            abort(403);
+        }
+
         $data       = null;
         $path       = $this->downLevel($request->path());
         $camposEdit = $this->getCamposEditMine();
@@ -156,6 +168,10 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        if (empty($this->permisos[$aId === 0 ? 'add' : 'edit'])) {
+            abort(403);
+        }
+
         $rules = [];
         foreach ($this->getCamposEditMine() as $columna) {
             foreach ($columna['reglas'] as $regla) {
@@ -163,8 +179,6 @@ class CrudController extends BaseController
             }
         }
 
-        \Log::warning($rules);
-        \Log::info($request->all());
         if (!empty($rules)) {
             $request->validate($rules);
         }
@@ -209,7 +223,6 @@ class CrudController extends BaseController
                     }
 
                     $file->move($path, $filename);
-                    $campos[$campo['campo']] = $filename;
                     $fields[$campo['campo']] = $filename;
                 }
             }
@@ -226,7 +239,6 @@ class CrudController extends BaseController
                     }
 
                     $filename                = Storage::disk($campo['filedisk'])->putFile($campo['filepath'], $request->file($campo['campo']));
-                    $campos[$campo['campo']] = $filename;
                     $fields[$campo['campo']] = $filename;
                 }
             }
@@ -276,6 +288,10 @@ class CrudController extends BaseController
 
     public function destroy(Request $request, $aId)
     {
+        if (empty($this->permisos['delete'])) {
+            abort(403);
+        }
+
         try {
             $this->modelo->destroy(Crypt::decrypt($aId));
             $request->session()->flash('message', trans('csgtcrud::crud.registroeliminado'));
@@ -730,7 +746,7 @@ class CrudController extends BaseController
         $target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
-        $filedisk      = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
+        $filedisk      = (!array_key_exists('filedisk', $aParams) ? '' : $aParams['filedisk']);
         $utc           = (!array_key_exists('utc', $aParams) ? false : $aParams['utc']);
         $searchable    = true;
 
@@ -757,8 +773,12 @@ class CrudController extends BaseController
             dd('Para el tipo securefile hay que especifiarle el filedisk');
         }
 
-        if ($tipo == 'emum' && count($enumarray) == 0) {
-            dd('Para el tipo enum el enumarray es requerido');
+        if ($tipo == 'enum' && (!is_array($enumarray) || count($enumarray) == 0)) {
+            // No se aborta la peticion: antes de que esta validacion corriera, un enum sin
+            // opciones renderizaba un select vacio y la aplicacion seguia funcionando. Se
+            // conserva ese comportamiento y solo se deja constancia en el log.
+            Log::warning('csgtcrud: el campo "' . $aParams['campo'] . '" es de tipo enum y no tiene un enumarray valido; se renderiza un select vacio.');
+            $enumarray = [];
         }
 
         if (!strpos($aParams['campo'], ')')) {
