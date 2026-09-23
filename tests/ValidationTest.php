@@ -61,11 +61,15 @@ class ValidationTest extends TestCase
         $controller->setCampo(['campo' => 'email', 'reglas' => 'notempty|email']);
         $controller->setCampo(['campo' => 'code', 'reglas' => 'string|notempty']);
         $controller->setCampo(['campo' => 'label', 'reglas' => 'notempty']);
+        $controller->setCampo(['campo' => 'title', 'reglas' => ['notEmpty']]);
+        $controller->setCampo(['campo' => 'description', 'reglas' => 'notEmpty|string']);
         Request::macro('validate', function ($rules) use ($customRule) {
             TestCase::assertSame(['required', $customRule, 'regex:/notempty/'], $rules['name']);
             TestCase::assertSame('required|email', $rules['email']);
             TestCase::assertSame('string|required', $rules['code']);
             TestCase::assertSame('required', $rules['label']);
+            TestCase::assertSame(['required'], $rules['title']);
+            TestCase::assertSame('required|string', $rules['description']);
             throw new RuntimeException('Validation stopped persistence');
         });
         $this->expectExceptionMessage('Validation stopped persistence');

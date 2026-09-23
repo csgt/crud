@@ -650,7 +650,7 @@ class CrudController extends BaseController
             $rules = $aParams['reglas'];
             $isString = is_string($rules);
             $rules = array_map(function ($rule) {
-                return $rule === 'notempty' ? 'required' : $rule;
+                return $rule === 'notempty' || $rule === 'notEmpty' ? 'required' : $rule;
             }, $isString ? explode('|', $rules) : $rules);
             $this->reglas[$aParams['campo']] = $isString ? implode('|', $rules) : $rules;
         }
