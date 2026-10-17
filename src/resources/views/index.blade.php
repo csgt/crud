@@ -324,7 +324,7 @@
 
             });
             @if (!$permisos['update'] && !$permisos['destroy'] && count($extraButtons) == 0)
-                oTable.fnSetColumnVis(-1, false);
+                oTable.api().column(-1).visible(false);
             @endif ;
 
             $filterRows.on('click', '.crud-filter-add', function() {
