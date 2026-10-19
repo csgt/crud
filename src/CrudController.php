@@ -82,14 +82,14 @@ class CrudController extends BaseController {
 		//Aqui falta procesar fechas, files, images, etc
 		$campos = array_except($request->all(), $this->noGuardar);
 		$this->modelo->create($campos);
-		return redirect()->to($request->path());
+		return redirect()->to($request->path(), 303);
 	}
 
 	public function update(Request $request, $aId){
 		$campos = array_except($request->all(), $this->noGuardar);
 		$m = $this->modelo->find(Crypt::decrypt($aId));
 		$m->update($campos);
-		return redirect()->to($this->downLevel($request->path()));
+		return redirect()->to($this->downLevel($request->path()), 303);
 	}
 
 	public function destroy(Request $request, $aId) {
@@ -102,7 +102,7 @@ class CrudController extends BaseController {
 			Session::flash('message', trans('csgtcrud::crud.registroelimiandoe'));
 			Session::flash('type', 'danger');
 		}
-		return redirect($this->downLevel($request->path()));
+		return redirect()->to($this->downLevel($request->path()), 303);
 	}
 
 	private function downLevel($aPath) {
