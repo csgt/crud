@@ -4,6 +4,7 @@ namespace Csgt\Crud;
 use DB;
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
@@ -239,7 +240,7 @@ class CrudController extends BaseController
             $foreignModel = $this->modelo->{$relation}();
 
             $data->with([$relation => function ($query) use ($fields, $foreignModel) {
-                $query->addSelect($foreignModel->getForeignKeyName());
+                $query->addSelect($foreignModel instanceof BelongsTo ? $foreignModel->getOwnerKeyName() : $foreignModel->getForeignKeyName());
                 foreach ($fields as $field) {
                     foreach ($field as $fiel) {
                         $query->addSelect(DB::raw($fiel));
@@ -248,7 +249,7 @@ class CrudController extends BaseController
             }]);
 
             foreach ($fields as $field) {
-                $data->addSelect($foreignModel->getQualifiedParentKeyName());
+                $data->addSelect($foreignModel instanceof BelongsTo ? $foreignModel->getForeignKeyName() : $foreignModel->getQualifiedParentKeyName());
             }
         }
         $data->addSelect($this->modelo->getKeyName() . ' AS ' . $this->uniqueid);
