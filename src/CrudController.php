@@ -255,7 +255,7 @@ class CrudController extends BaseController
                 ]);
             }
 
-            return redirect()->to("/" . $request->path() . $nuevasVars);
+            return redirect()->to("/" . $request->path() . $nuevasVars, 303);
         } else {
             $m = $this->modelo->find(Crypt::decrypt($aId));
             $m->update($fields);
@@ -270,7 +270,7 @@ class CrudController extends BaseController
                 ]);
             }
 
-            return redirect()->to("/" . $this->downLevel($request->path()) . $nuevasVars);
+            return redirect()->to("/" . $this->downLevel($request->path()) . $nuevasVars, 303);
         }
     }
 
@@ -289,7 +289,7 @@ class CrudController extends BaseController
             return response()->json('ok');
         }
 
-        return redirect()->to($this->downLevel($request->path()) . $this->getQueryString($request));
+        return redirect()->to($this->downLevel($request->path()) . $this->getQueryString($request), 303);
     }
 
     public function data(Request $request)
