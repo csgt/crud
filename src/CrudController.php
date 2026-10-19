@@ -181,7 +181,7 @@ class CrudController extends BaseController
                 return response()->json($item);
             }
 
-            return redirect()->to($request->path() . $nuevasVars);
+            return redirect()->to($request->path() . $nuevasVars, 303);
         } else {
             if (config('csgtcrud.usar_encripcion')) {
                 $aId = decrypt($aId);
@@ -196,7 +196,7 @@ class CrudController extends BaseController
                 return response()->json($m);
             }
 
-            return redirect()->to($this->downLevel($request->path()) . $nuevasVars);
+            return redirect()->to($this->downLevel($request->path()) . $nuevasVars, 303);
         }
     }
 
@@ -217,7 +217,7 @@ class CrudController extends BaseController
             return response()->json('ok');
         }
 
-        return redirect($this->downLevel($request->path()));
+        return redirect()->to($this->downLevel($request->path()), 303);
     }
 
     public function data(Request $request)
