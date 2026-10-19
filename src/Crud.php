@@ -687,7 +687,7 @@ class Crud
                 }
             }
 
-            return Redirect::to(Request::path() . self::getGetVars());
+            return Redirect::to(Request::path() . self::getGetVars(), 303);
         } else {
             if (config('csgtcrud.usar_encripcion')) {
                 $realId = Crypt::decrypt($id);
@@ -723,7 +723,7 @@ class Crud
 
                 return Response::json($record, 200);
             } else {
-                return Redirect::to(self::getUrl(Request::path(), false) . self::getGetVars());
+                return Redirect::to(self::getUrl(Request::path(), false) . self::getGetVars(), 303);
             }
         }
     }
@@ -753,6 +753,6 @@ class Crud
             Session::flash('type', 'danger');
         }
 
-        return Redirect::to(self::getUrl(Request::path(), false) . '?' . Request::server('QUERY_STRING'));
+        return Redirect::to(self::getUrl(Request::path(), false) . '?' . Request::server('QUERY_STRING'), 303);
     }
 }
