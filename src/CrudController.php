@@ -6,6 +6,7 @@ use Storage;
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -65,13 +66,20 @@ class CrudController extends BaseController
         }
         $data = $this->model->find($aId);
 
-        if ($request->expectsJson()) {
-            return response()->json($data);
-        }
+        return response()->json($data);
     }
 
     public function edit(Request $request, $aId)
     {
+        // Los permisos solo se leian en la vista para esconder botones, asi que la
+        // ruta seguia siendo alcanzable por POST directo. Esta rama no tiene setup():
+        // el controlador hijo los define en su constructor, de modo que ya estan
+        // poblados aca. Se usa empty() y no el indice directo para que un arreglo
+        // parcial deniegue en vez de emitir un warning de clave indefinida en PHP 8.
+        if (empty($this->permissions['update'])) {
+            abort(403);
+        }
+
         if (config('csgtcrud.usar_encripcion')) {
             $aId = decrypt($aId);
         }
@@ -95,6 +103,10 @@ class CrudController extends BaseController
 
     public function create(Request $request)
     {
+        if (empty($this->permissions['create'])) {
+            abort(403);
+        }
+
         $data            = null;
         $path            = $this->downLevel($request->path());
         $editFields      = $this->getLocalEditFields();
@@ -119,6 +131,10 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        if (empty($this->permissions[$aId === 0 ? 'create' : 'update'])) {
+            abort(403);
+        }
+
         $fields = array_except($request->request->all(), $this->ignoreFields);
         $fields = array_merge($fields, $this->hiddenFields);
 
@@ -226,6 +242,10 @@ class CrudController extends BaseController
 
     public function destroy(Request $request, $aId)
     {
+        if (empty($this->permissions['destroy'])) {
+            abort(403);
+        }
+
         try {
             if (config('csgtcrud.usar_encripcion')) {
                 $aId = decrypt($aId);
@@ -731,7 +751,7 @@ class CrudController extends BaseController
         $target        = (!array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $enumarray     = (!array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign     = (!array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
-        $filedisk      = (!array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
+        $filedisk      = (!array_key_exists('filedisk', $aParams) ? '' : $aParams['filedisk']);
         $searchable    = true;
 
         if (!in_array($tipo, $tipos)) {
@@ -757,8 +777,12 @@ class CrudController extends BaseController
             dd('Para el tipo securefile hay que especifiarle el filedisk');
         }
 
-        if ($tipo == 'emum' && count($enumarray) == 0) {
-            dd('Para el tipo enum el enumarray es requerido');
+        if ($tipo == 'enum' && (!is_array($enumarray) || count($enumarray) == 0)) {
+            // No se aborta la peticion: antes de que esta validacion corriera, un enum sin
+            // opciones renderizaba un select vacio y la aplicacion seguia funcionando. Se
+            // conserva ese comportamiento y solo se deja constancia en el log.
+            Log::warning('csgtcrud: el campo "' . $aParams['campo'] . '" es de tipo enum y no tiene un enumarray valido; se renderiza un select vacio.');
+            $enumarray = [];
         }
 
         if (!strpos($aParams['field'], ')')) {
