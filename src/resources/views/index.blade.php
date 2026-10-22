@@ -11,18 +11,83 @@
             $.fn.dataTable.ext.errMode = function(settings, helpPage, message) {
                 console.log(JSON.stringify(message));
             };
+            var filterColumns = @json($filterColumns);
+            var $filterRows = $('#crud-filter-rows');
+
+            function addFilterRow(filter) {
+                filter = filter || {};
+
+                var $row = $('<div class="form-row align-items-center mb-2 crud-filter-row"></div>');
+                var $column = $('<select class="form-control form-control-sm crud-filter-column"></select>');
+                var $value = $('<input type="text" class="form-control form-control-sm crud-filter-value">')
+                    .val(filter.value || '');
+
+                filterColumns.forEach(function(column) {
+                    $('<option></option>')
+                        .val(column.index)
+                        .text(column.label)
+                        .prop('selected', String(column.index) === String(filter.column))
+                        .appendTo($column);
+                });
+
+                $row.append($('<div class="col-sm-4 mb-1 mb-sm-0"></div>').append($column));
+                $row.append($('<div class="col"></div>').append($value));
+                $row.append(
+                    $('<div class="col-auto pl-1"></div>').append(
+                        $('<button type="button" class="btn btn-sm btn-light crud-filter-add"><i class="fa fa-plus"></i></button>')
+                            .attr('aria-label', @json(trans('csgtcrud::crud.agregarfiltro')))
+                            .attr('title', @json(trans('csgtcrud::crud.agregarfiltro'))),
+                        $('<button type="button" class="btn btn-sm btn-light ml-1 crud-filter-remove"><i class="fa fa-minus"></i></button>')
+                            .attr('aria-label', @json(trans('csgtcrud::crud.quitarfiltro')))
+                            .attr('title', @json(trans('csgtcrud::crud.quitarfiltro')))
+                    )
+                );
+
+                $filterRows.append($row);
+                updateRemoveButtons();
+            }
+
+            function updateRemoveButtons() {
+                $filterRows.find('.crud-filter-remove').prop('disabled', $filterRows.find('.crud-filter-row').length === 1);
+            }
+
+            function getFilters() {
+                return $filterRows.find('.crud-filter-row').map(function() {
+                    return {
+                        column: $(this).find('.crud-filter-column').val(),
+                        value: $(this).find('.crud-filter-value').val()
+                    };
+                }).get().filter(function(filter) {
+                    return filter.value.trim() !== '';
+                });
+            }
+
+            function setFilters(filters) {
+                $filterRows.empty();
+                if (!Array.isArray(filters) || filters.length === 0) {
+                    addFilterRow();
+                    return;
+                }
+
+                filters.forEach(addFilterRow);
+            }
+
+            addFilterRow();
+
             var oTable = $('.dataTable').dataTable({
                 "processing": true,
                 "serverSide": true,
-                search: {
-                    return: true,
-                },
+                "searching": false,
                 @if ($stateSave)
                     "stateSave": true,
                     "stateSaveParams": function(settings, data) {
                         data.columns.forEach(function(column) {
                             delete column.visible;
                         });
+                        data.crudFilters = getFilters();
+                    },
+                    stateLoadParams: function(settings, data) {
+                        setFilters(data.crudFilters || []);
                     },
                 @endif
                 @if ($orders)
@@ -38,9 +103,12 @@
                         "X-CSRF-Token": "{{ csrf_token() }}"
                     },
                     "method": "POST",
+                    "data": function(data) {
+                        data.filters = getFilters();
+                    },
                 },
                 "bLengthChange": false,
-                "sDom": '<"row" @if ($showSearch)<"col-sm-8 pull-left"f>@endif <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"pull-left"i><"pull-right"p>',
+                "sDom": '<"row" <"col-sm-8"> <"col-sm-4"<"btn-toolbar pull-right"  B <"btn-group btn-group-sm btn-group-agregar">>>>     t<"pull-left"i><"pull-right"p>',
                 "iDisplayLength": {!! $perPage !!},
                 "columnDefs": [{
                         "targets": -1,
@@ -222,9 +290,33 @@
                         );
                 @endforeach
                 $('.dt-buttons').addClass('btn-group-sm');
-                $('div[id$=_filter] input').css('width', '100%').attr('placeholder',
-                    '{{ trans('csgtcrud::crud.buscar') }}');
-                $('.dataTables_filter label').css('width', '100%');
+            });
+
+            $filterRows.on('click', '.crud-filter-add', function() {
+                addFilterRow();
+                $filterRows.find('.crud-filter-value').last().trigger('focus');
+            });
+
+            $filterRows.on('click', '.crud-filter-remove', function() {
+                $(this).closest('.crud-filter-row').remove();
+                updateRemoveButtons();
+                oTable.api().draw();
+            });
+
+            $filterRows.on('keydown', '.crud-filter-value', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    oTable.api().draw();
+                }
+            });
+
+            $('#crud-filter-apply').on('click', function() {
+                oTable.api().draw();
+            });
+
+            $('#crud-filter-clear').on('click', function() {
+                setFilters([]);
+                oTable.api().draw();
             });
 
             $('.dataTable').on('processing.dt', function(e, settings, processing) {
@@ -253,6 +345,19 @@
     <div class="clearfix"></div>
     <div class="card">
         <div class="card-body">
+            @if ($showSearch)
+                <div class="mb-3">
+                    <div id="crud-filter-rows"></div>
+                    <div class="text-right">
+                        <button id="crud-filter-clear" type="button" class="btn btn-sm btn-light">
+                            {{ trans('csgtcrud::crud.limpiar') }}
+                        </button>
+                        <button id="crud-filter-apply" type="button" class="btn btn-sm btn-primary">
+                            <i class="fa fa-filter"></i> {{ trans('csgtcrud::crud.filtrar') }}
+                        </button>
+                    </div>
+                </div>
+            @endif
             <table
                 class="table table-sm table-striped table-hover dataTable display {{ $responsive ? 'dt-responsive nowrap' : '' }}">
                 <thead>
