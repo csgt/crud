@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Storage;
 
 class CrudController extends BaseController
@@ -22,6 +25,8 @@ class CrudController extends BaseController
     private $showSearch = true;
 
     private $stateSave = true;
+
+    private $stateDuration = null;
 
     private $responsive = true;
 
@@ -65,11 +70,15 @@ class CrudController extends BaseController
             dd('setModel is required.');
         }
         $breadcrumb = $this->generateBreadcrumb('index');
+        $stateDuration = $this->stateDuration !== null ? $this->stateDuration : config('csgtcrud.stateDuration', 0);
+        $tableId = 'crud-table-'.Str::slug($request->path());
 
         return view('csgtcrud::index')
             ->with('layout', $this->layout)
             ->with('breadcrumb', $breadcrumb)
             ->with('stateSave', $this->stateSave)
+            ->with('stateDuration', $stateDuration)
+            ->with('tableId', $tableId)
             ->with('showExport', $this->showExport)
             ->with('showSearch', $this->showSearch)
             ->with('responsive', $this->responsive)
@@ -90,13 +99,20 @@ class CrudController extends BaseController
         }
         $data = $this->model->find($aId);
 
-        if ($request->expectsJson()) {
-            return response()->json($data);
-        }
+        return response()->json($data);
     }
 
     public function edit(Request $request, $aId)
     {
+        // Los permisos solo se leian en la vista para esconder botones, asi que la ruta
+        // seguia siendo alcanzable por POST directo. En esta rama no hay setup(): el
+        // controlador hijo define los permisos en su constructor o en un middleware, de
+        // modo que ya estan poblados aca. Se revisa sobre el $aId sin desencriptar porque
+        // create() delega aca con null y decrypt(null) lanzaria excepcion antes del chequeo.
+        if (empty($this->permissions[$aId ? 'update' : 'create'])) {
+            abort(403);
+        }
+
         if (config('csgtcrud.use_encryption')) {
             $aId = decrypt($aId);
         }
@@ -156,6 +172,11 @@ class CrudController extends BaseController
 
     public function update(Request $request, $aId)
     {
+        // store() delega aca con $aId === 0, de modo que ese caso valida el permiso de alta.
+        if (empty($this->permissions[$aId === 0 ? 'create' : 'update'])) {
+            abort(403);
+        }
+
         $request->validate($this->validationRules);
 
         $fields = Arr::except($request->request->all(), $this->ignoreFields);
@@ -165,8 +186,12 @@ class CrudController extends BaseController
         foreach ($this->fields as $campo) {
             if (array_key_exists($campo['field'], $fields)) {
                 if ($campo['type'] == 'date' || $campo['type'] == 'datetime') {
-                    $aFecha = $fields[$campo['field']];
-                    $fechahora = explode(' ', $fields[$campo['field']]);
+                    // El cast a string evita la deprecacion de PHP 8.1 cuando el campo llega
+                    // null (p.ej. desde setHidden() o desde una peticion JSON). El resultado
+                    // es el mismo que antes: explode(' ', '') devuelve [''] y cae en la rama de
+                    // solo fecha, igual que explode(' ', null).
+                    $aFecha = (string) $fields[$campo['field']];
+                    $fechahora = explode(' ', $aFecha);
 
                     if (count($fechahora) == 2) {
                         $formato = 'd/m/Y H:i';
@@ -189,8 +214,18 @@ class CrudController extends BaseController
             if (($campo['type'] == 'file') || ($campo['type'] == 'image')) {
                 if ($request->hasFile($campo['field'])) {
                     $file = $request->file($campo['field']);
+                    $extension = strtolower($file->getClientOriginalExtension());
 
-                    $filename = date('Ymdhis').mt_rand(1, 1000).'.'.strtolower($file->getClientOriginalExtension());
+                    // Whitelist de extensiones: solo se aplica si la aplicacion configura
+                    // 'extensiones_permitidas'. Por defecto (null) el comportamiento no cambia.
+                    $extensionesPermitidas = config('csgtcrud.extensiones_permitidas');
+                    if (is_array($extensionesPermitidas) && ! in_array($extension, array_map('strtolower', $extensionesPermitidas))) {
+                        throw ValidationException::withMessages([
+                            $campo['field'] => [trans('csgtcrud::crud.extensionnopermitida')],
+                        ]);
+                    }
+
+                    $filename = date('Ymdhis').mt_rand(1, 1000).'.'.$extension;
                     $path = public_path().$campo['filepath'];
 
                     if (! file_exists($path)) {
@@ -265,6 +300,10 @@ class CrudController extends BaseController
 
     public function destroy(Request $request, $aId)
     {
+        if (empty($this->permissions['destroy'])) {
+            abort(403);
+        }
+
         try {
             if (config('csgtcrud.use_encryption')) {
                 $aId = decrypt($aId);
@@ -344,16 +383,20 @@ class CrudController extends BaseController
         // Filtramos con el campo de la vista
         if ($search['value'] != '') {
             if ($recordsTotal > 0) {
-                $data = $data->filter(function ($item) use ($search) {
+                // El cast a string evita la deprecacion de PHP 8.1 al pasar null a
+                // strtoupper()/stristr() cuando la columna de la base de datos viene NULL.
+                // El needle se calcula una sola vez y no por cada columna de cada fila.
+                $needle = strtoupper((string) $search['value']);
+                $data = $data->filter(function ($item) use ($needle) {
                     $result = false;
                     foreach ($item->getAttributes() as $column) {
-                        $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
+                        $result = $result || stristr(strtoupper((string) $column), $needle);
                     }
                     $relations = $item->getRelations();
                     foreach ($relations as $relation) {
                         if ($relation && method_exists($relation, 'getAttributes')) {
                             foreach ($relation->getAttributes() as $column) {
-                                $result = $result || stristr(strtoupper($column), strtoupper($search['value']));
+                                $result = $result || stristr(strtoupper((string) $column), $needle);
                             }
                         }
                     }
@@ -781,7 +824,7 @@ class CrudController extends BaseController
         $target = (! array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $enumarray = (! array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign = (! array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
-        $filedisk = (! array_key_exists('filedisk', $aParams) ? true : $aParams['filedisk']);
+        $filedisk = (! array_key_exists('filedisk', $aParams) ? '' : $aParams['filedisk']);
         $utc = (! array_key_exists('utc', $aParams) ? false : $aParams['utc']);
         $editClass = (! array_key_exists('editClass', $aParams) ? 'col-sm-12' : $aParams['editClass']);
         $searchable = true;
@@ -809,8 +852,13 @@ class CrudController extends BaseController
             dd('Para el tipo securefile hay que especifiarle el filedisk');
         }
 
-        if ($tipo == 'emum' && count($enumarray) == 0) {
-            dd('Para el tipo enum el enumarray es requerido');
+        if ($tipo == 'enum' && (! is_array($enumarray) || count($enumarray) == 0)) {
+            // No se aborta la peticion: antes de que esta validacion corriera, un enum sin
+            // opciones renderizaba un select vacio y la aplicacion seguia funcionando. Se
+            // conserva ese comportamiento y solo se deja constancia en el log. El is_array()
+            // es necesario porque en PHP 8 un count() sobre un no-array es un TypeError fatal.
+            Log::warning('csgtcrud: el campo "'.$aParams['field'].'" es de tipo enum y no tiene un enumarray valido; se renderiza un select vacio.');
+            $enumarray = [];
         }
 
         if (! strpos($aParams['field'], ')')) {
@@ -1002,6 +1050,11 @@ class CrudController extends BaseController
     public function setPerPage($aCuantos)
     {
         $this->perPage = $aCuantos;
+    }
+
+    public function setStateDuration($aSegundos)
+    {
+        $this->stateDuration = $aSegundos;
     }
 
     public function setResponsive($aResponsive)

@@ -26,5 +26,6 @@ return [
     'registroerror'      => 'Error actualizando registro: ',
     'registroeliminado'  => 'Registro eliminado exitosamente',
     'registroelimiandoe' => 'Error al borrar campo. Revisar datos relacionados.',
+    'extensionnopermitida' => 'La extensión de este archivo no está permitida.',
 
 ];

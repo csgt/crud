@@ -149,6 +149,10 @@
                                     <div>
                                         <?php $campo = old($column['field'], $data ? $data->{$column['field']} : $column['default']); ?>
                                         <select name="{{ $column['field'] }}" {!! arrayToFields($arr) !!}>
+                                            {{-- Sin esta opcion el navegador selecciona la primera de la lista
+                                                 cuando el registro no tiene valor, y al guardar la escribe como
+                                                 si el usuario la hubiera elegido. --}}
+                                            <option value="" {{ ($campo === null || $campo === '' ? "selected='selected'" : "") }}></option>
                                             @foreach($combos[$column['alias']] as $id => $opcion)
                                             <option value="{{ $id }}" {{ ($campo == $id ? "selected='selected'" : "") }}>{!! $opcion !!}</option>
                                             @endforeach
@@ -187,6 +191,9 @@
                                     {!!$label!!}
                                     <div>
                                         <select name="{{ $column['campoReal'] }}" {!! arrayToFields($arr) !!}>
+                                            {{-- Ver el comentario del tipo combobox: sin opcion vacia se guarda
+                                                 la primera opcion sin que nadie la haya elegido. --}}
+                                            <option value="" {{ ($valor === null || $valor === '' ? "selected='selected'" : "") }}></option>
                                             @foreach($column['enumarray'] as $id => $opcion)
                                             <option value="{{ $id }}" {{ ($valor == $id ? "selected='selected'" : "") }}>{!! $opcion !!}</option>
                                             @endforeach
@@ -230,14 +237,56 @@
 
 @section ('javascript')
     <script type="text/javascript">
+        // Estas vistas no traen sus propias dependencias: las carga la aplicacion.
+        // Cuando faltaba alguna, la pantalla quedaba en blanco sin decir por que.
+        window.csgtCrudRequire = window.csgtCrudRequire || function(name, present, version, min, max) {
+            if (!present) {
+                var message = 'csgt/crud: falta la libreria ' + name + ', que esta vista necesita.';
+                if (document.body) {
+                    var banner = document.createElement('div');
+                    banner.setAttribute('style',
+                        'background:#b00020;color:#fff;padding:12px;font-family:sans-serif;font-size:14px');
+                    banner.textContent = message;
+                    document.body.insertBefore(banner, document.body.firstChild);
+                }
+                throw new Error(message);
+            }
+            if (!version) {
+                return;
+            }
+            var cmp = function(a, b) {
+                var x = String(a).split('.'),
+                    y = String(b).split('.');
+                for (var i = 0; i < 3; i++) {
+                    var d = (parseInt(x[i], 10) || 0) - (parseInt(y[i], 10) || 0);
+                    if (d) {
+                        return d < 0 ? -1 : 1;
+                    }
+                }
+                return 0;
+            };
+            // Fuera del rango probado avisa, pero no corta: ahi la libreria esta y
+            // la vista probablemente funcione.
+            if (min && cmp(version, min) < 0) {
+                console.warn('csgt/crud: ' + name + ' ' + version + ' es anterior a la minima probada (' + min + ').');
+            }
+            if (max && cmp(version, max) >= 0) {
+                console.warn('csgt/crud: ' + name + ' ' + version + ' es igual o posterior a ' + max + ', la primera no probada.');
+            }
+        };
+        csgtCrudRequire('jQuery', typeof window.jQuery !== 'undefined',
+            window.jQuery && window.jQuery.fn && window.jQuery.fn.jquery, '1.7', '');
         $(function() {
             @if($uses['dates'])
                 $('.catalogoFecha').datetimepicker();
             @endif
             @if($uses['selectize'])
+                csgtCrudRequire('selectize', !!(window.jQuery && jQuery.fn && jQuery.fn.selectize), null, '', '');
                 $('.selectpicker').selectize();
             @endif
             @if($uses['summernote'])
+                csgtCrudRequire('summernote', !!(window.jQuery && jQuery.summernote),
+                  window.jQuery && jQuery.summernote && jQuery.summernote.version, '0.8', '');
                 $('.summernote').summernote({
                     'lang'   : 'es-ES',
                 });
