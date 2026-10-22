@@ -195,7 +195,7 @@ class Crud
         self::$perPage = $aCuantos;
     }
 
-    public function setResponsive($aResponsive)
+    public static function setResponsive($aResponsive)
     {
         self::$responsive = $aResponsive;
     }

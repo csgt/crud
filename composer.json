@@ -17,5 +17,16 @@
             "Csgt\\Crud\\": "src"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "require-dev": {
+        "phpunit/phpunit": "^9.6 || ^10.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Csgt\\Crud\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
 }
