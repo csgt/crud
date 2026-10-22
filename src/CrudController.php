@@ -453,9 +453,34 @@ class CrudController extends BaseController
                     $relatedColumn = $this->stripAlias($parts[1]);
 
                     if (method_exists($this->modelo, $relationName)) {
-                        $query->orWhereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
-                            $relationQuery->where($relatedColumn, 'like', $searchValue);
-                        });
+                        if (preg_match('/\b(sum|max|min|avg)\s*\(/i', $relatedColumn)) {
+                            $relation = $this->modelo->{$relationName}();
+                            $table = $relation->getRelated()->getTable();
+                            $foreignKey = $relation->getRelated()->qualifyColumn(
+                                $relation->getForeignKeyName()
+                            );
+                            $parentKey = $relation->getParent()->qualifyColumn(
+                                $relation->getLocalKeyName()
+                            );
+
+                            $query->orWhereExists(function ($q) use ($table, $foreignKey, $parentKey, $relatedColumn, $searchValue) {
+                                $q->selectRaw('1')
+                                    ->from($table)
+                                    ->whereColumn(
+                                        $foreignKey,
+                                        $parentKey
+                                    )
+                                    ->groupBy($foreignKey)
+                                    ->havingRaw(
+                                        "CAST({$relatedColumn} AS CHAR) LIKE ?",
+                                        ['%'.$searchValue.'%']
+                                    );
+                            });
+                        } elseif (method_exists($this->modelo, $relationName)) {
+                            $query->orWhereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
+                                $relationQuery->where($relatedColumn, 'like', $searchValue);
+                            });
+                        }
                     }
 
                     continue;
