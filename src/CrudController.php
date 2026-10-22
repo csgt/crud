@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Arr;
+use Storage;
 
 class CrudController extends BaseController
 {
@@ -194,6 +195,22 @@ class CrudController extends BaseController
                     $file->move($path, $filename);
                     $campos[$campo['campo']] = $filename;
                     $fields[$campo['campo']] = $filename;
+                }
+            }
+
+            if ($campo['tipo'] == 'securefile') {
+                if ($request->hasFile($campo['campo'])) {
+                    if ($aId !== 0) {
+                        $existingId = config('csgtcrud.usar_encripcion') ? decrypt($aId) : $aId;
+                        $existing = $this->modelo->find($existingId);
+
+                        if ($existing && $existing->{$campo['campo']} != '') {
+                            Storage::disk($campo['filedisk'])->delete($existing->{$campo['campo']});
+                        }
+                    }
+
+                    $fields[$campo['campo']] = Storage::disk($campo['filedisk'])
+                        ->putFile($campo['filepath'], $request->file($campo['campo']));
                 }
             }
 
@@ -454,10 +471,16 @@ class CrudController extends BaseController
 
     private function applyOrderToQuery($query, $columnName, $direction)
     {
-        $isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false;
+        $columnName = $this->stripAlias($columnName);
+        $isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false
+            && strpos($columnName, '(') === false;
 
         if (! $isRelation) {
-            $query->orderBy($columnName, $direction);
+            if (strpos($columnName, '(') !== false || strpos($columnName, ' ') !== false) {
+                $query->orderByRaw($columnName.' '.$direction);
+            } else {
+                $query->orderBy($columnName, $direction);
+            }
 
             return;
         }
@@ -540,6 +563,7 @@ class CrudController extends BaseController
 
         if ($isRelation) {
             [$relationName, $relatedColumn] = explode('.', $field, 2);
+            $relatedColumn = $this->stripAlias($relatedColumn);
 
             if (method_exists($this->modelo, $relationName)) {
                 $query->whereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
@@ -550,6 +574,8 @@ class CrudController extends BaseController
             }
         }
 
+        $field = $this->stripAlias($field);
+
         if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
             $query->whereRaw($field.' LIKE ?', [$searchValue]);
 
@@ -557,6 +583,22 @@ class CrudController extends BaseController
         }
 
         $query->where($field, 'like', $searchValue);
+    }
+
+    /**
+     * Devuelve la expresion sin el alias, para poder usarla dentro de un WHERE
+     * o de un ORDER BY.
+     */
+    private function stripAlias($field)
+    {
+        $field = trim($field);
+        $pos = stripos($field, ' as ');
+
+        if ($pos !== false) {
+            $field = trim(substr($field, 0, $pos));
+        }
+
+        return $field;
     }
 
     private function fillCombos($aCampos)
@@ -778,7 +820,7 @@ class CrudController extends BaseController
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'decimales', 'collection',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc', 'editClass'];
+            'enumarray', 'filepath', 'filewidth', 'fileheight', 'filedisk', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file',
             'image', 'textarea', 'url', 'summernote', 'securefile'];
 
@@ -807,6 +849,7 @@ class CrudController extends BaseController
         $filepath = (! array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
         $filewidth = (! array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
         $fileheight = (! array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
+        $filedisk = (! array_key_exists('filedisk', $aParams) ? null : $aParams['filedisk']);
         $target = (! array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
         $enumarray = (! array_key_exists('enumarray', $aParams) ? [] : $aParams['enumarray']);
         $isforeign = (! array_key_exists('isforeign', $aParams) ? true : $aParams['isforeign']);
@@ -832,6 +875,10 @@ class CrudController extends BaseController
         }
         if ($tipo == 'securefile' && $filepath == '') {
             dd('Para el tipo securefile hay que especifiarle el filepath');
+        }
+
+        if ($tipo == 'securefile' && $filedisk == '') {
+            dd('Para el tipo securefile hay que especifiarle el filedisk');
         }
 
         if ($tipo == 'emum' && count($enumarray) == 0) {
@@ -871,6 +918,7 @@ class CrudController extends BaseController
             'searchable' => $searchable,
             'enumarray' => $enumarray,
             'filepath' => $filepath,
+            'filedisk' => $filedisk,
             'filewidth' => $filewidth,
             'fileheight' => $fileheight,
             'target' => $target,

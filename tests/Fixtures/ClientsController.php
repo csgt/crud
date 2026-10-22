@@ -1,0 +1,31 @@
+<?php
+namespace Csgt\Crud\Tests\Fixtures;
+
+use Csgt\Crud\CrudController;
+
+/**
+ * Minimal controller used by the tests: it declares the same fields a real CRUD
+ * would declare, without touching the framework beyond Eloquent.
+ */
+class ClientsController extends CrudController
+{
+    public function __construct()
+    {
+        $this->setModelo(new Client);
+        $this->setTitulo('Clients');
+
+        $this->setCampo(['campo' => 'name', 'nombre' => 'Name']);
+        $this->setCampo(['campo' => 'country.name AS country_name', 'nombre' => '<b>Country</b>', 'isforeign' => true]);
+        $this->setCampo(['campo' => 'tags', 'nombre' => 'Tags', 'tipo' => 'multi']);
+        $this->setCampo(['campo' => 'CONCAT(name, id) AS composed', 'nombre' => 'Composed']);
+        $this->setCampo(['campo' => 'secret', 'nombre' => 'Secret', 'show' => false]);
+        $this->setCampo([
+            'campo' => 'contract',
+            'nombre' => 'Contract',
+            'tipo' => 'securefile',
+            'filepath' => 'contracts',
+            'filedisk' => 's3',
+            'show' => false,
+        ]);
+    }
+}
