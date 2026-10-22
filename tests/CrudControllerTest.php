@@ -116,6 +116,33 @@ class CrudControllerTest extends TestCase
         $this->assertSame('other.name', $this->call($this->controller, 'qualifyRelatedColumn', [$model, 'other.name']));
     }
 
+    /*==================== resolveOrderDirection ====================*/
+
+    public function testResolveOrderDirectionDefaultsToAscForMissingOrNullDir()
+    {
+        // $order['dir'] comes straight from the client; a malformed request can
+        // omit it. strtolower(null) is deprecated since PHP 8.1, so this must
+        // not pass null through, and must keep falling back to "asc".
+        $this->assertSame('asc', $this->call($this->controller, 'resolveOrderDirection', [[]]));
+        $this->assertSame('asc', $this->call($this->controller, 'resolveOrderDirection', [['dir' => null]]));
+    }
+
+    public function testResolveOrderDirectionRecognisesDescCaseInsensitively()
+    {
+        $this->assertSame('desc', $this->call($this->controller, 'resolveOrderDirection', [['dir' => 'desc']]));
+        $this->assertSame('desc', $this->call($this->controller, 'resolveOrderDirection', [['dir' => 'DESC']]));
+        $this->assertSame('asc', $this->call($this->controller, 'resolveOrderDirection', [['dir' => 'asc']]));
+    }
+
+    public function testResolveOrderDirectionFeedsApplyOrderToQueryTheSameAsBefore()
+    {
+        $direction = $this->call($this->controller, 'resolveOrderDirection', [['dir' => 'desc']]);
+        $query     = $this->query();
+        $this->call($this->controller, 'applyOrderToQuery', [$query, 'name', $direction]);
+
+        $this->assertStringContainsString('order by "name" desc', $query->toSql());
+    }
+
     /*==================== applyOrderToQuery ====================*/
 
     public function testApplyOrderToQueryOrdersALocalColumn()
@@ -247,6 +274,174 @@ class CrudControllerTest extends TestCase
 
         $this->assertFalse($this->call($this->controller, 'applyFiltersToQuery', [$query, 'nope']));
         $this->assertSame([], $query->getBindings());
+    }
+
+    /*==================== filter options ====================*/
+
+    /**
+     * Declara las dos columnas de lista cerrada en el controlador de este test.
+     * No van en el fixture compartido porque correrian los indices de columna
+     * que usan los demas tests de filtro.
+     */
+    private function withClosedListColumns()
+    {
+        $this->controller->setField([
+            'field'     => 'status',
+            'name'      => 'Status',
+            'type'      => 'enum',
+            'enumarray' => ['a' => 'Active', 'i' => 'Inactive'],
+        ]);
+        $this->controller->setField(['field' => 'active', 'name' => 'Active', 'type' => 'bool']);
+    }
+
+    public function testGetFilterColumnsExposesTheOptionsOfClosedListColumns()
+    {
+        $this->withClosedListColumns();
+
+        $byLabel = [];
+        foreach ($this->call($this->controller, 'getFilterColumns') as $column) {
+            $byLabel[$column['label']] = $column;
+        }
+
+        $this->assertSame(
+            [['value' => 'a', 'label' => 'Active'], ['value' => 'i', 'label' => 'Inactive']],
+            $byLabel['Status']['options']
+        );
+        $this->assertSame(
+            [['value' => '1', 'label' => 'Si'], ['value' => '0', 'label' => 'No']],
+            $byLabel['Active']['options']
+        );
+
+        // Una columna de texto libre no ofrece lista, y su filtro sigue siendo
+        // un campo de escritura.
+        $this->assertSame([], $byLabel['Name']['options']);
+    }
+
+    public function testApplyFiltersToQueryMatchesAClosedListColumnExactly()
+    {
+        // Con LIKE '%a%' un enum de claves "a" e "i" devolveria tambien las filas
+        // cuyo valor solo contiene la letra, por eso la igualdad importa.
+        $this->withClosedListColumns();
+        $query = $this->query();
+
+        $applied = $this->call($this->controller, 'applyFiltersToQuery', [$query, [
+            ['column' => 4, 'value' => 'a'],
+        ]]);
+
+        $this->assertTrue($applied);
+        $this->assertStringContainsString('where "status" = ?', $query->toSql());
+        $this->assertStringNotContainsString('like', $query->toSql());
+        $this->assertSame(['a'], $query->getBindings());
+    }
+
+    public function testApplyFiltersToQueryMatchesABooleanColumnExactly()
+    {
+        $this->withClosedListColumns();
+        $query = $this->query();
+
+        $this->call($this->controller, 'applyFiltersToQuery', [$query, [
+            ['column' => 5, 'value' => '0'],
+        ]]);
+
+        $this->assertStringContainsString('where "active" = ?', $query->toSql());
+        $this->assertSame(['0'], $query->getBindings());
+    }
+
+    public function testApplyFiltersToQueryStillMatchesFreeTextColumnsWithLike()
+    {
+        $this->withClosedListColumns();
+        $query = $this->query();
+
+        $this->call($this->controller, 'applyFiltersToQuery', [$query, [
+            ['column' => 0, 'value' => 'acme'],
+        ]]);
+
+        $this->assertStringContainsString('where "name" like ?', $query->toSql());
+        $this->assertSame(['%acme%'], $query->getBindings());
+    }
+
+    /*==================== resolveLength ====================*/
+
+    public function testResolveLengthUsesTheRawRequestLengthWhenNoMaximumIsConfigured()
+    {
+        // csgtcrud.max_page_length is null by default: this preserves the
+        // historical behaviour of trusting the client's "length" as-is.
+        $this->assertSame(9999999, $this->call($this->controller, 'resolveLength', [9999999]));
+        $this->assertSame(0, $this->call($this->controller, 'resolveLength', [0]));
+    }
+
+    public function testResolveLengthClampsToTheConfiguredMaximum()
+    {
+        TestConfig::set('csgtcrud.max_page_length', 100);
+
+        $length = $this->call($this->controller, 'resolveLength', [9999999]);
+
+        $this->assertSame(100, $length);
+        $this->assertStringContainsString('limit 100', $this->query()->limit($length)->toSql());
+    }
+
+    public function testResolveLengthFallsBackToPerPageForAZeroOrNegativeLengthWhenAMaximumIsConfigured()
+    {
+        TestConfig::set('csgtcrud.max_page_length', 100);
+
+        $this->assertSame(50, $this->call($this->controller, 'resolveLength', [0]));
+        $this->assertSame(50, $this->call($this->controller, 'resolveLength', [-5]));
+    }
+
+    /*==================== setField / enum guard ====================*/
+
+    public function testSetFieldNormalizesAMissingNullOrNonArrayEnumarrayWithoutThrowing()
+    {
+        // count() on a non-array is a fatal TypeError on PHP 8, so a bad
+        // enumarray must never reach it; it is normalized to [] instead of
+        // aborting, since an enum with no options historically just rendered
+        // an empty <select> and the application kept working.
+        $cases = [
+            'missing'   => ['field' => 'status_missing', 'type' => 'enum'],
+            'null'      => ['field' => 'status_null', 'type' => 'enum', 'enumarray' => null],
+            'non-array' => ['field' => 'status_string', 'type' => 'enum', 'enumarray' => 'not-an-array'],
+        ];
+
+        foreach ($cases as $case) {
+            $this->controller->setField($case);
+        }
+
+        $fields = $this->read($this->controller, 'fields');
+        $byField = array_column($fields, 'enumarray', 'field');
+
+        $this->assertSame([], $byField['status_missing']);
+        $this->assertSame([], $byField['status_null']);
+        $this->assertSame([], $byField['status_string']);
+    }
+
+    public function testSetFieldDefaultsAMissingFiledisktoAnEmptyString()
+    {
+        // The securefile validation compares filedisk against '', so defaulting
+        // it to boolean true made that check unreachable: true == '' is false.
+        // A securefile declared without a disk was accepted and then failed at
+        // render time in Storage::disk(true), which resolves to the config key
+        // filesystems.disks.1.
+        $this->controller->setField(['field' => 'contract', 'type' => 'string']);
+
+        $fields = $this->read($this->controller, 'fields');
+        $byField = array_column($fields, 'filedisk', 'field');
+
+        $this->assertSame('', $byField['contract']);
+    }
+
+    public function testSetFieldKeepsAnExplicitFiledisk()
+    {
+        $this->controller->setField([
+            'field'    => 'contract_secure',
+            'type'     => 'securefile',
+            'filepath' => 'contracts',
+            'filedisk' => 's3',
+        ]);
+
+        $fields = $this->read($this->controller, 'fields');
+        $byField = array_column($fields, 'filedisk', 'field');
+
+        $this->assertSame('s3', $byField['contract_secure']);
     }
 
     /*==================== downLevel ====================*/
