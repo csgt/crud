@@ -2,7 +2,7 @@
 namespace Csgt\Crud;
 
 use Illuminate\Routing\Controller as BaseController;;
-use Response,Crypt, Session;
+use Response,Crypt, Session, DB;
 use Illuminate\Http\Request;
 
 class CrudController extends BaseController {
@@ -284,29 +284,38 @@ class CrudController extends BaseController {
 			$data->whereRaw($whereRaw);
 		}
 		//Obtenemos la cantidad de registros antes de filtrar
-		$recordsTotal = $data->count();
-		//Filtramos con el campo de la vista
-		$data->where(function($q) use ($columns, $search){
-			if ($columns) {
-				foreach ($columns as $column) {
-					if($column['searchable']){
-						//$select = explode(' AS ', $selects[$i]);
-						$q->orWhere($column['campo'], 'like', '%'.$search['value'].'%');
-					}
-				}
-			}
-		});
+		$recordsTotal = (clone $data)->count();
+		//Filtramos con el campo de la vista, directamente en la base de datos
+		if($search['value'] <> ''){
+			$this->applySearchToQuery($data, $search['value'], $columns);
+		}
 
 		//Obtenemos la cantidad de registros luego de haber filtrado
-		$recordsFiltered = $data->count();
-		//Filtramos los registros y obtenemos el arreglo con la data
+		$recordsFiltered = $search['value'] <> '' ? (clone $data)->count() : $recordsTotal;
+
+		$ordenColumnas = $this->getCamposOrden();
+		//Ahora order by, tambien en la base de datos
+		if($request->order){
+			foreach($request->order as $order){
+				$columnName = isset($ordenColumnas[$order['column']]) ? $ordenColumnas[$order['column']] : null;
+				if($columnName === null) continue;
+
+				$direction = strtolower($order['dir']) == 'desc' ? 'desc' : 'asc';
+
+				if($columnName == $this->uniqueid)
+					$data->orderBy($this->modelo->getTable() . '.' . $this->modelo->getKeyName(), $direction);
+				else
+					$this->applyOrderToQuery($data, $columnName, $direction);
+			}
+		}
+
+		//Paginamos en la base de datos y obtenemos unicamente la pagina solicitada
 		$items = $data
 			->skip($request->start)
 			->take($request->length)
-			->get()->toArray();
+			->get();
 
 		$arr = [];
-		$ordenColumnas = $this->getCamposOrden();
 		foreach($items as $item) {
 			$cols = [];
 			$lastItem = '';
@@ -327,10 +336,14 @@ class CrudController extends BaseController {
 				if ($colName == $this->uniqueid) $lastItem = Crypt::encrypt($item[$colName]);
 				else if($esRelacion){
 					//Se chequea si el restultado de la relaci'on es de uno a uno o de uno a muchos
-					if(array_key_exists(0, $item[$relationName]))
-						$cols[] = $item[$relationName][0][$colName];
-					else
-						$cols[] = $item[$relationName][$colName];
+					$relation = $item[$relationName];
+
+					if($relation instanceof \Illuminate\Support\Collection)
+						$relation = $relation->first();
+					else if(is_array($relation) && array_key_exists(0, $relation))
+						$relation = $relation[0];
+
+					$cols[] = data_get($relation, $colName);
 				}
 				else $cols[] = $item[$colName];
 			}
@@ -339,6 +352,98 @@ class CrudController extends BaseController {
 			$arr[] = $cols;
 		}
 		return response()->json(['draw' => $request->draw, 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $arr]);
+	}
+
+	/**
+	 * Ordena en la base de datos. Si la columna pertenece a una relacion se ordena
+	 * con un subquery correlacionado, cuando la version de Laravel lo permite.
+	 */
+	private function applyOrderToQuery($query, $columnName, $direction){
+		$columnName = $this->stripAlias($columnName);
+		$isRelation = strpos($columnName, '.') !== false && strpos($columnName, '"') === false
+			&& strpos($columnName, '(') === false;
+
+		if(!$isRelation){
+			if(strpos($columnName, '(') !== false || strpos($columnName, ' ') !== false)
+				$query->orderByRaw($columnName . ' ' . $direction);
+			else
+				$query->orderBy($columnName, $direction);
+
+			return;
+		}
+
+		$partes        = explode('.', $columnName, 2);
+		$relationName  = $partes[0];
+		$relatedColumn = $partes[1];
+
+		if(!method_exists($this->modelo, $relationName)){
+			$query->orderBy($columnName, $direction);
+
+			return;
+		}
+
+		$relation = $this->modelo->{$relationName}();
+
+		//getRelationExistenceQuery existe a partir de Laravel 5.5. En versiones
+		//anteriores se ordena por la llave primaria para no romper la consulta.
+		if(!method_exists($relation, 'getRelationExistenceQuery')){
+			$query->orderBy($this->modelo->getTable() . '.' . $this->modelo->getKeyName(), $direction);
+
+			return;
+		}
+
+		$relatedModel  = $relation->getRelated();
+		$relationQuery = $relation->getRelationExistenceQuery(
+			$relatedModel->newQuery(),
+			$query
+		)
+			->select(DB::raw($this->qualifyRelatedColumn($relatedModel, $relatedColumn)))
+			->limit(1);
+
+		$query->orderByRaw('(' . $relationQuery->toSql() . ') ' . $direction, $relationQuery->getBindings());
+	}
+
+	/**
+	 * Devuelve la expresion sin el alias, para poder usarla dentro de un WHERE.
+	 */
+	private function stripAlias($field){
+		$field = trim($field);
+		$pos   = stripos($field, ' as ');
+
+		if($pos !== false) $field = trim(substr($field, 0, $pos));
+
+		return $field;
+	}
+
+	/**
+	 * Antepone la tabla a la columna solo cuando es un identificador simple.
+	 */
+	private function qualifyRelatedColumn($relatedModel, $column){
+		$column = trim($column);
+
+		if(strpos($column, '(') !== false || strpos($column, ' ') !== false || strpos($column, '.') !== false)
+			return $column;
+
+		return $relatedModel->getTable() . '.' . $column;
+	}
+
+	/**
+	 * Aplica la busqueda global de DataTables como un WHERE en la base de datos,
+	 * sobre las mismas columnas marcadas como searchable.
+	 */
+	private function applySearchToQuery($query, $searchValue, $columns){
+		$searchValue = '%' . mb_strtolower(trim($searchValue)) . '%';
+
+		$query->where(function($q) use ($searchValue, $columns){
+			foreach($columns as $column){
+				if(!$column['searchable']) continue;
+
+				$field = $this->stripAlias($column['campo']);
+				if($field == '' || $field == $this->uniqueid) continue;
+
+				$q->orWhereRaw('LOWER(' . $field . ') LIKE ?', [$searchValue]);
+			}
+		});
 	}
 
 	public function setModelo($aModelo){
