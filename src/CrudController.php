@@ -97,15 +97,15 @@ class CrudController extends BaseController
 
     public function edit(Request $request, $aId)
     {
-        if (config('csgtcrud.use_encryption')) {
-            $aId = decrypt($aId);
-        }
-        $data = $this->model->find($aId);
-
         $path = $this->downLevel($request->path()).'/';
         if ($aId) {
+            if (config('csgtcrud.use_encryption')) {
+                $aId = decrypt($aId);
+            }
+            $data = $this->model->find($aId);
             $breadcrumb = $this->generateBreadcrumb('edit', $this->downLevel($path));
         } else {
+            $data = null;
             $breadcrumb = $this->generateBreadcrumb('create', $path);
         }
 
