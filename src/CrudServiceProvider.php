@@ -26,7 +26,7 @@ class CrudServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->app['crud'] = $this->app->share(function ($app) {
+        $this->app->singleton('crud', function ($app) {
             return new Crud;
         });
     }

@@ -1,15 +1,14 @@
 <?php
 namespace Csgt\Crud;
 
-use DB;
-use Hash;
-use View;
-use Crypt;
-use Input;
-use Request;
-use Session;
-use Redirect;
-use Response;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\View;
 
 class Crud
 {
@@ -85,7 +84,7 @@ class Crud
 
         $registros = $query->count();
 
-        $orders = Input::get('order');
+        $orders = Request::input('order');
         if ($orders) {
             foreach ($orders as $order) {
                 $orderArray = explode(' AS ', $selects[$order['column']]);
@@ -93,8 +92,8 @@ class Crud
             }
         }
 
-        $columns = Input::get('columns');
-        $search  = Input::get('search');
+        $columns = Request::input('columns');
+        $search  = Request::input('search');
         $i       = 0;
         $query->where(function ($q) use ($columns, $selects, $i, $search) {
             if ($columns) {
@@ -110,12 +109,12 @@ class Crud
 
         $filtrados = $query->count();
 
-        $query->skip(Input::get('start'))
-            ->take(Input::get('length'));
+        $query->skip(Request::input('start'))
+            ->take(Request::input('length'));
 
         $data = $query->get();
 
-        $response['draw']            = Input::get('draw');
+        $response['draw']            = Request::input('draw');
         $response['recordsTotal']    = $registros;
         $response['recordsFiltered'] = $filtrados;
         foreach ($data as $d) {
@@ -551,23 +550,23 @@ class Crud
 
         foreach (self::$camposEdit as $campo) {
             if ($campo['tipo'] == 'bool') {
-                $data[$campo['campoReal']] = Input::get($campo['campoReal'], 0);
+                $data[$campo['campoReal']] = Request::input($campo['campoReal'], 0);
             } else if ($campo['tipo'] == 'combobox') {
-                if (Input::get($campo['combokey']) == '') {
+                if (Request::input($campo['combokey']) == '') {
                     $data[$campo['combokey']] = null;
                 } else {
-                    $data[$campo['combokey']] = Input::get($campo['combokey']);
+                    $data[$campo['combokey']] = Request::input($campo['combokey']);
                 }
 
             } else if ($campo['tipo'] == 'date') {
-                $laFecha = explode('/', Input::get($campo['campoReal']));
+                $laFecha = explode('/', Request::input($campo['campoReal']));
                 if (count($laFecha) == 3) {
                     $data[$campo['campoReal']] = $laFecha[2] . '-' . $laFecha[1] . '-' . $laFecha[0];
                 } else {
                     $data[$campo['campoReal']] = null;
                 }
             } else if ($campo['tipo'] == 'datetime') {
-                $fechaHora = explode(' ', Input::get($campo['campoReal']));
+                $fechaHora = explode(' ', Request::input($campo['campoReal']));
                 if (count($fechaHora) == 2) {
                     $laFecha = explode('/', $fechaHora[0]);
                     if (count($laFecha) != 3) {
@@ -580,16 +579,16 @@ class Crud
                 }
             } else if ($campo['tipo'] == 'password') {
                 if ($id == null) {
-                    $data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+                    $data[$campo['campoReal']] = Hash::make(Request::input($campo['campoReal']));
                 } else {
-                    if (Input::get($campo['campoReal']) != '') {
-                        $data[$campo['campoReal']] = Hash::make(Input::get($campo['campoReal']));
+                    if (Request::input($campo['campoReal']) != '') {
+                        $data[$campo['campoReal']] = Hash::make(Request::input($campo['campoReal']));
                     }
 
                 }
             } else if (($campo['tipo'] == 'file') || ($campo['tipo'] == 'image')) {
-                if (Input::hasFile($campo['campoReal'])) {
-                    $file = Input::file($campo['campoReal']);
+                if (Request::hasFile($campo['campoReal'])) {
+                    $file = Request::file($campo['campoReal']);
 
                     $filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
                     $path     = public_path() . $campo['filepath'];
@@ -603,8 +602,8 @@ class Crud
                     $data[$campo['campoReal']] = $filename;
                 }
             } else if ($campo['tipo'] == 'securefile') {
-                if (Input::hasFile($campo['campoReal'])) {
-                    $file     = Input::file($campo['campoReal']);
+                if (Request::hasFile($campo['campoReal'])) {
+                    $file     = Request::file($campo['campoReal']);
                     $filename = date('Ymdhis') . mt_rand(1, 1000) . '.' . strtolower($file->getClientOriginalExtension());
                     $path     = $campo['filepath'];
 
@@ -617,11 +616,11 @@ class Crud
                     $data[$campo['campoReal']] = $filename;
                 }
             } else {
-                $data[$campo['campoReal']] = Input::get($campo['campoReal']);
+                $data[$campo['campoReal']] = Request::input($campo['campoReal']);
             }
 
             if (in_array($campo['campoReal'], self::$camposSlug)) {
-                $temp = strtolower(Input::get($campo['campoReal']));
+                $temp = strtolower(Request::input($campo['campoReal']));
                 $temp = str_replace(' ', self::$slugSeparator, $temp);
                 $temp = str_replace('\\', 'y', $temp);
                 $temp = str_replace('+', 'y', $temp);
