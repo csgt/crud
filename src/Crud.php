@@ -512,7 +512,7 @@ class Crud
         $combos = null;
         foreach (self::$camposEdit as $campo) {
             if ($campo['tipo'] == 'combobox') {
-                $resultados = DB::select(DB::raw($campo['query']));
+                $resultados = DB::select($campo['query']);
                 $temp       = [];
                 foreach ($resultados as $resultado) {
                     $i = 0;
