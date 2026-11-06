@@ -3,14 +3,14 @@
 namespace Csgt\Crud;
 
 use Carbon\Carbon;
-use DB;
 use Exception;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CrudController extends BaseController
 {
@@ -875,6 +875,11 @@ class CrudController extends BaseController
     public function setLayout($aLayout)
     {
         $this->layout = $aLayout;
+    }
+
+    public function setShowSearch($aSearch)
+    {
+        $this->showSearch = $aSearch;
     }
 
     public function setField($aParams)
