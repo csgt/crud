@@ -273,15 +273,16 @@
                     window.location = res.redirect;
                 })
                 .fail(function(err) {
-                    if (err.status == 422) {
+                    var json = err.responseJSON || {};
+                    if (err.status == 422 && json.errors) {
                         var errorsHtml = ''
-                        $.each( err.responseJSON.errors, function( key, value ) {
+                        $.each( json.errors, function( key, value ) {
                             errorsHtml += value[0] + "\n";
                         });
                         alert(errorsHtml)
                     }
                     else {
-                        alert(err.responseJSON.message);
+                        alert(json.message || err.statusText || ('Error ' + err.status));
                     }
                 });
 
