@@ -123,7 +123,11 @@
                         data.filters = getFilters();
                     },
                     error: function(xhr, error, thrown) {
-                        alert(xhr.responseJSON.message)
+                        if (error === 'abort' || xhr.status === 0) {
+                            return;
+                        }
+                        var json = xhr.responseJSON || {};
+                        alert(json.message || thrown || ('Error ' + xhr.status));
                     },
                 },
                 bLengthChange: false,
