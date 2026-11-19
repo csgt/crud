@@ -754,7 +754,7 @@ class CrudController extends BaseController
         return $html;
     }
 
-    public function mostrarBreadcrumb($aBool)
+    public function showBreadcrumb($aBool)
     {
         $this->breadcrumb['mostrar'] = $aBool;
     }

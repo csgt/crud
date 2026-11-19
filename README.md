@@ -84,6 +84,7 @@ public function setup(Request $request)
         //This will render an extra button next to the Add button
         $this->setExtraAction(['url' => '/module/import', 'title' => 'Importar']);
         //Render the breadcrumb according to BS version
+        $this->showBreadcrumb(true);
         $this->setBreadcrumb([
             ['url' => '', 'title' => 'Catálogos', 'icon' => 'fa fa-book'],
             ['url' => '', 'title' => 'Titulo', 'icon' => 'fa fa-university'],
