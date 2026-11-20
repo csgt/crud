@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CrudController extends BaseController
 {
@@ -21,6 +25,8 @@ class CrudController extends BaseController
     private $showSearch = true;
 
     private $stateSave = true;
+
+    private $stateDuration = null;
 
     private $responsive = true;
 
@@ -72,10 +78,15 @@ class CrudController extends BaseController
         }
         $breadcrumb = $this->generarBreadcrumb('index');
 
+        $tableSlug = Str::slug($request->path());
+        $tableId = 'tabla-catalogo-'.($tableSlug !== '' ? $tableSlug : 'root');
+
         return view('csgtcrud::index')
             ->with('layout', $this->layout)
             ->with('breadcrumb', $breadcrumb)
+            ->with('tableId', $tableId)
             ->with('stateSave', $this->stateSave)
+            ->with('stateDuration', $this->getStateDuration())
             ->with('showExport', $this->showExport)
             ->with('showSearch', $this->showSearch)
             ->with('responsive', $this->responsive)
@@ -98,14 +109,20 @@ class CrudController extends BaseController
             $aId = decrypt($aId);
         }
         $data = $this->modelo->find($aId);
-        if ($request->expectsJson()) {
-            return response()->json($data);
-        }
+
+        return response()->json($data);
     }
 
     public function edit(Request $request, $aId)
     {
         $this->setup($request);
+
+        // Los permisos solo se leian en la vista para esconder botones, asi que la ruta
+        // seguia siendo alcanzable por POST directo. Se revisan despues de setup(), que es
+        // donde el controlador hijo los define. create() delega aca con $aId nulo.
+        if (empty($this->permisos[$aId ? 'edit' : 'add'])) {
+            abort(403);
+        }
 
         $path = $this->downLevel($request->path()).'/';
         if ($aId) {
@@ -163,6 +180,11 @@ class CrudController extends BaseController
     {
         $this->setup($request);
 
+        // store() delega aca con $aId === 0, de modo que ese caso valida el permiso de alta.
+        if (empty($this->permisos[$aId === 0 ? 'add' : 'edit'])) {
+            abort(403);
+        }
+
         $request->validate($this->reglas);
         $fields = $request->except($this->noGuardar);
         $fields = array_merge($fields, $this->camposHidden);
@@ -183,8 +205,16 @@ class CrudController extends BaseController
             if (($campo['tipo'] == 'file') || ($campo['tipo'] == 'image')) {
                 if ($request->hasFile($campo['campo'])) {
                     $file = $request->file($campo['campo']);
+                    $extension = strtolower($file->getClientOriginalExtension());
 
-                    $filename = date('Ymdhis').mt_rand(1, 1000).'.'.strtolower($file->getClientOriginalExtension());
+                    $extensionesPermitidas = config('csgtcrud.extensiones_permitidas');
+                    if (is_array($extensionesPermitidas) && ! in_array($extension, array_map('strtolower', $extensionesPermitidas))) {
+                        throw ValidationException::withMessages([
+                            $campo['campo'] => [trans('csgtcrud::crud.extensionnopermitida')],
+                        ]);
+                    }
+
+                    $filename = date('Ymdhis').mt_rand(1, 1000).'.'.$extension;
                     $path = public_path().$campo['filepath'];
 
                     if (! file_exists($path)) {
@@ -192,7 +222,6 @@ class CrudController extends BaseController
                     }
 
                     $file->move($path, $filename);
-                    $campos[$campo['campo']] = $filename;
                     $fields[$campo['campo']] = $filename;
                 }
             }
@@ -244,6 +273,10 @@ class CrudController extends BaseController
     public function destroy(Request $request, $aId)
     {
         $this->setup($request);
+
+        if (empty($this->permisos['delete'])) {
+            abort(403);
+        }
 
         try {
             if (config('csgtcrud.usar_encripcion')) {
@@ -342,9 +375,19 @@ class CrudController extends BaseController
         }
 
         // Filtramos los registros y obtenemos el arreglo con la data
+        $length = (int) $request->length;
+        $maxPageLength = config('csgtcrud.max_page_length');
+        if ($maxPageLength !== null) {
+            if ($length <= 0) {
+                $length = $this->perPage;
+            } elseif ($length > $maxPageLength) {
+                $length = $maxPageLength;
+            }
+        }
+
         $items = $data
             ->offset((int) $request->start)
-            ->limit((int) $request->length)
+            ->limit($length)
             ->get();
 
         $multiRelations = array_values(array_unique(array_filter(array_map(function ($campo) {
@@ -512,23 +555,31 @@ class CrudController extends BaseController
                 continue;
             }
 
-            $this->applyColumnFilter($query, $columns[$columnIndex], '%'.$value.'%');
+            // Una columna con lista cerrada se filtra por igualdad: con LIKE
+            // '%1%' un enum de claves 1 y 10 devolveria ambas.
+            $column = $columns[$columnIndex];
+            if ($this->getFilterOptions($column) !== []) {
+                $this->applyColumnFilter($query, $column, $value, true);
+            } else {
+                $this->applyColumnFilter($query, $column, '%'.$value.'%');
+            }
             $applied = true;
         }
 
         return $applied;
     }
 
-    private function applyColumnFilter($query, $column, $searchValue)
+    private function applyColumnFilter($query, $column, $searchValue, $exact = false)
     {
         $field = $column['campo'];
+        $operator = $exact ? '=' : 'like';
 
         if ($column['tipo'] === 'multi' && method_exists($this->modelo, $field)) {
             $methodName = 'fetch'.ucfirst($field).'Column';
             $relatedColumn = method_exists($this->modelo, $methodName) ? $this->modelo->{$methodName}() : 'nombre';
 
-            $query->whereHas($field, function ($relationQuery) use ($relatedColumn, $searchValue) {
-                $relationQuery->where($relatedColumn, 'like', $searchValue);
+            $query->whereHas($field, function ($relationQuery) use ($relatedColumn, $searchValue, $operator) {
+                $relationQuery->where($relatedColumn, $operator, $searchValue);
             });
 
             return;
@@ -542,8 +593,8 @@ class CrudController extends BaseController
             [$relationName, $relatedColumn] = explode('.', $field, 2);
 
             if (method_exists($this->modelo, $relationName)) {
-                $query->whereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue) {
-                    $relationQuery->where($relatedColumn, 'like', $searchValue);
+                $query->whereHas($relationName, function ($relationQuery) use ($relatedColumn, $searchValue, $operator) {
+                    $relationQuery->where($relatedColumn, $operator, $searchValue);
                 });
 
                 return;
@@ -551,12 +602,12 @@ class CrudController extends BaseController
         }
 
         if (strpos($field, '(') !== false || strpos($field, ')') !== false || strpos($field, ' ') !== false) {
-            $query->whereRaw($field.' LIKE ?', [$searchValue]);
+            $query->whereRaw($field.($exact ? ' = ?' : ' LIKE ?'), [$searchValue]);
 
             return;
         }
 
-        $query->where($field, 'like', $searchValue);
+        $query->where($field, $operator, $searchValue);
     }
 
     private function fillCombos($aCampos)
@@ -693,8 +744,36 @@ class CrudController extends BaseController
                 'index' => $index,
                 'label' => strip_tags($column['nombre']),
                 'type' => $column['tipo'],
+                'options' => $this->getFilterOptions($column),
             ];
         }, $this->getCamposShow(), array_keys($this->getCamposShow()));
+    }
+
+    /**
+     * Valores que una columna puede tomar, para ofrecerlos como lista en el
+     * filtro en lugar de pedirle al usuario que escriba el valor exacto.
+     * Una columna sin lista cerrada devuelve un arreglo vacio y se sigue
+     * filtrando por texto.
+     */
+    private function getFilterOptions($column)
+    {
+        if ($column['tipo'] === 'enum' && is_array($column['enumarray']) && count($column['enumarray']) > 0) {
+            $options = [];
+            foreach ($column['enumarray'] as $value => $label) {
+                $options[] = ['value' => (string) $value, 'label' => strip_tags($label)];
+            }
+
+            return $options;
+        }
+
+        if ($column['tipo'] === 'bool') {
+            return [
+                ['value' => '1', 'label' => trans('csgtcrud::crud.si')],
+                ['value' => '0', 'label' => trans('csgtcrud::crud.no')],
+            ];
+        }
+
+        return [];
     }
 
     private function getCamposShowMine()
@@ -778,7 +857,7 @@ class CrudController extends BaseController
     {
         $allowed = ['campo', 'nombre', 'editable', 'show', 'tipo', 'class',
             'default', 'reglas', 'decimales', 'collection',
-            'enumarray', 'filepath', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc', 'editClass'];
+            'enumarray', 'filepath', 'filedisk', 'filewidth', 'fileheight', 'target', 'isforeign', 'utc', 'editClass'];
         $tipos = ['string', 'multi', 'numeric', 'date', 'datetime', 'bool', 'combobox', 'password', 'enum', 'file',
             'image', 'textarea', 'url', 'summernote', 'securefile'];
 
@@ -805,6 +884,7 @@ class CrudController extends BaseController
         $decimales = (! array_key_exists('decimales', $aParams) ? 0 : $aParams['decimales']);
         $collection = (! array_key_exists('collection', $aParams) ? '' : $aParams['collection']);
         $filepath = (! array_key_exists('filepath', $aParams) ? '' : $aParams['filepath']);
+        $filedisk = (! array_key_exists('filedisk', $aParams) ? '' : $aParams['filedisk']);
         $filewidth = (! array_key_exists('filewidth', $aParams) ? 80 : $aParams['filewidth']);
         $fileheight = (! array_key_exists('fileheight', $aParams) ? 80 : $aParams['fileheight']);
         $target = (! array_key_exists('target', $aParams) ? '_blank' : $aParams['target']);
@@ -833,9 +913,17 @@ class CrudController extends BaseController
         if ($tipo == 'securefile' && $filepath == '') {
             dd('Para el tipo securefile hay que especifiarle el filepath');
         }
+        if ($tipo == 'securefile' && $filedisk == '') {
+            dd('Para el tipo securefile hay que especifiarle el filedisk');
+        }
 
-        if ($tipo == 'emum' && count($enumarray) == 0) {
-            dd('Para el tipo enum el enumarray es requerido');
+        if ($tipo == 'enum' && (! is_array($enumarray) || count($enumarray) == 0)) {
+            // No se aborta la peticion: antes de que esta validacion corriera, un enum sin
+            // opciones renderizaba un select vacio y la aplicacion seguia funcionando. Se
+            // conserva ese comportamiento y solo se deja constancia en el log. El is_array()
+            // es necesario porque en PHP 8 un count() sobre un no-array es un TypeError fatal.
+            Log::warning('csgtcrud: el campo "'.$aParams['campo'].'" es de tipo enum y no tiene un enumarray valido; se renderiza un select vacio.');
+            $enumarray = [];
         }
 
         if (! strpos($aParams['campo'], ')')) {
@@ -871,6 +959,7 @@ class CrudController extends BaseController
             'searchable' => $searchable,
             'enumarray' => $enumarray,
             'filepath' => $filepath,
+            'filedisk' => $filedisk,
             'filewidth' => $filewidth,
             'fileheight' => $fileheight,
             'target' => $target,
@@ -1024,6 +1113,19 @@ class CrudController extends BaseController
     public function setResponsive($aResponsive)
     {
         $this->responsive = $aResponsive;
+    }
+
+    public function setStateDuration($aSegundos)
+    {
+        $this->stateDuration = $aSegundos;
+    }
+
+    private function getStateDuration()
+    {
+        // Si no se configuro con setStateDuration, se toma el valor del config.
+        return $this->stateDuration === null
+        ? config('csgtcrud.stateDuration', 0)
+        : $this->stateDuration;
     }
 
     private function getQueryString($request)

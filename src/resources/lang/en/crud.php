@@ -6,9 +6,11 @@ return [
     'cancelar' => 'Cancel',
     'editar' => 'Edit',
     'eliminar' => 'Delete',
+    'extensionnopermitida' => 'File extension not allowed',
     'filtrar' => 'Filter',
     'guardar' => 'Save',
     'limpiar' => 'Clear',
+    'no' => 'No',
     'passnocoinciden' => 'Passwords don\'t match',
     'passrequerida' => 'The password is required',
     'quitarfiltro' => 'Remove filter',
@@ -29,6 +31,7 @@ return [
     'sPrevious' => 'Previous',
     'sProcessing' => 'Processing',
     'sZeroRecords' => 'No records were found',
+    'todos' => 'All',
     'valor' => 'Value',
 ];
 
