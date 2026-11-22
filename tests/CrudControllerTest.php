@@ -1,125 +1,261 @@
 <?php
-
 namespace Csgt\Crud\Tests;
 
-use Csgt\Crud\CrudController;
-use Illuminate\Database\Capsule\Manager as Capsule;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
-use PHPUnit\Framework\TestCase;
+use Csgt\Crud\Tests\Fixtures\Client;
+use Csgt\Crud\Tests\Fixtures\ClientsController;
 
+/**
+ * One group of tests per method of CrudController that shapes the listing
+ * query. Everything is asserted on the generated SQL and bindings.
+ */
 class CrudControllerTest extends TestCase
 {
+    protected $controller;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $capsule = new Capsule();
-        $capsule->addConnection([
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-        ]);
-        $capsule->setAsGlobal();
-        $capsule->bootEloquent();
-
-        Capsule::schema()->create('tipos_envios', function ($table) {
-            $table->increments('id');
-            $table->string('nombre');
-        });
-        Capsule::schema()->create('ordenes', function ($table) {
-            $table->increments('id');
-            $table->unsignedInteger('tipo_envio_id');
-        });
-
-        TipoEnvio::insert([
-            ['id' => 1, 'nombre' => 'Standard'],
-            ['id' => 2, 'nombre' => 'Express'],
-            ['id' => 3, 'nombre' => 'Recoger'],
-        ]);
-        Orden::insert([
-            ['id' => 10, 'tipo_envio_id' => 1],
-            ['id' => 20, 'tipo_envio_id' => 2],
-            ['id' => 30, 'tipo_envio_id' => 3],
-        ]);
+        $this->controller = new ClientsController;
     }
 
-    public function testBelongsToUsesTheOwnerKeyAndPaginatesInTheDatabase(): void
+    protected function query()
     {
-        Capsule::connection()->enableQueryLog();
-
-        $response = $this->controller()->data($this->request([
-            'search' => ['value' => ''],
-            'order' => [['column' => 1, 'dir' => 'asc']],
-            'start' => 1,
-            'length' => 1,
-            'draw' => 1,
-        ]));
-        $payload = json_decode($response->getContent(), true);
-
-        $this->assertSame(3, $payload['recordsTotal']);
-        $this->assertSame(3, $payload['recordsFiltered']);
-        $this->assertCount(1, $payload['data']);
-        $this->assertSame('Recoger', $payload['data'][0][1]);
-
-        $pageQuery = collect(Capsule::connection()->getQueryLog())->first(function ($query) {
-            return strpos($query['query'], 'from "ordenes"') !== false
-                && strpos($query['query'], 'limit 1 offset 1') !== false;
-        });
-
-        $this->assertNotNull($pageQuery, 'The requested page must be limited in SQL.');
+        return Client::query();
     }
 
-    public function testGlobalSearchFiltersBelongsToColumnsInTheDatabase(): void
+    /*==================== getSelect ====================*/
+
+    public function testGetSelectReturnsOneExpressionPerLocalShownField()
     {
-        $response = $this->controller()->data($this->request([
-            'search' => ['value' => 'Standard'],
-            'order' => [],
-            'start' => 0,
-            'length' => 10,
-            'draw' => 2,
-        ]));
-        $payload = json_decode($response->getContent(), true);
+        $columns = $this->call($this->controller, 'getCamposShowMine');
+        $select  = $this->call($this->controller, 'getSelect', [$columns]);
 
-        $this->assertSame(3, $payload['recordsTotal']);
-        $this->assertSame(1, $payload['recordsFiltered']);
-        $this->assertSame('Standard', $payload['data'][0][1]);
+        $this->assertCount(count($columns), $select);
+        $this->assertSame(
+            ['name', 'CONCAT(name, id) AS composed'],
+            array_map(function ($expression) {
+                return $expression->getValue(\Illuminate\Database\Capsule\Manager::connection()->getQueryGrammar());
+            }, $select)
+        );
     }
 
-    private function controller()
+    /*==================== getCamposShowMine ====================*/
+
+    public function testGetCamposShowMineExcludesRelationsMultiAndHiddenFields()
     {
-        $controller = new CrudController();
-        $controller->setModelo(new Orden());
-        $controller->setCampo(['campo' => 'id', 'nombre' => 'ID']);
-        $controller->setCampo(['campo' => 'tipoenvio.nombre', 'nombre' => 'Tipo de envío']);
+        $fields = array_column($this->call($this->controller, 'getCamposShowMine'), 'campo');
 
-        return $controller;
+        $this->assertSame(['name', 'CONCAT(name, id) AS composed'], $fields);
     }
 
-    private function request(array $parameters)
+    /*==================== getCamposShowForeign ====================*/
+
+    public function testGetCamposShowForeignGroupsColumnsByRelation()
     {
-        return Request::create('/ordenes/data', 'POST', $parameters);
+        $foreigns = $this->call($this->controller, 'getCamposShowForeign');
+
+        $this->assertSame(['country'], array_keys($foreigns));
+        $this->assertSame('name AS country_name', trim($foreigns['country'][0][0]));
     }
-}
 
-class Orden extends Model
-{
-    protected $table = 'ordenes';
+    /*==================== getCamposShowMulti ====================*/
 
-    public $timestamps = false;
-
-    protected $guarded = [];
-
-    public function tipoenvio()
+    public function testGetCamposShowMultiReturnsOnlyMultiFields()
     {
-        return $this->belongsTo(TipoEnvio::class, 'tipo_envio_id', 'id');
+        $multi = array_column($this->call($this->controller, 'getCamposShowMulti'), 'campo');
+
+        $this->assertSame(['tags'], $multi);
     }
-}
 
-class TipoEnvio extends Model
-{
-    protected $table = 'tipos_envios';
+    /*==================== getCamposOrden ====================*/
 
-    public $timestamps = false;
+    public function testGetCamposOrdenKeepsColumnOrderAndAppendsTheUniqueId()
+    {
+        $order = $this->call($this->controller, 'getCamposOrden');
 
-    protected $guarded = [];
+        $this->assertSame(
+            ['name', 'country.name AS country_name', 'tags', 'CONCAT(name, id) AS composed', '___id___'],
+            $order
+        );
+    }
+
+    /*==================== getFilterColumns ====================*/
+
+    public function testGetFilterColumnsExposesIndexAndPlainLabel()
+    {
+        $columns = $this->call($this->controller, 'getFilterColumns');
+
+        $this->assertSame([0, 1, 2, 3], array_column($columns, 'index'));
+        $this->assertSame(['Name', 'Country', 'Tags', 'Composed'], array_column($columns, 'label'));
+    }
+
+    /*==================== stripAlias ====================*/
+
+    public function testStripAliasRemovesTheAliasAndKeepsPlainColumns()
+    {
+        $this->assertSame('country.name', $this->call($this->controller, 'stripAlias', ['country.name AS country_name']));
+        $this->assertSame('name', $this->call($this->controller, 'stripAlias', ['  name  ']));
+        $this->assertSame('CONCAT(a, b)', $this->call($this->controller, 'stripAlias', ['CONCAT(a, b) as composed']));
+    }
+
+    /*==================== qualifyRelatedColumn ====================*/
+
+    public function testQualifyRelatedColumnOnlyPrefixesPlainIdentifiers()
+    {
+        $model = new \Csgt\Crud\Tests\Fixtures\Country;
+
+        $this->assertSame('countries.name', $this->call($this->controller, 'qualifyRelatedColumn', [$model, 'name']));
+        $this->assertSame('CONCAT(a, b)', $this->call($this->controller, 'qualifyRelatedColumn', [$model, 'CONCAT(a, b)']));
+        $this->assertSame('other.name', $this->call($this->controller, 'qualifyRelatedColumn', [$model, 'other.name']));
+    }
+
+    /*==================== applyOrderToQuery ====================*/
+
+    public function testApplyOrderToQueryOrdersALocalColumn()
+    {
+        $query = $this->query();
+        $this->call($this->controller, 'applyOrderToQuery', [$query, 'name', 'desc']);
+
+        $this->assertStringContainsString('order by "name" desc', $query->toSql());
+    }
+
+    public function testApplyOrderToQueryOrdersARawExpressionWithoutQuotingIt()
+    {
+        $query = $this->query();
+        $this->call($this->controller, 'applyOrderToQuery', [$query, 'CONCAT(name, id) AS composed', 'asc']);
+
+        $this->assertStringContainsString('order by CONCAT(name, id) asc', $query->toSql());
+    }
+
+    public function testApplyOrderToQueryOrdersARelationWithACorrelatedSubquery()
+    {
+        $query = $this->query();
+        $this->call($this->controller, 'applyOrderToQuery', [$query, 'country.name AS country_name', 'desc']);
+
+        $sql = $query->toSql();
+
+        $this->assertStringContainsString('order by (select countries.name from "countries"', $sql);
+        $this->assertStringContainsString('"clients"."country_id" = "countries"."id"', $sql);
+        $this->assertStringContainsString('limit 1) desc', $sql);
+        $this->assertStringNotContainsString('country_name', $sql);
+    }
+
+    public function testApplyOrderToQueryFallsBackToAPlainOrderForAnUnknownRelation()
+    {
+        $query = $this->query();
+        $this->call($this->controller, 'applyOrderToQuery', [$query, 'missing.name', 'asc']);
+
+        $this->assertStringContainsString('order by "missing"."name" asc', $query->toSql());
+    }
+
+    /*==================== applyColumnFilter ====================*/
+
+    public function testApplyColumnFilterMatchesALocalColumn()
+    {
+        $columns = $this->call($this->controller, 'getCamposShow');
+        $query   = $this->query();
+
+        $this->call($this->controller, 'applyColumnFilter', [$query, $columns[0], '%acme%']);
+
+        $this->assertStringContainsString('where "name" like ?', $query->toSql());
+        $this->assertSame(['%acme%'], $query->getBindings());
+    }
+
+    public function testApplyColumnFilterMatchesARelationColumnThroughWhereHas()
+    {
+        $columns = $this->call($this->controller, 'getCamposShow');
+        $query   = $this->query();
+
+        $this->call($this->controller, 'applyColumnFilter', [$query, $columns[1], '%mex%']);
+
+        $sql = $query->toSql();
+
+        $this->assertStringContainsString('exists (select * from "countries"', $sql);
+        $this->assertStringContainsString('"name" like ?', $sql);
+        $this->assertStringNotContainsString('country_name', $sql);
+        $this->assertSame(['%mex%'], $query->getBindings());
+    }
+
+    public function testApplyColumnFilterMatchesAMultiFieldThroughItsRelation()
+    {
+        $columns = $this->call($this->controller, 'getCamposShow');
+        $query   = $this->query();
+
+        $this->call($this->controller, 'applyColumnFilter', [$query, $columns[2], '%vip%']);
+
+        $sql = $query->toSql();
+
+        $this->assertStringContainsString('exists (select * from "tags"', $sql);
+        $this->assertStringContainsString('"client_tag"', $sql);
+        $this->assertSame(['%vip%'], $query->getBindings());
+    }
+
+    public function testApplyColumnFilterUsesWhereRawForExpressions()
+    {
+        $columns = $this->call($this->controller, 'getCamposShow');
+        $query   = $this->query();
+
+        $this->call($this->controller, 'applyColumnFilter', [$query, $columns[3], '%abc%']);
+
+        $this->assertStringContainsString('CONCAT(name, id) LIKE ?', $query->toSql());
+        $this->assertStringNotContainsString('composed', $query->toSql());
+        $this->assertSame(['%abc%'], $query->getBindings());
+    }
+
+    /*==================== applyFiltersToQuery ====================*/
+
+    public function testApplyFiltersToQueryAppliesEveryValidFilter()
+    {
+        $query = $this->query();
+
+        $applied = $this->call($this->controller, 'applyFiltersToQuery', [$query, [
+            ['column' => 0, 'value' => 'acme'],
+            ['column' => 1, 'value' => 'mex'],
+        ]]);
+
+        $this->assertTrue($applied);
+        $this->assertSame(['%acme%', '%mex%'], $query->getBindings());
+    }
+
+    public function testApplyFiltersToQueryIgnoresEmptyUnknownAndMalformedFilters()
+    {
+        $query = $this->query();
+
+        $applied = $this->call($this->controller, 'applyFiltersToQuery', [$query, [
+            ['column' => 0, 'value' => '   '],
+            ['column' => 99, 'value' => 'x'],
+            ['column' => 'not-an-index', 'value' => 'x'],
+            ['value' => 'no column'],
+            'not an array',
+        ]]);
+
+        $this->assertFalse($applied);
+        $this->assertSame([], $query->getBindings());
+        $this->assertStringNotContainsString('where', $query->toSql());
+    }
+
+    public function testApplyFiltersToQueryIgnoresANonArrayPayload()
+    {
+        $query = $this->query();
+
+        $this->assertFalse($this->call($this->controller, 'applyFiltersToQuery', [$query, 'nope']));
+        $this->assertSame([], $query->getBindings());
+    }
+
+    /*==================== downLevel ====================*/
+
+    public function testDownLevelRemovesTheLastSegmentOfThePath()
+    {
+        $this->assertSame('clients', $this->call($this->controller, 'downLevel', ['clients/5']));
+        $this->assertSame('', $this->call($this->controller, 'downLevel', ['clients']));
+    }
+
+    /*==================== setters ====================*/
+
+    public function testSetCampoRejectsUnknownKeys()
+    {
+        $this->assertSame('Clients', $this->controller->getTitulo());
+        $this->assertCount(5, $this->read($this->controller, 'campos'));
+    }
 }
