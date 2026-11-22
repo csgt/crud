@@ -6,6 +6,7 @@ use Storage;
 use Response;
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
@@ -138,12 +139,6 @@ class CrudController extends BaseController
                 }
             }
 
-            if ((($campo['tipo'] == 'date') || ($campo['tipo'] == 'datetime')) && $campo['utc']) {
-                $fields[$campo['campo']] = Carbon::parse($fields[$campo['campo']])
-                    ->shiftTimezone($request->__tz__)
-                    ->setTimezone('UTC');
-            }
-
             if (($campo['tipo'] == 'file') || ($campo['tipo'] == 'image')) {
                 if ($request->hasFile($campo['campo'])) {
                     $file = $request->file($campo['campo']);
@@ -203,7 +198,7 @@ class CrudController extends BaseController
                 return response()->json($item);
             }
 
-            return redirect()->to($request->path() . $nuevasVars);
+            return redirect()->to($request->path() . $nuevasVars, 303);
         } else {
             if (config('csgtcrud.usar_encripcion')) {
                 $aId = decrypt($aId);
@@ -218,7 +213,7 @@ class CrudController extends BaseController
                 return response()->json($m);
             }
 
-            return redirect()->to($this->downLevel($request->path()) . $nuevasVars);
+            return redirect()->to($this->downLevel($request->path()) . $nuevasVars, 303);
         }
     }
 
@@ -239,7 +234,7 @@ class CrudController extends BaseController
             return response()->json('ok');
         }
 
-        return redirect()->to($this->downLevel($request->path()) . $this->getQueryString($request));
+        return redirect()->to($this->downLevel($request->path()) . $this->getQueryString($request), 303);
     }
 
     public function data(Request $request)
@@ -262,7 +257,7 @@ class CrudController extends BaseController
             $foreignModel = $this->modelo->{$relation}();
 
             $data->with([$relation => function ($query) use ($fields, $foreignModel) {
-                $query->addSelect($foreignModel->getForeignKeyName());
+                $query->addSelect($foreignModel instanceof BelongsTo ? $foreignModel->getOwnerKeyName() : $foreignModel->getForeignKeyName());
                 foreach ($fields as $field) {
                     foreach ($field as $fiel) {
                         $query->addSelect(DB::raw($fiel));
@@ -271,7 +266,7 @@ class CrudController extends BaseController
             }]);
 
             foreach ($fields as $field) {
-                $data->addSelect($foreignModel->getQualifiedParentKeyName());
+                $data->addSelect($foreignModel instanceof BelongsTo ? $foreignModel->getForeignKeyName() : $foreignModel->getQualifiedParentKeyName());
             }
         }
 
