@@ -131,7 +131,10 @@ class CrudController extends BaseController
                 if ($campo['tipo'] == 'date' || $campo['tipo'] == 'datetime') {
                     $aFecha = $fields[$campo['campo']];
                     try {
-                        $fecha                   = Carbon::parse($aFecha);
+                        $fecha = Carbon::parse($aFecha);
+                        if (! $campo['utc']) {
+                            $fecha->utc();
+                        }
                         $fields[$campo['campo']] = $fecha;
                     } catch (Exception $e) {
                         $fields[$campo['campo']] = null;

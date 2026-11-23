@@ -172,7 +172,7 @@
                                     var date = moment.utc(data[{{ $loop->index }}]);
                                     if (!date.isValid()) return null
 
-                                    @if ($columna['utc'] == true)
+                                    @if ($columna['utc'] == false)
                                         date.local()
                                     @endif
 

@@ -39,6 +39,16 @@
                 @foreach ($columnas as $columna)
                     @php
                         $valor = $data ? $data->{$columna['campoReal']} : $columna['default'];
+                        if (
+                            $valor &&
+                            ($columna['tipo'] == 'date' || $columna['tipo'] == 'datetime') &&
+                            ! $columna['utc']
+                        ) {
+                            $valor = \Carbon\Carbon::parse(
+                                $valor instanceof \DateTimeInterface ? $valor->format('Y-m-d H:i:s') : $valor,
+                                'UTC'
+                            )->setTimezone(config('app.timezone'));
+                        }
                         $label =
                             '<label for="' .
                             $columna['campoReal'] .
@@ -110,7 +120,7 @@
                             <!---------------------------- DATE ---------------------------------->
                         @elseif($columna['tipo'] == 'date')
                             @php
-                                $laFecha = substr($valor, 0, 10);
+                                $laFecha = $valor ? \Carbon\Carbon::parse($valor)->format('Y-m-d') : '';
                             @endphp
                             {!! $label !!}
                             <div class="col-sm-10">
@@ -119,10 +129,13 @@
                             </div>
                             <!---------------------------- DATETIME ---------------------------------->
                         @elseif($columna['tipo'] == 'datetime')
+                            @php
+                                $laFecha = $valor ? \Carbon\Carbon::parse($valor)->format('Y-m-d\\TH:i') : '';
+                            @endphp
                             {!! $label !!}
                             <div class="col-sm-10">
                                 <input type="datetime-local" name="{{ $columna['campoReal'] }}"
-                                    value="{{ $valor }}" {!! arrayToFields($arr) !!}>
+                                    value="{{ $laFecha }}" {!! arrayToFields($arr) !!}>
                             </div>
                             <!---------------------------- TIME ---------------------------------->
                         @elseif($columna['tipo'] == 'time')
