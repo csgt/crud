@@ -91,7 +91,7 @@
                                     <!---------------------------- COMBOBOX ---------------------------------->
                                 @elseif($columna['tipo'] == 'combobox')
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] = 'selectpicker';
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -107,7 +107,7 @@
                                     <!---------------------------- MULTI ---------------------------------->
                                 @elseif($columna['tipo'] == 'multi')
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] = 'selectpicker';
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -123,7 +123,7 @@
                                     <!---------------------------- ENUM ---------------------------------->
                                 @elseif($columna['tipo'] == 'enum')
                                     @php
-                                        $arr['class'] = 'selectpicker form-control';
+                                        $arr['class'] = 'selectpicker';
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -175,7 +175,12 @@
     <script type="text/javascript">
         $(function() {
             @if ($uses['selectize'])
-                $('.selectpicker').selectize();
+                var $selects = $('#frmCrud .selectpicker');
+                if (typeof $.fn.selectize === 'function') {
+                    $selects.selectize();
+                } else {
+                    $selects.addClass('form-control');
+                }
             @endif
             @if ($uses['summernote'])
                 $('.summernote').summernote({
