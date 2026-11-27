@@ -35,7 +35,8 @@
                                 '" class="control-label">' .
                                 $columna['nombre'] .
                                 '</label>';
-                            $arr = ['class' => 'form-control' . ($errors->has($real) ? ' is-invalid' : '')];
+                            $invalidClass = $errors->has($real) ? ' is-invalid' : '';
+                            $arr = ['class' => 'form-control' . $invalidClass];
                         @endphp
                         <div class="{{ $columna['editClass'] }}">
                             <div class="form-group">
@@ -88,7 +89,7 @@
                                     <!---------------------------- COMBOBOX ---------------------------------->
                                 @elseif($columna['tipo'] == 'combobox')
                                     @php
-                                        $arr['class'] .= ' selectpicker';
+                                        $arr['class'] = 'selectpicker' . $invalidClass;
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -104,7 +105,7 @@
                                     <!---------------------------- MULTI ---------------------------------->
                                 @elseif($columna['tipo'] == 'multi')
                                     @php
-                                        $arr['class'] .= ' selectpicker';
+                                        $arr['class'] = 'selectpicker' . $invalidClass;
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -124,7 +125,7 @@
                                     <!---------------------------- ENUM ---------------------------------->
                                 @elseif($columna['tipo'] == 'enum')
                                     @php
-                                        $arr['class'] .= ' selectpicker';
+                                        $arr['class'] = 'selectpicker' . $invalidClass;
                                         $arr['data-width'] = 'auto';
                                     @endphp
                                     {!! $label !!}
@@ -175,7 +176,12 @@
     <script type="text/javascript">
         $(function() {
             @if ($uses['selectize'])
-                $('.selectpicker').selectize();
+                var $selects = $('#frmCrud .selectpicker');
+                if (typeof $.fn.selectize === 'function') {
+                    $selects.selectize();
+                } else {
+                    $selects.addClass('form-control');
+                }
             @endif
             @if ($uses['summernote'])
                 $('.summernote').summernote({
