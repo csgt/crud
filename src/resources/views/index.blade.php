@@ -17,7 +17,7 @@
             function addFilterRow(filter) {
                 filter = filter || {};
 
-                var $row = $('<div class="form-row align-items-center mb-2 crud-filter-row"></div>');
+                var $row = $('<div class="row flex-nowrap align-items-center mb-2 crud-filter-row"></div>');
                 var $column = $('<select class="form-control form-control-sm crud-filter-column"></select>');
                 var $value = $('<input type="text" class="form-control form-control-sm crud-filter-value">')
                     .val(filter.value || '');
@@ -30,14 +30,14 @@
                         .appendTo($column);
                 });
 
-                $row.append($('<div class="col-sm-4 mb-1 mb-sm-0"></div>').append($column));
+                $row.append($('<div class="col-4"></div>').append($column));
                 $row.append($('<div class="col"></div>').append($value));
                 $row.append(
-                    $('<div class="col-auto pl-1"></div>').append(
+                    $('<div class="col-auto d-flex pl-1 ps-1"></div>').append(
                         $('<button type="button" class="btn btn-sm btn-light crud-filter-add"><i class="fa fa-plus"></i></button>')
                             .attr('aria-label', @json(trans('csgtcrud::crud.agregarfiltro')))
                             .attr('title', @json(trans('csgtcrud::crud.agregarfiltro'))),
-                        $('<button type="button" class="btn btn-sm btn-light ml-1 crud-filter-remove"><i class="fa fa-minus"></i></button>')
+                        $('<button type="button" class="btn btn-sm btn-light ml-1 ms-1 crud-filter-remove"><i class="fa fa-minus"></i></button>')
                             .attr('aria-label', @json(trans('csgtcrud::crud.quitarfiltro')))
                             .attr('title', @json(trans('csgtcrud::crud.quitarfiltro')))
                     )
@@ -337,13 +337,13 @@
     <div class="card">
         <div class="card-body">
             @if ($showSearch)
-                <div class="mb-3">
-                    <div id="crud-filter-rows"></div>
-                    <div class="text-right text-end">
+                <div class="row align-items-end mb-3">
+                    <div id="crud-filter-rows" class="col-12 col-md"></div>
+                    <div class="col-12 col-md-auto d-flex justify-content-end pb-2">
                         <button id="crud-filter-clear" type="button" class="btn btn-sm btn-light">
                             {{ trans('csgtcrud::crud.limpiar') }}
                         </button>
-                        <button id="crud-filter-apply" type="button" class="btn btn-sm btn-primary">
+                        <button id="crud-filter-apply" type="button" class="btn btn-sm btn-primary ml-1 ms-1">
                             <i class="fa fa-filter"></i> {{ trans('csgtcrud::crud.filtrar') }}
                         </button>
                     </div>
