@@ -42,7 +42,7 @@
                         if (
                             $valor &&
                             ($columna['tipo'] == 'date' || $columna['tipo'] == 'datetime') &&
-                            ! $columna['utc']
+                            $columna['utc']
                         ) {
                             $valor = \Carbon\Carbon::parse(
                                 $valor instanceof \DateTimeInterface ? $valor->format('Y-m-d H:i:s') : $valor,

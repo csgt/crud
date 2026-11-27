@@ -132,7 +132,7 @@ class CrudController extends BaseController
                     $aFecha = $fields[$campo['campo']];
                     try {
                         $fecha = Carbon::parse($aFecha);
-                        if (! $campo['utc']) {
+                        if ($campo['utc']) {
                             $fecha->utc();
                         }
                         $fields[$campo['campo']] = $fecha;
