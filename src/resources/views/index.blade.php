@@ -18,7 +18,7 @@
                 filter = filter || {};
 
                 var $row = $('<div class="row flex-nowrap align-items-center mb-2 crud-filter-row"></div>');
-                var $column = $('<select class="form-control form-control-sm crud-filter-column"></select>');
+                var $column = $('<select class="form-select form-select-sm crud-filter-column"></select>');
                 var $value = $('<input type="text" class="form-control form-control-sm crud-filter-value">')
                     .val(filter.value || '');
 
