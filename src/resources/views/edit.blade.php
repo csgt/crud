@@ -189,7 +189,7 @@
                             <!---------------------------- COMBOBOX ---------------------------------->
                         @elseif($column['type'] == 'combobox')
                             @php
-                                $arr['class'] = 'selectpicker form-control';
+                                $arr['class'] = 'selectpicker';
                                 $arr['data-width'] = 'auto';
                             @endphp
                             {!! $label !!}
@@ -206,7 +206,7 @@
                             <!---------------------------- MULTI ---------------------------------->
                         @elseif($column['type'] == 'multi')
                             @php
-                                $arr['class'] = 'selectpicker form-control';
+                                $arr['class'] = 'selectpicker';
                                 $arr['data-width'] = 'auto';
                             @endphp
                             {!! $label !!}
@@ -224,7 +224,7 @@
                             <!---------------------------- ENUM ---------------------------------->
                         @elseif($column['type'] == 'enum')
                             @php
-                                $arr['class'] = 'selectpicker form-control';
+                                $arr['class'] = 'selectpicker';
                                 $arr['data-width'] = 'auto';
                             @endphp
                             {!! $label !!}
@@ -295,7 +295,12 @@
                 $('.catalogoFecha').datetimepicker();
             @endif
             @if ($includeSelecize)
-                $('.selectpicker').selectize();
+                var $selects = $('#frmCrud .selectpicker');
+                if (typeof $.fn.selectize === 'function') {
+                    $selects.selectize();
+                } else {
+                    $selects.addClass('form-control');
+                }
             @endif
             @if ($includeSummernote)
                 $('.summernote').summernote({
