@@ -421,6 +421,10 @@ class CrudController extends BaseController
                                     })
                                     ->toArray()
                             );
+                        } elseif (in_array($fullCampoFixed['tipo'], ['date', 'datetime']) && $item[$colName] instanceof \DateTimeInterface) {
+                            // Carbon serializes to ISO 8601 UTC ("...Z"), which shifts the stored digits.
+                            // Send the value exactly as stored so the view can apply the utc flag.
+                            $cols[] = $item[$colName]->format('Y-m-d H:i:s');
                         } else {
                             $cols[] = $item[$colName];
                         }
